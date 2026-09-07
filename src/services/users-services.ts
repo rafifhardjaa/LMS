@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { users } from "../db/schema";
+import { sessions, users } from "../db/schema";
 
 export async function findUserByEmail(email: string) {
   const rows = await db
@@ -28,4 +28,28 @@ export async function createUser(input: {
     email: input.email,
     password: hashedPassword,
   });
+}
+
+export async function loginUser(input: {
+  email: string;
+  password: string;
+}): Promise<string> {
+  const user = await findUserByEmail(input.email);
+  if (!user) {
+    throw new Error("Email atau password salah");
+  }
+
+  const valid = await Bun.password.verify(input.password, user.password);
+  if (!valid) {
+    throw new Error("Email atau password salah");
+  }
+
+  const token = crypto.randomUUID();
+
+  await db.insert(sessions).values({
+    token,
+    userId: user.id,
+  });
+
+  return token;
 }
