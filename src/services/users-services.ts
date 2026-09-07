@@ -87,3 +87,17 @@ export async function getCurrentUser(token: string) {
     created_at: user.createdAt,
   };
 }
+
+export async function logoutUser(token: string) {
+  const sessionRows = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.token, token))
+    .limit(1);
+  const session = sessionRows[0];
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  await db.delete(sessions).where(eq(sessions.token, token));
+}
