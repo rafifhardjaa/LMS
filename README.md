@@ -1,4 +1,4 @@
-# lms_sem5
+# Learning Management System
 
 To install dependencies:
 
