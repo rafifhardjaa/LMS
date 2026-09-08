@@ -11,14 +11,23 @@ export async function findUserByEmail(email: string) {
   return rows[0];
 }
 
+export const VALID_ROLES = ["admin", "teacher", "student"] as const;
+export type UserRole = (typeof VALID_ROLES)[number];
+
 export async function createUser(input: {
   name: string;
   email: string;
   password: string;
+  role?: string;
 }) {
   const existing = await findUserByEmail(input.email);
   if (existing) {
     throw new Error("Email sudah terdaftar");
+  }
+
+  const role = input.role ?? "student";
+  if (!(VALID_ROLES as readonly string[]).includes(role)) {
+    throw new Error("Role tidak valid");
   }
 
   const hashedPassword = await Bun.password.hash(input.password);
@@ -27,6 +36,7 @@ export async function createUser(input: {
     name: input.name,
     email: input.email,
     password: hashedPassword,
+    role,
   });
 }
 
@@ -70,6 +80,7 @@ export async function getCurrentUser(token: string) {
       id: users.id,
       name: users.name,
       email: users.email,
+      role: users.role,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -84,6 +95,7 @@ export async function getCurrentUser(token: string) {
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role,
     created_at: user.createdAt,
   };
 }
