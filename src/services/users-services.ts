@@ -65,15 +65,7 @@ export async function loginUser(input: {
 }
 
 export async function getCurrentUser(token: string) {
-  const sessionRows = await db
-    .select()
-    .from(sessions)
-    .where(eq(sessions.token, token))
-    .limit(1);
-  const session = sessionRows[0];
-  if (!session) {
-    throw new Error("Unauthorized");
-  }
+  const session = await findSessionByToken(token);
 
   const userRows = await db
     .select({
@@ -101,6 +93,16 @@ export async function getCurrentUser(token: string) {
 }
 
 export async function logoutUser(token: string) {
+  const deleted = await db
+    .delete(sessions)
+    .where(eq(sessions.token, token))
+    .returning({ id: sessions.id });
+  if (deleted.length === 0) {
+    throw new Error("Unauthorized");
+  }
+}
+
+async function findSessionByToken(token: string) {
   const sessionRows = await db
     .select()
     .from(sessions)
@@ -110,6 +112,5 @@ export async function logoutUser(token: string) {
   if (!session) {
     throw new Error("Unauthorized");
   }
-
-  await db.delete(sessions).where(eq(sessions.token, token));
+  return session;
 }
