@@ -16,6 +16,9 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
         ) {
           return status(400, { error: "Email sudah terdaftar" });
         }
+        if (error instanceof Error && error.message === "Role tidak valid") {
+          return status(400, { error: "Role tidak valid" });
+        }
         throw error;
       }
     },
@@ -24,6 +27,9 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
         name: t.String(),
         email: t.String(),
         password: t.String(),
+        role: t.Optional(
+          t.Union([t.Literal("admin"), t.Literal("teacher"), t.Literal("student")])
+        ),
       }),
     }
   )
