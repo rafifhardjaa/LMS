@@ -4,19 +4,17 @@ import { swagger } from "@elysiajs/swagger";
 import { jwt } from "@elysiajs/jwt";
 import { usersRoute } from "./routes/users-route";
 
+const documentation = {
+  info: {
+    title: "LMS API",
+    version: "1.0.0",
+  },
+};
+
 const app = new Elysia()
   .use(cors())
-  .use(
-    swagger({
-      path: "/docs",
-      documentation: {
-        info: {
-          title: "LMS API",
-          version: "1.0.0",
-        },
-      },
-    })
-  )
+  .use(swagger({ path: "/docs", documentation }))
+  .use(swagger({ path: "/swagger", documentation }))
   .use(
     jwt({
       name: "jwt",
