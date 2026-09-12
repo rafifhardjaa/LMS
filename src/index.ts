@@ -3,6 +3,8 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { jwt } from "@elysiajs/jwt";
 import { usersRoute } from "./routes/users-route";
+import { subjectsRoute } from "./routes/subjects-route";
+import { modulesRoute } from "./routes/modules-route";
 
 const documentation = {
   info: {
@@ -23,6 +25,8 @@ const app = new Elysia()
   )
   .get("/", () => ({ status: "ok" }))
   .use(usersRoute)
+  .use(subjectsRoute)
+  .use(modulesRoute)
   .listen(Number(process.env.PORT) || 3000);
 
 console.log(
