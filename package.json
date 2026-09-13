@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "db:push": "bunx drizzle-kit push"
+    "db:push": "bunx drizzle-kit push",
+    "seed": "bun run src/db/seed.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
