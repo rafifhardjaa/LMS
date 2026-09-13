@@ -115,25 +115,6 @@ frontend/
 
 ---
 
-## Menjalankan Bersama Backend
-
-Pastikan backend (folder `LMS`) sudah berjalan terlebih dahulu sebelum menjalankan frontend:
-
-```bash
-# Terminal 1 — jalankan backend
-cd LMS
-bun run dev
-
-# Terminal 2 — jalankan frontend
-cd frontend
-npm run dev
-```
-
-Backend: [http://localhost:3000](http://localhost:3000)  
-Frontend: [http://localhost:3001](http://localhost:3001)
-
----
-
 ## Kontribusi
 
 1. Buat branch baru dari `frontend`:
