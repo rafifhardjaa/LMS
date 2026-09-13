@@ -1,36 +1,153 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LMS Frontend
 
-## Getting Started
+Frontend untuk aplikasi Learning Management System (LMS) yang dibangun menggunakan **Next.js 16**, **TypeScript**, dan **Tailwind CSS**.
 
-First, run the development server:
+---
+
+## Teknologi yang Digunakan
+
+- [Next.js 16](https://nextjs.org) — Framework React
+- [TypeScript](https://www.typescriptlang.org) — Type safety
+- [Tailwind CSS v4](https://tailwindcss.com) — Styling
+- [Supabase](https://supabase.com) — Autentikasi & Storage
+- [TanStack Query](https://tanstack.com/query) — State management & fetching data
+- [Zustand](https://zustand-demo.pmnd.rs) — Global state
+- [Shadcn/UI](https://ui.shadcn.com) — Komponen UI
+- [Recharts](https://recharts.org) — Grafik & chart
+- [Framer Motion](https://www.framer.com/motion) — Animasi
+
+---
+
+## Prasyarat
+
+Pastikan perangkat kamu sudah terinstal:
+
+- [Node.js](https://nodejs.org) versi **18** ke atas
+- [npm](https://www.npmjs.com) (sudah termasuk saat install Node.js)
+- [Git](https://git-scm.com)
+
+---
+
+## Cara Setup dari Awal
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/rafifhardjaa/LMS.git
+cd LMS
+git checkout frontend
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Konfigurasi Environment Variable
+
+Salin file `.env.example` menjadi `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Lalu buka `.env.local` dan isi dengan nilai yang sesuai:
+
+```env
+# URL backend (Elysia berjalan di port 3000)
+NEXT_PUBLIC_API_URL=http://localhost:3000
+
+# Supabase — dapatkan dari https://supabase.com/dashboard/project/_/settings/api
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+```
+
+> **Catatan:** Minta nilai `SUPABASE_URL` dan `SUPABASE_ANON_KEY` kepada anggota tim yang sudah setup Supabase.
+
+### 4. Jalankan Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka browser dan akses [http://localhost:3001](http://localhost:3001).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Frontend berjalan di port **3001**, sedangkan backend berjalan di port **3000**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Struktur Folder
 
-To learn more about Next.js, take a look at the following resources:
+```
+frontend/
+├── app/                  # Halaman (App Router Next.js)
+│   ├── admin/            # Halaman khusus admin
+│   ├── teacher/          # Halaman khusus guru
+│   ├── student/          # Halaman khusus siswa
+│   ├── auth/             # Halaman login & register
+│   └── layout.tsx        # Layout utama
+├── components/           # Komponen UI
+│   ├── admin/            # Komponen khusus admin
+│   ├── teacher/          # Komponen khusus guru
+│   ├── student/          # Komponen khusus siswa
+│   └── ui/               # Komponen umum (Shadcn)
+├── lib/                  # Utilitas & konfigurasi
+│   ├── api/              # Fungsi pemanggilan API
+│   ├── store/            # Zustand global state
+│   ├── supabase/         # Konfigurasi Supabase client
+│   └── providers/        # React providers
+├── hooks/                # Custom React hooks
+├── public/               # Aset statis
+└── middleware.ts         # Middleware autentikasi
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts yang Tersedia
 
-## Deploy on Vercel
+| Perintah | Fungsi |
+|----------|--------|
+| `npm run dev` | Jalankan server development di port 3001 |
+| `npm run build` | Build untuk production |
+| `npm run start` | Jalankan hasil build production |
+| `npm run lint` | Cek kode dengan ESLint |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Menjalankan Bersama Backend
+
+Pastikan backend (folder `LMS`) sudah berjalan terlebih dahulu sebelum menjalankan frontend:
+
+```bash
+# Terminal 1 — jalankan backend
+cd LMS
+bun run dev
+
+# Terminal 2 — jalankan frontend
+cd frontend
+npm run dev
+```
+
+Backend: [http://localhost:3000](http://localhost:3000)  
+Frontend: [http://localhost:3001](http://localhost:3001)
+
+---
+
+## Kontribusi
+
+1. Buat branch baru dari `frontend`:
+   ```bash
+   git checkout frontend
+   git checkout -b nama-fitur-kamu
+   ```
+2. Lakukan perubahan dan commit:
+   ```bash
+   git add .
+   git commit -m "feat: deskripsi perubahan"
+   ```
+3. Push ke GitHub:
+   ```bash
+   git push origin nama-fitur-kamu
+   ```
+4. Buat Pull Request ke branch `frontend`.
