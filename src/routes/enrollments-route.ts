@@ -5,21 +5,7 @@ import {
   listEnrollmentsByStudent,
   updateEnrollmentStatus,
 } from "../services/enrollments-services";
-
-function toErrorResponse(error: unknown) {
-  if (error instanceof Error) {
-    if (
-      error.message === "Subject tidak ditemukan" ||
-      error.message === "Enrollment tidak ditemukan"
-    ) {
-      return { status: 404 as const, body: { error: error.message } };
-    }
-    if (error.message === "ID tidak valid" || error.message === "Sudah terdaftar di subject ini") {
-      return { status: 400 as const, body: { error: error.message } };
-    }
-  }
-  throw error;
-}
+import { handleError } from "../utils/response";
 
 export const enrollmentsRoute = new Elysia({ prefix: "/api/v1/enrollments" })
   .use(authMiddleware)
@@ -37,10 +23,10 @@ export const enrollmentsRoute = new Elysia({ prefix: "/api/v1/enrollments" })
           data: created,
         });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, {
+        const err = handleError(error);
+        return status(err.status, {
           success: false,
-          message: mapped.body.error,
+          message: err.message,
         });
       }
     },
@@ -60,12 +46,14 @@ export const enrollmentsRoute = new Elysia({ prefix: "/api/v1/enrollments" })
         data,
       });
     } catch (error) {
-      const mapped = toErrorResponse(error);
-      return status(mapped.status, {
+      const err = handleError(error);
+      return status(err.status, {
         success: false,
-        message: mapped.body.error,
+        message: err.message,
       });
     }
+  }, {
+    beforeHandle: requireRole(["admin", "guru", "siswa"]),
   })
   .patch(
     "/:id/status",
@@ -78,10 +66,10 @@ export const enrollmentsRoute = new Elysia({ prefix: "/api/v1/enrollments" })
           data: updated,
         });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, {
+        const err = handleError(error);
+        return status(err.status, {
           success: false,
-          message: mapped.body.error,
+          message: err.message,
         });
       }
     },

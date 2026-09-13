@@ -4,21 +4,7 @@ import {
   markLessonProgress,
   getProgressPercentage,
 } from "../services/progress-services";
-
-function toError(error: unknown) {
-  if (error instanceof Error) {
-    if (
-      error.message === "Lesson tidak ditemukan" ||
-      error.message === "Enrollment tidak ditemukan"
-    ) {
-      return { status: 404 as const, body: { error: error.message } };
-    }
-    if (error.message === "ID tidak valid") {
-      return { status: 400 as const, body: { error: error.message } };
-    }
-  }
-  throw error;
-}
+import { handleError } from "../utils/response";
 
 export const progressRoute = new Elysia({ prefix: "/api/v1/progress" })
   .use(authMiddleware)
@@ -33,8 +19,8 @@ export const progressRoute = new Elysia({ prefix: "/api/v1/progress" })
           data: progress,
         });
       } catch (error) {
-        const m = toError(error);
-        return status(m.status, { success: false, message: m.body.error });
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
@@ -58,8 +44,8 @@ export const progressRoute = new Elysia({ prefix: "/api/v1/progress" })
           data: { percentage },
         });
       } catch (error) {
-        const m = toError(error);
-        return status(m.status, { success: false, message: m.body.error });
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
