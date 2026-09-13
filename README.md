@@ -55,9 +55,6 @@ cp .env.example .env.local
 Lalu buka `.env.local` dan isi dengan nilai yang sesuai:
 
 ```env
-# URL backend (Elysia berjalan di port 3000)
-NEXT_PUBLIC_API_URL=http://localhost:3000
-
 # Supabase — dapatkan dari https://supabase.com/dashboard/project/_/settings/api
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
