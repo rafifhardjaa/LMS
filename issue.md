@@ -1,57 +1,61 @@
-# TASK SPECIFICATION: Codebase Audit, Debugging, &amp; Refactoring
+# TASK SPECIFICATION: Database Indexing for Query Optimization
 
 ## 🤖 CRITICAL INSTRUCTION FOR AI AGENT
 
-**USE INSTALLED SKILLS:** You are running via Orca automation. 
+**USE INSTALLED SKILLS:** You are running via Orca automation.
 
-1. **GIT FLOW:** Buat branch `chore/audit-refactor` SEBELUM melakukan perubahan kode.
+1. **GIT FLOW:** Buat branch `chore/db-indexing` SEBELUM mengubah kode.
 
-2. Gunakan skill membaca file untuk meninjau seluruh kode di dalam direktori `src/` (terutama `src/routes`, `src/index.ts`, dan `src/db`).
+2. Buka dan modifikasi file `src/db/schema.ts`.
 
-3. Lakukan refactoring, perbaiki bug, dan pastikan konsistensi.
+3. Tambahkan implementasi Drizzle indexes pada tabel-tabel yang memiliki relasi (Foreign Key).
 
-4. Jalankan pengecekan TypeScript `bun run check` atau sejenisnya) untuk memastikan tidak ada error.
+4. Gunakan terminal untuk menjalankan `bunx drizzle-kit push` agar index diterapkan ke Supabase.
 
-5. Stage dan commit perubahan `git add .` dan `git commit -m "chore: audit and refactor codebase"`).
+5. Stage dan commit `git add .` dan `git commit -m "chore: add database indexes for query optimization"`).
 
-6. **FINAL PUSH (CRITICAL):** Pindah ke branch main `git checkout main`), gabungkan perubahan `git merge chore/audit-refactor`), dan **WAJIB eksekusi `git push origin main`**.
+6. **FINAL PUSH:** Pindah ke `main` `git checkout main`), merge `git merge chore/db-indexing`), dan push `git push origin main`).
 
 ---
 
 ## Context &amp; Objective
 
-Sebelum integrasi dengan frontend (Next.js), seluruh codebase REST API LMS SIMANIS harus diaudit. Tujuannya adalah merapikan kode (refactor), memastikan penanganan error yang konsisten, dan menambal celah keamanan pada logika RBAC atau validasi input.
+Laporan Observability Supabase mendeteksi kemunculan lambatnya performa pembacaan database (slow queries). Untuk menambal isu ini sebelum masuk masa production, kita harus menerapkan metode Indexing pada kolom-kolom yang sering digunakan dalam query pencarian `WHERE`) dan relasi antar tabel `JOIN`).
 
 ---
 
-## Task Checklist: Audit &amp; Refactor Target
+## Task Checklist: Schema Indexing `src/db/schema.ts`)
 
-- [ ] **1. Standardize Error Handling (Try-Catch)**
+Tambahkan block `(table) => ({ ... })` di akhir definisi setiap tabel berikut menggunakan fungsi `index()` dari `drizzle-orm/pg-core`:
 
-  - Pastikan SELURUH endpoint dibungkus dengan error handling yang aman.
+- [ ] *`enrollments`**: Tambahkan index untuk `studentId` dan `subjectId`.
 
-  - Jika terjadi error database atau internal, jangan bocorkan error stack trace ke response. Return format standar: `{ "success": false, "message": "Internal Server Error" }`.
+- [ ] *`lessons`**: Tambahkan index untuk `moduleId` dan `orderIndex`.
 
-- [ ] **2. RBAC &amp; Auth Guard Verification**
+- [ ] *`lessonProgress`**: Tambahkan index untuk `enrollmentId` dan `lessonId`.
 
-  - Cek ulang semua route. Pastikan endpoint sensitif (seperti Create/Update/Delete mata pelajaran, modul, tugas, nilai) benar-benar memverifikasi JWT dan mengecek role user (ADMIN/GURU/SISWA) dengan ketat.
+- [ ] *`assignments`**: Tambahkan index untuk `moduleId`.
 
-- [ ] **3. Code DRY (Don't Repeat Yourself)**
+- [ ] *`assignmentAttempts`**: Tambahkan index untuk `assignmentId` dan `studentId`.
 
-  - Jika ada logika query Drizzle atau validasi yang diulang-ulang di beberapa file, ekstrak menjadi fungsi helper/utility di folder `src/utils/` atau `src/services/`.
+- [ ] *`grades`**: Tambahkan index untuk `attemptId`.
 
-- [ ] **4. TypeScript Type Safety**
+- [ ] *`reviews`**: Tambahkan index untuk `subjectId`.
 
-  - Pastikan tidak ada variabel dengan tipe `any`. Semua response dan body request harus tervalidasi menggunakan TypeBox Elysia.
+- [ ] *`notifications`**: Tambahkan index untuk `userId`.
 
-- [ ] **5. Clean Up Imports &amp; Dead Code**
+*Referensi Syntax Drizzle untuk Agen:*
 
-  - Hapus semua `console.log()` yang tersisa dari proses debugging sebelumnya.
+```typescript
 
-  - Hapus import library atau variabel yang tidak digunakan (unused imports).
+export const enrollments = pgTable('enrollments', {
 
----
+  // ... kolom-kolom ...
 
-## Execution Target
+}, (table) =&gt; ({
 
-Lakukan audit menyeluruh pada codebase. Perbaiki bagian yang kotor atau rawan bug. Pastikan aplikasi tetap bisa berjalan normal (tidak breaking) dengan menjalankan script start/check sebelum melakukan push ke origin/main.
+  studentIdx: index('enrollment_student_idx').on(table.studentId),
+
+  subjectIdx: index('enrollment_subject_idx').on(table.subjectId),
+
+}));
