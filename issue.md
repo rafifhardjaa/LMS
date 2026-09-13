@@ -1,61 +1,83 @@
-# TASK SPECIFICATION: Database Indexing for Query Optimization
+# TASK SPECIFICATION: Supabase Storage Integration (File Uploads)
 
 ## 🤖 CRITICAL INSTRUCTION FOR AI AGENT
 
-**USE INSTALLED SKILLS:** You are running via Orca automation.
+**USE INSTALLED SKILLS:** You are running via Orca automation. 
 
-1. **GIT FLOW:** Buat branch `chore/db-indexing` SEBELUM mengubah kode.
+1. **GIT FLOW:** Buat branch `feature/storage-upload` SEBELUM menulis kode.
 
-2. Buka dan modifikasi file `src/db/schema.ts`.
+2. Gunakan terminal untuk menginstal `@supabase/supabase-js` jika belum ada di `package.json` `bun add @supabase/supabase-js`).
 
-3. Tambahkan implementasi Drizzle indexes pada tabel-tabel yang memiliki relasi (Foreign Key).
+3. Buat service untuk Supabase Storage dan buat endpoint upload.
 
-4. Gunakan terminal untuk menjalankan `bunx drizzle-kit push` agar index diterapkan ke Supabase.
+4. Stage dan commit perubahan `git add .` dan `git commit -m "feat: add file upload endpoint via supabase storage"`).
 
-5. Stage dan commit `git add .` dan `git commit -m "chore: add database indexes for query optimization"`).
-
-6. **FINAL PUSH:** Pindah ke `main` `git checkout main`), merge `git merge chore/db-indexing`), dan push `git push origin main`).
+5. **FINAL PUSH (CRITICAL):** Pindah ke branch main `git checkout main`), gabungkan perubahan `git merge feature/storage-upload`), dan **WAJIB eksekusi `git push origin main`** agar hasil kerjamu langsung tersimpan di repository utama.
 
 ---
 
 ## Context &amp; Objective
 
-Laporan Observability Supabase mendeteksi kemunculan lambatnya performa pembacaan database (slow queries). Untuk menambal isu ini sebelum masuk masa production, kita harus menerapkan metode Indexing pada kolom-kolom yang sering digunakan dalam query pencarian `WHERE`) dan relasi antar tabel `JOIN`).
+Frontend (Next.js) membutuhkan endpoint khusus untuk mengunggah file (gambar profil, dokumen materi, file tugas). Karena kita menggunakan Supabase, file fisik harus diunggah ke Supabase Storage, dan API kita hanya akan mengembalikan Public URL dari file tersebut untuk disimpan ke dalam database.
 
 ---
 
-## Task Checklist: Schema Indexing `src/db/schema.ts`)
+## Technical Constraints &amp; Standards
 
-Tambahkan block `(table) => ({ ... })` di akhir definisi setiap tabel berikut menggunakan fungsi `index()` dari `drizzle-orm/pg-core`:
+1. **Framework**: ElysiaJS + `@supabase/supabase-js`.
 
-- [ ] *`enrollments`**: Tambahkan index untuk `studentId` dan `subjectId`.
+2. **Environment Variables**: Gunakan `SUPABASE_URL` dan `SUPABASE_ANON_KEY` (atau Service Role Key) yang sudah ada di `.env`.
 
-- [ ] *`lessons`**: Tambahkan index untuk `moduleId` dan `orderIndex`.
+3. **Storage Bucket**: Asumsikan nama bucket di Supabase adalah `uploads` (pastikan bucket ini diset public di dashboard Supabase nanti).
 
-- [ ] *`lessonProgress`**: Tambahkan index untuk `enrollmentId` dan `lessonId`.
+4. **Validation**: Gunakan TypeBox untuk memvalidasi input `multipart/form-data`.
 
-- [ ] *`assignments`**: Tambahkan index untuk `moduleId`.
+5. **Response Standard**: `{ "success": true, "message": "...", "data": { "fileUrl": "..." } }`
 
-- [ ] *`assignmentAttempts`**: Tambahkan index untuk `assignmentId` dan `studentId`.
+---
 
-- [ ] *`grades`**: Tambahkan index untuk `attemptId`.
+## Task Checklist: Upload Route `src/routes/uploads.ts`)
 
-- [ ] *`reviews`**: Tambahkan index untuk `subjectId`.
+- [ ] **1. Setup Supabase Client**
 
-- [ ] *`notifications`**: Tambahkan index untuk `userId`.
+  - Buat file `src/utils/supabase.ts` (jika belum ada) untuk inisialisasi client Supabase menggunakan kredensial dari `.env`.
 
-*Referensi Syntax Drizzle untuk Agen:*
+- [ ] **2. Endpoint `POST /api/v1/uploads`**
 
-```typescript
+  - **Auth**: Authenticated (Semua Role bisa upload).
 
-export const enrollments = pgTable('enrollments', {
+  - **Body Schema**: `t.Object({ file: t.File() })` (Elysia mendukung `t.File()` untuk multipart).
 
-  // ... kolom-kolom ...
+  - **Logic**:
 
-}, (table) =&gt; ({
+    1. Terima file dari request.
 
-  studentIdx: index('enrollment_student_idx').on(table.studentId),
+    2. Buat nama file unik (misal: gabungkan [`Date.now](http://Date.now)()` atau `uuid` dengan nama file asli agar tidak bentrok).
 
-  subjectIdx: index('enrollment_subject_idx').on(table.subjectId),
+    3. Upload file fisik tersebut ke Supabase Storage pada bucket `uploads`.
 
-}));
+    4. Ambil Public URL dari file yang baru saja diunggah.
+
+    5. Return Public URL tersebut di dalam response JSON.
+
+- [ ] **3. Mount Route**
+
+  - Import dan daftarkan `uploads` route ini ke dalam `src/index.ts`.
+
+- [ ] **Validasi Ukuran File**: Tolak file jika ukurannya melebihi 10MB `file.size > 1 * 1024 * 1024`) dengan response error yang jelas.
+
+---
+
+## Execution Target
+
+Eksekusi instalasi dependency, pembuatan endpoint upload, dan pastikan route terdaftar di index. Validasi menggunakan TypeScirpt, lalu selesaikan dengan **Push ke origin/main** sesuai instruksi Git Flow.
+
+
+
+// Contoh validasi sederhana di endpoint upload Elysia
+
+if (file.size &gt; 5  *1024*  1024) { // Batas 5 MB
+
+  return { success: false, message: "Ukuran file terlalu besar! Maksimal 10 MB." }
+
+}
