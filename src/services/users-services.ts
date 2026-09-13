@@ -179,8 +179,32 @@ export async function getCurrentUserById(sub: string) {
   };
 }
 
-// JWT bersifat stateless: logout cukup dilakukan di sisi klien dengan
-// membuang token. Fungsi ini dipertahankan agar route tidak berubah.
+export async function updateUserProfile(
+  userId: string,
+  patch: { fullName?: string; phone?: string; avatarUrl?: string }
+) {
+  const rows = await db
+    .update(users)
+    .set(patch)
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      fullName: users.fullName,
+      email: users.email,
+      phone: users.phone,
+      avatarUrl: users.avatarUrl,
+      isActive: users.isActive,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+    });
+
+  const updated = rows[0];
+  if (!updated) {
+    throw new Error("User tidak ditemukan");
+  }
+  return updated;
+}
+
 export async function logoutUser(_token: string) {
   return;
 }
