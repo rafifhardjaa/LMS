@@ -5,6 +5,8 @@ import { jwt } from "@elysiajs/jwt";
 import { usersRoute } from "./routes/users-route";
 import { subjectsRoute } from "./routes/subjects-route";
 import { modulesRoute } from "./routes/modules-route";
+import { lessonsRoute } from "./routes/lessons-route";
+import { enrollmentsRoute } from "./routes/enrollments-route";
 
 const documentation = {
   info: {
@@ -27,6 +29,8 @@ const app = new Elysia()
   .use(usersRoute)
   .use(subjectsRoute)
   .use(modulesRoute)
+  .use(lessonsRoute)
+  .use(enrollmentsRoute)
   .listen(Number(process.env.PORT) || 3000);
 
 console.log(
