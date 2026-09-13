@@ -6,27 +6,20 @@ import {
   listSubjects,
   updateSubject,
 } from "../services/subjects-services";
+import { handleError } from "../utils/response";
 
-function toErrorResponse(error: unknown) {
-  if (error instanceof Error) {
-    if (error.message === "Subject tidak ditemukan") {
-      return { status: 404 as const, body: { error: error.message } };
-    }
-    if (
-      error.message === "Kode sudah digunakan" ||
-      error.message === "ID tidak valid"
-    ) {
-      return { status: 400 as const, body: { error: error.message } };
-    }
-  }
-  throw error;
-}
-
-export const subjectsRoute = new Elysia({ prefix: "/api/subjects" })
+export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
   .use(authMiddleware)
   .get("/", async ({ status }) => {
-    const data = await listSubjects();
-    return status(200, { data });
+    try {
+      const data = await listSubjects();
+      return status(200, { success: true, message: "Subjects retrieved", data });
+    } catch (error) {
+      const err = handleError(error);
+      return status(err.status, { success: false, message: err.message });
+    }
+  }, {
+    beforeHandle: requireRole(["admin", "guru", "siswa"]),
   })
   .post(
     "/",
@@ -36,10 +29,10 @@ export const subjectsRoute = new Elysia({ prefix: "/api/subjects" })
           ...(body as { name: string; code: string; description?: string }),
           createdBy: user.id,
         });
-        return status(201, { data: created });
+        return status(201, { success: true, message: "Subject created", data: created });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, mapped.body);
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
@@ -56,10 +49,10 @@ export const subjectsRoute = new Elysia({ prefix: "/api/subjects" })
     async ({ params, body, status }: any) => {
       try {
         const updated = await updateSubject(params.id, body);
-        return status(200, { data: updated });
+        return status(200, { success: true, message: "Subject updated", data: updated });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, mapped.body);
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
@@ -77,10 +70,10 @@ export const subjectsRoute = new Elysia({ prefix: "/api/subjects" })
     async ({ params, status }: any) => {
       try {
         await deleteSubject(params.id);
-        return status(200, { data: "OK" });
+        return status(200, { success: true, message: "Subject deleted" });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, mapped.body);
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {

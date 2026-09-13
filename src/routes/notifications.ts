@@ -5,21 +5,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
 } from "../services/reviews-notifications-services";
-
-function toError(error: unknown) {
-  if (error instanceof Error) {
-    if (error.message === "Notifikasi tidak ditemukan") {
-      return { status: 404 as const, body: { error: error.message } };
-    }
-    if (error.message === "Akses ditolak") {
-      return { status: 403 as const, body: { error: error.message } };
-    }
-    if (error.message === "ID tidak valid") {
-      return { status: 400 as const, body: { error: error.message } };
-    }
-  }
-  throw error;
-}
+import { handleError } from "../utils/response";
 
 export const notificationsRoute = new Elysia({
   prefix: "/api/v1/notifications",
@@ -36,8 +22,8 @@ export const notificationsRoute = new Elysia({
           data: notificationsList,
         });
       } catch (error) {
-        const m = toError(error);
-        return status(m.status, { success: false, message: m.body.error });
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
@@ -54,8 +40,8 @@ export const notificationsRoute = new Elysia({
           message: "Semua notifikasi ditandai telah dibaca",
         });
       } catch (error) {
-        const m = toError(error);
-        return status(m.status, { success: false, message: m.body.error });
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
@@ -73,8 +59,8 @@ export const notificationsRoute = new Elysia({
           data: updated,
         });
       } catch (error) {
-        const m = toError(error);
-        return status(m.status, { success: false, message: m.body.error });
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {

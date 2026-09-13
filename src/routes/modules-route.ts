@@ -7,40 +7,23 @@ import {
   listModules,
   updateModule,
 } from "../services/modules-services";
+import { handleError } from "../utils/response";
 
-function toErrorResponse(error: unknown) {
-  if (error instanceof Error) {
-    if (
-      error.message === "Module tidak ditemukan" ||
-      error.message === "Subject tidak ditemukan"
-    ) {
-      return { status: 404 as const, body: { error: error.message } };
-    }
-    if (
-      error.message === FORBIDDEN_MESSAGE ||
-      error.message === "ID tidak valid"
-    ) {
-      const code = error.message === FORBIDDEN_MESSAGE ? 403 : 400;
-      return { status: code as 403 | 400, body: { error: error.message } };
-    }
-  }
-  throw error;
-}
-
-export const modulesRoute = new Elysia({ prefix: "/api/modules" })
+export const modulesRoute = new Elysia({ prefix: "/api/v1/modules" })
   .use(authMiddleware)
   .get(
     "/",
     async ({ query, status }: any) => {
       try {
         const data = await listModules({ subjectId: query?.subject_id });
-        return status(200, { data });
+        return status(200, { success: true, message: "Modules retrieved", data });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, mapped.body);
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
+      beforeHandle: requireRole(["admin", "guru", "siswa"]),
       query: t.Object({ subject_id: t.Optional(t.String()) }),
     }
   )
@@ -55,10 +38,10 @@ export const modulesRoute = new Elysia({ prefix: "/api/modules" })
           orderIndex: body.order_index,
           teacherId: user.id,
         });
-        return status(201, { data: created });
+        return status(201, { success: true, message: "Module created", data: created });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, mapped.body);
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
@@ -81,13 +64,14 @@ export const modulesRoute = new Elysia({ prefix: "/api/modules" })
           orderIndex: body.order_index,
           subjectId: body.subject_id,
         });
-        return status(200, { data: updated });
+        return status(200, { success: true, message: "Module updated", data: updated });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, mapped.body);
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
       }
     },
     {
+      beforeHandle: requireRole(["admin", "guru"]),
       params: t.Object({ id: t.String() }),
       body: t.Object({
         title: t.Optional(t.String()),
@@ -100,9 +84,12 @@ export const modulesRoute = new Elysia({ prefix: "/api/modules" })
   .delete("/:id", async ({ params, user, status }: any) => {
     try {
       await deleteModule(params.id, user);
-      return status(200, { data: "OK" });
+      return status(200, { success: true, message: "Module deleted" });
     } catch (error) {
-      const mapped = toErrorResponse(error);
-      return status(mapped.status, mapped.body);
+      const err = handleError(error);
+      return status(err.status, { success: false, message: err.message });
     }
+  }, {
+    beforeHandle: requireRole(["admin", "guru"]),
+    params: t.Object({ id: t.String() }),
   });

@@ -1,18 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware, requireRole } from "../middleware/auth-middleware";
 import { createLesson, listLessonsByModule } from "../services/lessons-services";
-
-function toErrorResponse(error: unknown) {
-  if (error instanceof Error) {
-    if (error.message === "Module tidak ditemukan") {
-      return { status: 404 as const, body: { error: error.message } };
-    }
-    if (error.message === "ID tidak valid") {
-      return { status: 400 as const, body: { error: error.message } };
-    }
-  }
-  throw error;
-}
+import { handleError } from "../utils/response";
 
 export const lessonsRoute = new Elysia({ prefix: "/api/v1/lessons" })
   .use(authMiddleware)
@@ -34,10 +23,10 @@ export const lessonsRoute = new Elysia({ prefix: "/api/v1/lessons" })
           data: created,
         });
       } catch (error) {
-        const mapped = toErrorResponse(error);
-        return status(mapped.status, {
+        const err = handleError(error);
+        return status(err.status, {
           success: false,
-          message: mapped.body.error,
+          message: err.message,
         });
       }
     },
@@ -62,10 +51,13 @@ export const lessonsRoute = new Elysia({ prefix: "/api/v1/lessons" })
         data,
       });
     } catch (error) {
-      const mapped = toErrorResponse(error);
-      return status(mapped.status, {
+      const err = handleError(error);
+      return status(err.status, {
         success: false,
-        message: mapped.body.error,
+        message: err.message,
       });
     }
+  }, {
+    beforeHandle: requireRole(["admin", "guru", "siswa"]),
+    params: t.Object({ moduleId: t.String() }),
   });
