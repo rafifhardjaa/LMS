@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   pgTable,
   serial,
@@ -77,7 +78,10 @@ export const lessons = pgTable("lessons", {
   attachmentUrl: text("attachment_url"),
   orderIndex: integer("order_index").default(0),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  moduleIdx: index("lesson_module_idx").on(table.moduleId),
+  orderIdx: index("lesson_order_idx").on(table.orderIndex),
+}));
 
 export const enrollments = pgTable("enrollments", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -89,7 +93,10 @@ export const enrollments = pgTable("enrollments", {
     .references(() => subjects.id, { onDelete: "cascade" }),
   status: varchar("status", { length: 20 }).default("active"),
   enrolledAt: timestamp("enrolled_at").defaultNow(),
-});
+}, (table) => ({
+  studentIdx: index("enrollment_student_idx").on(table.studentId),
+  subjectIdx: index("enrollment_subject_idx").on(table.subjectId),
+}));
 
 export const lessonProgress = pgTable("lesson_progress", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -101,7 +108,10 @@ export const lessonProgress = pgTable("lesson_progress", {
     .references(() => lessons.id, { onDelete: "cascade" }),
   isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
-});
+}, (table) => ({
+  enrollmentIdx: index("lesson_progress_enrollment_idx").on(table.enrollmentId),
+  lessonIdx: index("lesson_progress_lesson_idx").on(table.lessonId),
+}));
 
 export const assignments = pgTable("assignments", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -116,7 +126,9 @@ export const assignments = pgTable("assignments", {
   dueDate: timestamp("due_date"),
   maxScore: integer("max_score").default(100),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  moduleIdx: index("assignment_module_idx").on(table.moduleId),
+}));
 
 export const assignmentAttempts = pgTable("assignment_attempts", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -129,7 +141,10 @@ export const assignmentAttempts = pgTable("assignment_attempts", {
   fileUrl: text("file_url").notNull(),
   attemptNumber: integer("attempt_number").default(1),
   submittedAt: timestamp("submitted_at").defaultNow(),
-});
+}, (table) => ({
+  assignmentIdx: index("assignment_attempts_assignment_idx").on(table.assignmentId),
+  studentIdx: index("assignment_attempts_student_idx").on(table.studentId),
+}));
 
 export const grades = pgTable("grades", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -142,7 +157,9 @@ export const grades = pgTable("grades", {
     onDelete: "set null",
   }),
   gradedAt: timestamp("graded_at").defaultNow(),
-});
+}, (table) => ({
+  attemptIdx: index("grade_attempt_idx").on(table.attemptId),
+}));
 
 export const reviews = pgTable("reviews", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -155,7 +172,9 @@ export const reviews = pgTable("reviews", {
   rating: integer("rating").notNull(),
   comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  subjectIdx: index("review_subject_idx").on(table.subjectId),
+}));
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -167,7 +186,9 @@ export const notifications = pgTable("notifications", {
   type: varchar("type", { length: 50 }),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  userIdx: index("notification_user_idx").on(table.userId),
+}));
 
 // ── Relasi (WAJIB: users ↔ roles via user_roles) ───────────────────────
 
