@@ -44,25 +44,7 @@ git checkout frontend
 npm install
 ```
 
-### 3. Konfigurasi Environment Variable
-
-Salin file `.env.example` menjadi `.env.local`:
-
-```bash
-cp .env.example .env.local
-```
-
-Lalu buka `.env.local` dan isi dengan nilai yang sesuai:
-
-```env
-# Supabase — dapatkan dari https://supabase.com/dashboard/project/_/settings/api
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-```
-
-> **Catatan:** Minta nilai `SUPABASE_URL` dan `SUPABASE_ANON_KEY` kepada anggota tim yang sudah setup Supabase.
-
-### 4. Jalankan Development Server
+### 3. Jalankan Development Server
 
 ```bash
 npm run dev
