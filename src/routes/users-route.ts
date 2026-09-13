@@ -3,6 +3,7 @@ import {
   buildLoginPayload,
   createUser,
   logoutUser,
+  updateUserProfile,
 } from "../services/users-services";
 import { authMiddleware } from "../middleware/auth-middleware";
 
@@ -77,4 +78,36 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
   .delete("/logout", async ({ session, status }) => {
     await logoutUser(session.token);
     return status(200, { data: "OK" });
-  });
+  })
+  .put(
+    "/profile",
+    async ({ body, user, status }: any) => {
+      try {
+        const updated = await updateUserProfile(user.id, {
+          fullName: body.fullName,
+          phone: body.phone,
+          avatarUrl: body.avatarUrl,
+        });
+        return status(200, {
+          success: true,
+          message: "Profil berhasil diperbarui",
+          data: updated,
+        });
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === "User tidak ditemukan"
+        ) {
+          return status(404, { success: false, message: error.message });
+        }
+        throw error;
+      }
+    },
+    {
+      body: t.Object({
+        fullName: t.Optional(t.String()),
+        phone: t.Optional(t.String()),
+        avatarUrl: t.Optional(t.String()),
+      }),
+    }
+  );
