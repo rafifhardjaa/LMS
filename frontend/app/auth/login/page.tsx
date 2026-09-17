@@ -50,10 +50,7 @@ function Header() {
         </motion.div>
         <div className="flex flex-col">
           <span className="text-sm font-extrabold tracking-tight text-slate-900 leading-none">
-            SMK
-          </span>
-          <span className="text-sm font-bold tracking-tight text-slate-800 leading-tight">
-            Mataram
+            SiManis
           </span>
         </div>
       </div>
@@ -85,10 +82,8 @@ function LeftHeroSection() {
       <FadeIn delay={0.1}>
         <div className="space-y-3">
           <h1 className="text-3xl sm:text-4xl lg:text-[40px] font-extrabold text-slate-900 leading-tight tracking-tight">
-            Gerbang Masuk Terpadu
-            <br />
-            Pembelajaran Digital SMK Mataram
-          </h1>
+          Gerbang Masuk Sistem Manajemen Akademis SMK Mataram
+        </h1>
           <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-xl">
             Satu akun Single Sign-On (SSO) untuk seluruh ekosistem: Guru Mapel,
             Siswa, Guru BK, dan Manajemen Sekolah.
@@ -165,6 +160,7 @@ function LeftHeroSection() {
           </div>
         </div>
       </FadeIn>
+
     </section>
   );
 }
@@ -204,7 +200,7 @@ function Footer() {
       transition={{ delay: 0.5, duration: 0.4 }}
     >
       <div>
-        © 2024 SMK Mataram. All Rights Reserved. Education Management Platform.
+        © 2026 SMK Mataram. All Rights Reserved. Education Management Platform.
       </div>
       <div className="flex items-center gap-4 text-xs font-medium">
         {["Privacy Policy", "Terms of Service", "IT Helpdesk"].map((link) => (
