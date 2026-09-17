@@ -102,7 +102,7 @@ export function Sidebar() {
         </div>
 
         {/* Promo banner */}
-        <div className="relative p-4 rounded-2xl bg-[#f1f4f9] border border-[#e0e2e7]/30 flex flex-col gap-2 mt-auto overflow-hidden">
+        {/* <div className="relative p-4 rounded-2xl bg-[#f1f4f9] border border-[#e0e2e7]/30 flex flex-col gap-2 mt-auto overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="w-7 h-7 rounded-lg bg-[#e5deff] flex items-center justify-center text-[#6c5dd3]">
               <School className="size-4" />
@@ -125,7 +125,7 @@ export function Sidebar() {
               What&apos;s new?
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* User profile */}
