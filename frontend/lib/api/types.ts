@@ -5,14 +5,19 @@
 
 // ─── User & Session ──────────────────────────────────────────────────────────
 
-export type UserRole = "admin" | "teacher" | "student";
+export type UserRole = "admin" | "guru" | "siswa" | "teacher" | "student";
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
+  full_name: string;
   email: string;
+  phone: string | null;
+  avatar_url: string | null;
+  is_active: boolean;
   role: UserRole;
   created_at: string;
+  updated_at: string;
 }
 
 // ─── Request / Response shapes ───────────────────────────────────────────────
