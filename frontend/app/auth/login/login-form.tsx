@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ArrowRight, Eye, EyeOff, Lock } from "lucide-react";
 import { StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import { api, authApi } from "@/lib/api/client";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 export function LoginForm() {
   const router = useRouter();
@@ -14,7 +16,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!username.trim() || !password.trim()) {
@@ -23,12 +25,56 @@ export function LoginForm() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      localStorage.setItem("lms_demo_user", JSON.stringify({ username }));
-      setLoading(false);
+    try {
+      const { data, error } = await api.users.login.post({
+        email: username,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.error || "Login gagal");
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.data) {
+        toast.error("Token tidak diterima dari server");
+        setLoading(false);
+        return;
+      }
+
+      const token = data.data;
+
+      const { data: currentData, error: currentError } =
+        await authApi(token).users.current.get();
+
+      if (currentError || !currentData?.data) {
+        toast.error("Gagal mengambil data pengguna");
+        setLoading(false);
+        return;
+      }
+
+      const user = currentData.data;
+      useAuthStore.getState().setAuth(token, user);
+
       toast.success("Login berhasil — menyambungkan ke portal…");
-      router.push("/admin/dashboard");
-    }, 1200);
+
+      const role = user.role;
+      if (role === "admin") {
+        router.push("/admin/dashboard");
+      } else if (role === "teacher" || role === "guru") {
+        router.push("/teacher/dashboard");
+      } else {
+        router.push("/student/dashboard");
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message || "Kesalahan jaringan");
+      } else {
+        toast.error("Kesalahan jaringan");
+      }
+      setLoading(false);
+    }
   }
 
   return (
