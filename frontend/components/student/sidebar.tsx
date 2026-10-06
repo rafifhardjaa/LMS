@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import {
   BadgeCheck,
   BookOpen,
@@ -11,15 +14,16 @@ import {
 } from "lucide-react";
 
 const menu = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true, title: "Dashboard" },
-  { label: "Modules", icon: BookOpen, title: "Modul Pembelajaran" },
-  { label: "Assignments", icon: ClipboardList, title: "Tugas & Kuis" },
-  { label: "Transcripts", icon: BadgeCheck, title: "Rekap Nilai & Transkrip" },
-  { label: "Counseling (BK)", icon: Headset, title: "Konseling & Bimbingan" },
-  { label: "Settings", icon: Settings, title: "Pengaturan Akun" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/student/dashboard", title: "Dashboard" },
+  { label: "Modules", icon: BookOpen, href: "#", title: "Modul Pembelajaran" },
+  { label: "Assignments", icon: ClipboardList, href: "#", title: "Tugas & Kuis" },
+  { label: "Transcripts", icon: BadgeCheck, href: "#", title: "Rekap Nilai & Transkrip" },
+  { label: "Counseling (BK)", icon: Headset, href: "#", title: "Konseling & Bimbingan" },
+  { label: "Settings", icon: Settings, href: "/student/settings", title: "Pengaturan Akun" },
 ];
 
 export function MuridSidebar() {
+  const pathname = usePathname();
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white z-50 flex flex-col justify-between py-6 px-6 border-r border-[#cee8e1]/60 shadow-[0_1px_8px_rgba(7,31,28,0.03)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex flex-col gap-8 w-full">
@@ -38,10 +42,12 @@ export function MuridSidebar() {
         </div>
 
         <nav className="flex flex-col gap-1 w-full">
-          {menu.map(({ label, icon: Icon, active, title }) => (
+          {menu.map(({ label, icon: Icon, href, title }) => {
+            const active = href !== "#" && pathname.startsWith(href);
+            return (
             <a
               key={label}
-              href="#"
+              href={href}
               title={title}
               aria-current={active ? "page" : undefined}
               className={`w-full flex items-center gap-4 px-4 py-2 rounded-xl transition-all duration-200 ${
@@ -53,7 +59,8 @@ export function MuridSidebar() {
               <Icon className="size-[22px] flex-shrink-0" />
               <span className="text-[14px] truncate">{label}</span>
             </a>
-          ))}
+            );
+          })}
         </nav>
       </div>
 
