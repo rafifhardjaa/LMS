@@ -18,7 +18,7 @@ const menu = [
   { label: "Modules", icon: BookOpen, href: "#", title: "Modul Pembelajaran" },
   { label: "Assignments", icon: ClipboardList, href: "#", title: "Tugas & Kuis" },
   { label: "Transcripts", icon: BadgeCheck, href: "#", title: "Rekap Nilai & Transkrip" },
-  { label: "Counseling (BK)", icon: Headset, href: "#", title: "Konseling & Bimbingan" },
+  { label: "Counseling (BK)", icon: Headset, href: "/student/counseling", title: "Konseling & Bimbingan" },
   { label: "Settings", icon: Settings, href: "/student/settings", title: "Pengaturan Akun" },
 ];
 
