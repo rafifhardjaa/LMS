@@ -70,7 +70,7 @@ export function ProfileWidget() {
             animate={{ rotate: [0, -8, 8, -4, 0] }}
             transition={{ delay: 0.8, duration: 0.6, ease: "easeInOut" }}
           >
-            <Award className="size-6 flex-shrink-0" />
+            <Award className="size-6 shrink-0" />
           </motion.div>
           <div className="flex flex-col">
             <span className="text-[13px] font-bold text-[#071f1c]">
