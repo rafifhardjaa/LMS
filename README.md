@@ -42,39 +42,42 @@ Modules (`/api/modules`):
 ## Prasyarat
 
 1. [Bun](https://bun.sh) v1.4+ terinstall (`bun --version`).
-2. Database PostgreSQL. Paling mudah: buat project gratis di [Supabase](https://supabase.com) → ambil **Connection String** (mode Session/Transaction, port 5432).
+2. [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) terinstall.
 
-## Cara Menjalankan (5 menit)
+## Cara Menjalankan (Docker & Local DB)
 
 ```bash
-# 1. Clone & masuk folder
-git clone <url-repo-ini>
-cd LMS_Sem5
+# 1. Jalankan database PostgreSQL lokal (pgvector via Docker Compose)
+docker compose up -d
 
-# 2. Install dependency
+# 2. Install dependencies backend
 bun install
 
-# 3. Setup environment
+# 3. Setup environment backend (.env sudah di-default ke docker)
 cp .env.example .env
-```
 
-Isi file `.env`:
-
-```env
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres
-JWT_SECRET=isi_dengan_string_acak_minimal_32_karakter
-PORT=3000
-```
-
-```bash
-# 4. Sinkronkan schema ke database (5 tabel SIMANIS: users, roles, user_roles, subjects, modules)
+# 4. Sinkronkan schema ke database
 bun run db:push
 
-# 5. Jalankan server (watch mode)
-bun run dev
+# 5. Jalankan server backend (watch mode)
+bun run dev:backend
 ```
 
-Server jalan di `http://localhost:3000` (atau sesuai `PORT`).
+Server backend berjalan di `http://localhost:3000`.
+
+---
+
+## Cara Menjalankan Frontend
+
+Masuk ke direktori `frontend`:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend berjalan di `http://localhost:3001`.
 
 > Cek cepat: buka `http://localhost:3000/` → harusnya `{ "status": "ok" }`.
 
@@ -142,20 +145,23 @@ drizzle.config.ts             # Config drizzle-kit (schema + DATABASE_URL)
 
 Pola nambah fitur baru: tulis logic di `services/`, daftarkan route di `routes/`, proteksi route dengan `.use(authMiddleware)` (tidak perlu parsing `Authorization` manual).
 
-## Scripts
+## Scripts (Backend)
 
 | Command | Fungsi |
 | --- | --- |
-| `bun run dev` | Jalankan server + auto-reload (`src/index.ts`) |
+| `docker compose up -d` | Menyalakan local PostgreSQL + pgvector container |
+| `docker compose down` | Mematikan local database container |
+| `bun run dev:backend` | Jalankan server backend + auto-reload (`src/index.ts`) |
 | `bun run db:push` | Push schema Drizzle ke database (`drizzle-kit push`) |
+| `bun run seed` | Seed data awal ke database |
 
 ## Troubleshooting
 
-- `DATABASE_URL is not defined` / gagal konek DB → pastikan `.env` ada dan `DATABASE_URL` benar. Di Supabase, ganti `[YOUR-PASSWORD]` dengan password DB project kamu.
+- `DATABASE_URL is not defined` / gagal konek DB → Pastikan container Docker berjalan (`docker compose ps`) dan `.env` ada dengan `DATABASE_URL="postgresql://postgres:postgres@localhost:5432/simanis"`.
+- Port 5432 tabrakan → Pastikan service PostgreSQL lokal host tidak sedang jalan.
 - `JWT_SECRET` kosong → isi string acak, server butuh ini untuk plugin `@elysiajs/jwt`.
-- Port 3000 dipakai → ganti `PORT` di `.env` (misal `PORT=3001`), lalu buka `http://localhost:3001/swagger`.
-- `bun run db:push` gagal → pastikan DB bisa diakses publik (cek firewall/host) dan connection string pakai port 5432.
-- Setelah logout token masih bisa dipakai → itu normal, auth memakai JWT stateless (logout = buang token di sisi klien).
+- Port 3000 dipakai → ganti `PORT` di `.env` (misal `PORT=3002`), sesuaikan `NEXT_PUBLIC_API_URL` di `frontend/.env`.
+- `bun run db:push` gagal → cek apakah docker postgres sudah healthy (`docker compose logs db`).
 
 
 ---
