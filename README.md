@@ -1,6 +1,6 @@
 # LMS Sem5 — Learning Management System API
 
-Backend REST API untuk LMS, dibangun dengan [Bun](https://bun.com), [Elysia](https://elysiajs.com), [Drizzle ORM](https://orm.drizzle.team), dan PostgreSQL (bisa pakai Supabase).
+Backend REST API untuk LMS, dibangun dengan [Bun](https://bun.com), [Elysia](https://elysiajs.com), [Drizzle ORM](https://orm.drizzle.team), dan PostgreSQL (Docker lokal).
 
 ## Fitur
 
@@ -177,7 +177,6 @@ Frontend untuk aplikasi Learning Management System (LMS) yang dibangun menggunak
 - [Next.js 16](https://nextjs.org) — Framework React
 - [TypeScript](https://www.typescriptlang.org) — Type safety
 - [Tailwind CSS v4](https://tailwindcss.com) — Styling
-- [Supabase](https://supabase.com) — Autentikasi & Storage
 - [TanStack Query](https://tanstack.com/query) — State management & fetching data
 - [Zustand](https://zustand-demo.pmnd.rs) — Global state
 - [Shadcn/UI](https://ui.shadcn.com) — Komponen UI
@@ -242,7 +241,6 @@ frontend/
 ├── lib/                  # Utilitas & konfigurasi
 │   ├── api/              # Fungsi pemanggilan API
 │   ├── store/            # Zustand global state
-│   ├── supabase/         # Konfigurasi Supabase client
 │   └── providers/        # React providers
 ├── hooks/                # Custom React hooks
 ├── public/               # Aset statis

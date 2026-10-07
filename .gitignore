@@ -1,5 +1,6 @@
 # dependencies (bun / npm / yarn / pnpm)
 node_modules
+drizzle-storage
 /.pnp
 .pnp.*
 .yarn/*
@@ -58,4 +59,4 @@ yarn-error.log*
 
 # AI Agent Tasks
 tasks/
-issue.md
+

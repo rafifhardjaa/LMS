@@ -1,13 +1,17 @@
 import { Elysia, t } from "elysia";
+import { eq } from "drizzle-orm";
 import { authMiddleware, requireRole } from "../middleware/auth-middleware";
-import { supabase } from "../utils/supabase";
+import { storageDb } from "../db/storage";
+import { uploadedFiles } from "../db/storage-schema";
 import { handleError } from "../utils/response";
+
+const FILE_SIZE_LIMIT = 10 * 1024 * 1024;
 
 export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
   .use(authMiddleware)
   .post(
     "/",
-    async ({ body, status }: any) => {
+    async ({ body, user, status, request }: any) => {
       try {
         const file = body.file;
 
@@ -18,41 +22,33 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
           });
         }
 
-        if (file.size > 10 * 1024 * 1024) {
+        if (file.size > FILE_SIZE_LIMIT) {
           return status(400, {
             success: false,
             message: "Ukuran file terlalu besar! Maksimal 10 MB.",
           });
         }
 
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
-
         const fileBuffer = await file.arrayBuffer();
-        const fileBlob = new Uint8Array(fileBuffer);
+        const blob = new Uint8Array(fileBuffer);
 
-        const { data, error } = await supabase.storage
-          .from("uploads")
-          .upload(fileName, fileBlob, {
-            contentType: file.type,
-            upsert: false,
-          });
+        const [inserted] = await storageDb
+          .insert(uploadedFiles)
+          .values({
+            filename: file.name,
+            mimeType: file.type,
+            size: blob.byteLength,
+            data: blob,
+            uploadedBy: user.id,
+          })
+          .returning({ id: uploadedFiles.id });
 
-        if (error) {
-          return status(500, {
-            success: false,
-            message: `Upload gagal: ${error.message}`,
-          });
-        }
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("uploads").getPublicUrl(data.path);
+        const origin = new URL(request.url).origin;
 
         return status(201, {
           success: true,
           message: "File berhasil diunggah",
-          data: { fileUrl: publicUrl },
+          data: { fileUrl: `${origin}/api/v1/uploads/${inserted.id}` },
         });
       } catch (error) {
         const err = handleError(error);
@@ -64,5 +60,44 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
       body: t.Object({
         file: t.File(),
       }),
+    }
+  )
+  .get(
+    "/:id",
+    async ({ params, status }: any) => {
+      try {
+        const [found] = await storageDb
+          .select({
+            filename: uploadedFiles.filename,
+            mimeType: uploadedFiles.mimeType,
+            data: uploadedFiles.data,
+          })
+          .from(uploadedFiles)
+          .where(eq(uploadedFiles.id, params.id))
+          .limit(1);
+
+        if (!found) {
+          return status(404, { success: false, message: "File tidak ditemukan" });
+        }
+
+        const disposition = `inline; filename="${found.filename}"; filename*=UTF-8''${encodeURIComponent(found.filename)}`;
+
+        return new Response(found.data, {
+          status: 200,
+          headers: {
+            "Content-Type": found.mimeType,
+            "Content-Disposition": disposition,
+            "Content-Length": String(found.data.byteLength),
+            "Cache-Control": "private, max-age=3600",
+          },
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru", "siswa"]),
+      params: t.Object({ id: t.String() }),
     }
   );
