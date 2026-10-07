@@ -32,8 +32,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# dotenv environment variable files (covers .env, .env.local, .env.example, ...)
+# dotenv environment variable files
 .env*
+!.env.example
 .env
 .env.development.local
 .env.test.local
