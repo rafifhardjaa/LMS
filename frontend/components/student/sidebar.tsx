@@ -15,7 +15,7 @@ import {
 
 const menu = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/student/dashboard", title: "Dashboard" },
-  { label: "Modules", icon: BookOpen, href: "#", title: "Modul Pembelajaran" },
+  { label: "Modules", icon: BookOpen, href: "/student/modules", title: "Modul Pembelajaran" },
   { label: "Assignments", icon: ClipboardList, href: "#", title: "Tugas & Kuis" },
   { label: "Transcripts", icon: BadgeCheck, href: "/student/transcripts", title: "Rekap Nilai & Transkrip" },
   { label: "Counseling (BK)", icon: Headset, href: "/student/counseling", title: "Konseling & Bimbingan" },
