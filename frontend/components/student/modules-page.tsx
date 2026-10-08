@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Atom,
@@ -264,6 +265,7 @@ function progressText(m: Module) {
 }
 
 export function StudentModules() {
+  const router = useRouter();
   const [subject, setSubject] = useState<"all" | SubjectKey>("all");
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
@@ -499,7 +501,7 @@ export function StudentModules() {
             <div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[220px]">
               <button
                 type="button"
-                onClick={() => alert("Sesi belajar Bab 4 dilanjutkan. Fitur pembelajaran aktif setelah integrasi backend.")}
+                onClick={() => router.push("/student/modules/algoritma-pemrograman-optimasi-big-o")}
                 className="px-6 py-3 rounded-xl bg-white text-[#0d5c52] text-[15px] font-semibold hover:bg-[#abf0e2] transition-all duration-200 shadow-md flex items-center justify-center gap-2 group"
               >
                 Lanjutkan Belajar
@@ -698,11 +700,15 @@ export function StudentModules() {
                     <div className="p-4 pt-0 flex items-center justify-between gap-2">
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={() => {
+                          if (m.id === "algo-big-o") {
+                            router.push("/student/modules/algoritma-pemrograman-optimasi-big-o");
+                            return;
+                          }
                           alert(
                             `Modul "${m.title}" dibuka. Fitur pembelajaran aktif setelah integrasi backend.`
-                          )
-                        }
+                          );
+                        }}
                         className={`flex-1 py-2 px-3 rounded-lg text-[14px] font-semibold transition-colors flex items-center justify-center gap-1.5 ${
                           m.status === "new"
                             ? "bg-[#0d5c52] text-white hover:bg-[#00433b]"
