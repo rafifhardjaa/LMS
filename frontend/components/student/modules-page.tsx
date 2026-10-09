@@ -489,7 +489,7 @@ export function StudentModules() {
         {/* Hero: Active Module */}
         <FadeIn>
           <motion.div
-            whileHover={{ scale: 1.005 }}
+            // whileHover={{ scale: 1.005 }}
             transition={{ type: "spring", stiffness: 300, damping: 26 }}
             className="relative bg-gradient-to-br from-[#00433b] via-[#0d5c52] to-[#14b8a6] text-white rounded-2xl p-6 shadow-lg overflow-hidden"
           >
