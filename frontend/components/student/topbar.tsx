@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Bell, Search, Sparkles, User } from "lucide-react";
 import { PulseDot } from "@/components/ui/animations";
 
@@ -27,24 +30,31 @@ export function MuridTopbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button
+          <motion.button
             type="button"
             title="Notifications"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
             className="relative w-10 h-10 rounded-full bg-[#f2f9f7] flex items-center justify-center text-[#536360] hover:bg-[#edf7f4] transition-colors"
           >
             <Bell className="size-[22px]" />
             <PulseDot className="bg-[#14b8a6] ring-2 ring-white" wrapClassName="absolute top-2 right-2" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             type="button"
-            className="flex items-center gap-1 px-6 py-2 bg-[#0d5c52] text-white text-[13px] font-semibold rounded-full shadow-[0_4px_16px_rgba(13,92,82,0.28)] hover:bg-[#00433b] transition-all duration-200"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="flex items-center gap-1 px-6 py-2 bg-[#0d5c52] text-white text-[13px] font-semibold rounded-full shadow-[0_4px_16px_rgba(13,92,82,0.28)] hover:bg-[#00433b] transition-colors duration-200"
           >
             <span>+ Ask AI Tutor</span>
             <Sparkles className="size-4" />
-          </button>
-          <div className="w-9 h-9 rounded-full bg-[#0d5c52] flex items-center justify-center shadow-sm">
+          </motion.button>
+          <motion.div
+            whileHover={{ scale: 1.08 }}
+            className="w-9 h-9 rounded-full bg-[#0d5c52] flex items-center justify-center shadow-sm"
+          >
             <User className="size-[18px] text-white" />
-          </div>
+          </motion.div>
         </div>
       </div>
     </header>
