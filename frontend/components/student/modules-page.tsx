@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Atom,
@@ -35,7 +36,13 @@ import {
   LayoutGrid,
   SearchX,
 } from "lucide-react";
-import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import {
+  FadeIn,
+  SlideIn,
+  StaggerChildren,
+  StaggerItem,
+  CountUp,
+} from "@/components/ui/animations";
 
 type SubjectKey = "cs" | "physics" | "math" | "vocational" | "language";
 type StatusKey = "in_progress" | "completed" | "new";
@@ -330,218 +337,268 @@ export function StudentModules() {
                 ))}
               </select>
             </div>
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() =>
                 alert("Arsip silabus (.zip) sedang disiapkan. Fitur unduh aktif setelah integrasi backend.")
               }
-              className="h-11 px-4 rounded-lg bg-[#0d5c52] text-white text-[14px] font-semibold flex items-center gap-2 shadow-md hover:bg-[#00433b] transition-all duration-200"
+              className="h-11 px-4 rounded-lg bg-[#0d5c52] text-white text-[14px] font-semibold flex items-center gap-2 shadow-md hover:bg-[#00433b] transition-colors duration-200"
             >
               <Download className="size-[19px]" />
               Unduh Semua Silabus (.zip)
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Total Modul Tersedia
-              </span>
-              <div className="w-9 h-9 rounded-lg bg-[#d4eee7] text-[#0d5c52] flex items-center justify-center">
-                <BookOpen className="size-5" />
-              </div>
-            </div>
-            <div className="mt-4 relative">
-              <div className="flex items-baseline gap-2">
-                <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
-                  28
+        <StaggerChildren staggerDelay={0.1} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow h-full"
+            >
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Total Modul Tersedia
                 </span>
-                <span className="text-[13px] text-[#0d5c52] font-semibold">Modul Aktif</span>
-              </div>
-              <div className="flex items-center gap-1.5 mt-1 text-[12px] text-[#536360]">
-                <span className="w-2 h-2 rounded-full bg-[#0d5c52]" />
-                <span>18 Wajib</span>
-                <span className="text-[#bec9c5]">•</span>
-                <span className="w-2 h-2 rounded-full bg-[#14b8a6]" />
-                <span>10 Peminatan</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Telah Dipelajari
-              </span>
-              <div className="w-9 h-9 rounded-lg bg-[#6df5e1] text-[#006f64] flex items-center justify-center">
-                <BadgeCheck className="size-5" />
-              </div>
-            </div>
-            <div className="mt-4 relative">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
-                  19 <span className="text-[15px] text-[#536360] font-normal">/ 28</span>
-                </span>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#a6f2cf] text-[#00513a] font-bold">
-                  68% Tuntas
-                </span>
-              </div>
-              <div className="w-full h-1.5 bg-[#cee8e1] rounded-full mt-2.5 overflow-hidden">
-                <div className="h-full bg-[#0d5c52] rounded-full" style={{ width: "68%" }} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Bahan Bacaan &amp; E-Book
-              </span>
-              <div className="w-9 h-9 rounded-lg bg-[#d4eee7] text-[#0d5c52] flex items-center justify-center">
-                <Library className="size-5" />
-              </div>
-            </div>
-            <div className="mt-4 relative">
-              <div className="flex items-baseline gap-2">
-                <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
-                  42
-                </span>
-                <span className="text-[13px] text-[#536360] font-semibold">Dokumen</span>
-              </div>
-              <p className="text-[12px] text-[#536360] mt-1 flex items-center gap-1">
-                <FileText className="size-[15px] text-[#0d5c52]" />
-                Format PDF, e-Pub &amp; Diktat Resmi
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Lab &amp; Praktikum
-              </span>
-              <div className="w-9 h-9 rounded-lg bg-[#a6f2cf] text-[#00513a] flex items-center justify-center">
-                <Video className="size-5" />
-              </div>
-            </div>
-            <div className="mt-4 relative">
-              <div className="flex items-baseline gap-2">
-                <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
-                  14
-                </span>
-                <span className="text-[13px] text-[#0d5c52] font-semibold">Sesi Rekaman</span>
-              </div>
-              <p className="text-[12px] text-[#536360] mt-1 flex items-center gap-1">
-                <Video className="size-[15px] text-[#0d5c52]" />
-                Video Eksperimen Kualitas 1080p
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero: Active Module */}
-        <div className="relative bg-gradient-to-br from-[#00433b] via-[#0d5c52] to-[#14b8a6] text-white rounded-2xl p-6 shadow-lg overflow-hidden">
-          <div className="absolute right-0 top-0 w-96 h-96 bg-[#abf0e2]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-          <div className="absolute right-1/3 bottom-0 w-64 h-64 bg-[#71f8e4]/5 rounded-full blur-2xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex flex-col gap-2 max-w-2xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-white/15 text-[#abf0e2] text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md">
-                  <span className="w-2 h-2 rounded-full bg-[#8fd3c6] animate-pulse" />
-                  Sedang Dipelajari Minggu Ini
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white text-[11px] font-semibold">
-                  Informatika &amp; Sains Komputasi
-                </span>
-              </div>
-              <h2 className="text-[26px] leading-[34px] font-bold tracking-tight">
-                Advanced Graph Algorithms &amp; Applied Quantum Physics
-              </h2>
-              <p className="text-[14px] leading-relaxed text-[#abf0e2]">
-                Bab 4: Implementasi Algoritma Dijkstra, Shortest Path Optimization, &amp; Analisis
-                Komputasi Jaringan.
-              </p>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[#abf0e2] text-[12px] mt-1">
-                <span className="flex items-center gap-1.5">
-                  <GraduationCap className="size-4" />
-                  Dr. Pawell Bennett, S.Kom &amp; Mrs. Sarah V.
-                </span>
-                <span className="opacity-50">•</span>
-                <span className="flex items-center gap-1.5">
-                  <Clock className="size-4" />
-                  Est. Waktu Membaca: ~35 Menit
-                </span>
-                <span className="opacity-50">•</span>
-                <span className="flex items-center gap-1.5">
-                  <Paperclip className="size-4" />
-                  4.2 MB PDF Lengkap
-                </span>
-              </div>
-              <div className="mt-2 max-w-md">
-                <div className="flex justify-between text-[11px] text-[#abf0e2] mb-1.5 font-semibold">
-                  <span>Progres Sesi Bab 4</span>
-                  <span className="text-white font-bold">75% Selesai (Sisa 1 Praktikum)</span>
+                <div className="w-9 h-9 rounded-lg bg-[#d4eee7] text-[#0d5c52] flex items-center justify-center">
+                  <BookOpen className="size-5" />
                 </div>
-                <div className="w-full h-2 rounded-full bg-[#00433b]/60 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#8fd3c6] to-[#abf0e2] rounded-full"
-                    style={{ width: "75%" }}
+              </div>
+              <div className="mt-4 relative">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
+                    <CountUp to={28} duration={1.2} />
+                  </span>
+                  <span className="text-[13px] text-[#0d5c52] font-semibold">Modul Aktif</span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1 text-[12px] text-[#536360]">
+                  <span className="w-2 h-2 rounded-full bg-[#0d5c52]" />
+                  <span>18 Wajib</span>
+                  <span className="text-[#bec9c5]">•</span>
+                  <span className="w-2 h-2 rounded-full bg-[#14b8a6]" />
+                  <span>10 Peminatan</span>
+                </div>
+              </div>
+            </motion.div>
+          </StaggerItem>
+
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow h-full"
+            >
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Telah Dipelajari
+                </span>
+                <div className="w-9 h-9 rounded-lg bg-[#6df5e1] text-[#006f64] flex items-center justify-center">
+                  <BadgeCheck className="size-5" />
+                </div>
+              </div>
+              <div className="mt-4 relative">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
+                    <CountUp to={19} duration={1.2} />{" "}
+                    <span className="text-[15px] text-[#536360] font-normal">/ 28</span>
+                  </span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#a6f2cf] text-[#00513a] font-bold">
+                    68% Tuntas
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-[#cee8e1] rounded-full mt-2.5 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-[#0d5c52] rounded-full"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: "68%" }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
                   />
                 </div>
               </div>
-            </div>
+            </motion.div>
+          </StaggerItem>
 
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[220px]">
-              <button
-                type="button"
-                onClick={() => router.push("/student/modules/algoritma-pemrograman-optimasi-big-o")}
-                className="px-6 py-3 rounded-xl bg-white text-[#0d5c52] text-[15px] font-semibold hover:bg-[#abf0e2] transition-all duration-200 shadow-md flex items-center justify-center gap-2 group"
-              >
-                Lanjutkan Belajar
-                <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button
-                type="button"
-                onClick={() => alert("PDF modul lengkap siap diunduh. Fitur unduh aktif setelah integrasi backend.")}
-                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[14px] font-semibold transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-md"
-              >
-                <Download className="size-[18px]" />
-                Unduh PDF Modul Lengkap
-              </button>
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow h-full"
+            >
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Bahan Bacaan &amp; E-Book
+                </span>
+                <div className="w-9 h-9 rounded-lg bg-[#d4eee7] text-[#0d5c52] flex items-center justify-center">
+                  <Library className="size-5" />
+                </div>
+              </div>
+              <div className="mt-4 relative">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
+                    <CountUp to={42} duration={1.2} />
+                  </span>
+                  <span className="text-[13px] text-[#536360] font-semibold">Dokumen</span>
+                </div>
+                <p className="text-[12px] text-[#536360] mt-1 flex items-center gap-1">
+                  <FileText className="size-[15px] text-[#0d5c52]" />
+                  Format PDF, e-Pub &amp; Diktat Resmi
+                </p>
+              </div>
+            </motion.div>
+          </StaggerItem>
+
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow h-full"
+            >
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full bg-[#edf7f4]/60 group-hover:scale-125 transition-transform duration-300" />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Lab &amp; Praktikum
+                </span>
+                <div className="w-9 h-9 rounded-lg bg-[#a6f2cf] text-[#00513a] flex items-center justify-center">
+                  <Video className="size-5" />
+                </div>
+              </div>
+              <div className="mt-4 relative">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[32px] leading-10 font-bold text-[#071f1c] tracking-tight">
+                    <CountUp to={14} duration={1.2} />
+                  </span>
+                  <span className="text-[13px] text-[#0d5c52] font-semibold">Sesi Rekaman</span>
+                </div>
+                <p className="text-[12px] text-[#536360] mt-1 flex items-center gap-1">
+                  <Video className="size-[15px] text-[#0d5c52]" />
+                  Video Eksperimen Kualitas 1080p
+                </p>
+              </div>
+            </motion.div>
+          </StaggerItem>
+        </StaggerChildren>
+
+        {/* Hero: Active Module */}
+        <FadeIn>
+          <motion.div
+            whileHover={{ scale: 1.005 }}
+            transition={{ type: "spring", stiffness: 300, damping: 26 }}
+            className="relative bg-gradient-to-br from-[#00433b] via-[#0d5c52] to-[#14b8a6] text-white rounded-2xl p-6 shadow-lg overflow-hidden"
+          >
+            <div className="absolute right-0 top-0 w-96 h-96 bg-[#abf0e2]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+            <div className="absolute right-1/3 bottom-0 w-64 h-64 bg-[#71f8e4]/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="flex flex-col gap-2 max-w-2xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-white/15 text-[#abf0e2] text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md">
+                    <span className="w-2 h-2 rounded-full bg-[#8fd3c6] animate-pulse" />
+                    Sedang Dipelajari Minggu Ini
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white text-[11px] font-semibold">
+                    Informatika &amp; Sains Komputasi
+                  </span>
+                </div>
+                <h2 className="text-[26px] leading-[34px] font-bold tracking-tight">
+                  Advanced Graph Algorithms &amp; Applied Quantum Physics
+                </h2>
+                <p className="text-[14px] leading-relaxed text-[#abf0e2]">
+                  Bab 4: Implementasi Algoritma Dijkstra, Shortest Path Optimization, &amp; Analisis
+                  Komputasi Jaringan.
+                </p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[#abf0e2] text-[12px] mt-1">
+                  <span className="flex items-center gap-1.5">
+                    <GraduationCap className="size-4" />
+                    Dr. Pawell Bennett, S.Kom &amp; Mrs. Sarah V.
+                  </span>
+                  <span className="opacity-50">•</span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="size-4" />
+                    Est. Waktu Membaca: ~35 Menit
+                  </span>
+                  <span className="opacity-50">•</span>
+                  <span className="flex items-center gap-1.5">
+                    <Paperclip className="size-4" />
+                    4.2 MB PDF Lengkap
+                  </span>
+                </div>
+                <div className="mt-2 max-w-md">
+                  <div className="flex justify-between text-[11px] text-[#abf0e2] mb-1.5 font-semibold">
+                    <span>Progres Sesi Bab 4</span>
+                    <span className="text-white font-bold">75% Selesai (Sisa 1 Praktikum)</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-[#00433b]/60 overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-[#8fd3c6] to-[#abf0e2] rounded-full"
+                      initial={{ width: 0 }}
+                      whileInView={{ width: "75%" }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.1, ease: "easeOut", delay: 0.3 }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[220px]">
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => router.push("/student/modules/algoritma-pemrograman-optimasi-big-o")}
+                  className="px-6 py-3 rounded-xl bg-white text-[#0d5c52] text-[15px] font-semibold hover:bg-[#abf0e2] transition-colors duration-200 shadow-md flex items-center justify-center gap-2 group"
+                >
+                  Lanjutkan Belajar
+                  <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => alert("PDF modul lengkap siap diunduh. Fitur unduh aktif setelah integrasi backend.")}
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[14px] font-semibold transition-colors duration-200 flex items-center justify-center gap-2 backdrop-blur-md"
+                >
+                  <Download className="size-[18px]" />
+                  Unduh PDF Modul Lengkap
+                </motion.button>
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </FadeIn>
 
         {/* Filter Toolbar */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4 overflow-x-auto pb-1">
             <div className="flex items-center gap-2 min-w-max">
               {subjectTabs.map((t) => (
-                <button
+                <motion.button
                   key={t.key}
                   type="button"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => setSubject(t.key)}
-                  className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all ${
+                  className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
                     subject === t.key
                       ? "bg-[#0d5c52] text-white shadow-sm"
                       : "bg-white text-[#536360] hover:bg-[#d4eee7] hover:text-[#0d5c52] border border-[#cee8e1]/60"
                   }`}
                 >
                   {t.label}
-                </button>
+                </motion.button>
               ))}
             </div>
             <div className="flex items-center bg-white p-1 rounded-lg shadow-sm border border-[#cee8e1]/60 shrink-0">
-              <button
+              <motion.button
                 type="button"
                 title="Tampilan Kisi"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={() => setView("grid")}
                 className={`p-1.5 rounded-md transition-colors ${
                   view === "grid"
@@ -550,10 +607,12 @@ export function StudentModules() {
                 }`}
               >
                 <LayoutGrid className="size-5" />
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 type="button"
                 title="Tampilan Daftar"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={() => setView("list")}
                 className={`p-1.5 rounded-md transition-colors ${
                   view === "list"
@@ -562,7 +621,7 @@ export function StudentModules() {
                 }`}
               >
                 <List className="size-5" />
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -592,27 +651,31 @@ export function StudentModules() {
                 ))}
               </select>
               <div className="h-6 w-px bg-[#cee8e1]" />
-              <button
+              <motion.button
                 type="button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setSortNewest((v) => !v)}
                 className="h-10 px-3 bg-[#edf7f4] text-[#071f1c] text-[13px] font-semibold rounded-lg hover:bg-[#d4eee7] flex items-center gap-1 transition-colors"
               >
                 <Scale className="size-[18px] rotate-90" />
                 {sortNewest ? "Terbaru" : "Terlama"}
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>
 
         {/* Modules Grid */}
         {visibleModules.length === 0 ? (
-          <div className="bg-white rounded-xl border border-[#cee8e1]/60 p-10 text-center text-[#536360] flex flex-col items-center gap-2">
-            <SearchX className="size-8 text-[#bec9c5]" />
-            <span className="text-[14px] font-semibold">
-              Tidak ada modul yang cocok dengan filter Anda.
-            </span>
-            <span className="text-[12px]">Coba ubah kata kunci atau status pencarian.</span>
-          </div>
+          <FadeIn>
+            <div className="bg-white rounded-xl border border-[#cee8e1]/60 p-10 text-center text-[#536360] flex flex-col items-center gap-2">
+              <SearchX className="size-8 text-[#bec9c5]" />
+              <span className="text-[14px] font-semibold">
+                Tidak ada modul yang cocok dengan filter Anda.
+              </span>
+              <span className="text-[12px]">Coba ubah kata kunci atau status pencarian.</span>
+            </div>
+          </FadeIn>
         ) : (
           <StaggerChildren
             as="div"
@@ -627,7 +690,11 @@ export function StudentModules() {
               const ActionIcon = m.actionIcon;
               return (
                 <StaggerItem key={m.id}>
-                  <div className="group bg-white rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] hover:shadow-[0_8px_20px_-4px_rgba(13,92,82,0.10)] hover:border-[#14b8a6]/25 transition-all duration-200 flex flex-col justify-between overflow-hidden h-full">
+                  <motion.div
+                    whileHover={{ y: -4 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="group bg-white rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] hover:shadow-[0_8px_20px_-4px_rgba(13,92,82,0.10)] hover:border-[#14b8a6]/25 transition-colors duration-200 flex flex-col justify-between overflow-hidden h-full"
+                  >
                     <div>
                       {/* Visual header */}
                       <div
@@ -679,7 +746,7 @@ export function StudentModules() {
                             </span>
                           </div>
                           <div className="w-full h-1.5 bg-[#cee8e1] rounded-full overflow-hidden">
-                            <div
+                            <motion.div
                               className={`h-full rounded-full ${
                                 m.status === "new"
                                   ? "bg-[#bec9c5]"
@@ -689,7 +756,10 @@ export function StudentModules() {
                                       ? "bg-[#14b8a6]"
                                       : "bg-[#0d5c52]"
                               }`}
-                              style={{ width: `${Math.max(m.progress, 5)}%` }}
+                              initial={{ width: 0 }}
+                              whileInView={{ width: `${Math.max(m.progress, 5)}%` }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 + i * 0.05 }}
                             />
                           </div>
                         </div>
@@ -698,8 +768,10 @@ export function StudentModules() {
 
                     {/* Footer */}
                     <div className="p-4 pt-0 flex items-center justify-between gap-2">
-                      <button
+                      <motion.button
                         type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           if (m.id === "algo-big-o") {
                             router.push("/student/modules/algoritma-pemrograman-optimasi-big-o");
@@ -717,10 +789,12 @@ export function StudentModules() {
                       >
                         <ActionIcon className="size-[18px]" />
                         {m.action}
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         type="button"
                         title={m.downloadLabel}
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.92 }}
                         onClick={() =>
                           alert(`${m.downloadLabel} siap diunduh. Fitur unduh aktif setelah integrasi backend.`)
                         }
@@ -731,9 +805,9 @@ export function StudentModules() {
                         ) : (
                           <Download className="size-5" />
                         )}
-                      </button>
+                      </motion.button>
                     </div>
-                  </div>
+                  </motion.div>
                 </StaggerItem>
               );
             })}
@@ -775,8 +849,15 @@ export function StudentModules() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#edf7f4]">
-                  {syllabusDocs.map((d) => (
-                    <tr key={d.name} className="hover:bg-[#edf7f4]/50 transition-colors">
+                  {syllabusDocs.map((d, i) => (
+                    <motion.tr
+                      key={d.name}
+                      initial={{ opacity: 0, y: 8 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ duration: 0.4, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                      className="hover:bg-[#edf7f4]/50 transition-colors"
+                    >
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <span
@@ -803,8 +884,10 @@ export function StudentModules() {
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <button
+                        <motion.button
                           type="button"
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.96 }}
                           onClick={() =>
                             alert(`${d.file} siap diunduh. Fitur unduh aktif setelah integrasi backend.`)
                           }
@@ -812,9 +895,9 @@ export function StudentModules() {
                         >
                           <Download className="size-4" />
                           {d.action}
-                        </button>
+                        </motion.button>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
