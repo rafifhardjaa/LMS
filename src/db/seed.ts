@@ -31,7 +31,9 @@ async function seed() {
     }
 
     console.log("Inserting users...");
-    const passwordHash = await Bun.password.hash("password123");
+    const passwordHash = await Bun.password.hash("password123", {
+      algorithm: "argon2id",
+    });
 
     const usersData = await db
       .insert(users)
@@ -58,6 +60,7 @@ async function seed() {
           isActive: true,
         },
       ])
+      .onConflictDoNothing({ target: users.email })
       .returning({ id: users.id, email: users.email });
 
     const adminUser = usersData.find((u) => u.email === "admin@simanis.com");
