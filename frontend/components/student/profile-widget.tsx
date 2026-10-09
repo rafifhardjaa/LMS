@@ -51,7 +51,6 @@ export function ProfileWidget() {
         {/* Student ID */}
         <motion.div
           className="flex items-center justify-between p-2 rounded-xl bg-[#edf7f4] border border-[#cee8e1]/50 text-[11px] font-semibold"
-          whileHover={{ x: 3 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
         >
           <span className="text-[#536360]">Student ID:</span>
