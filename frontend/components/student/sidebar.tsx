@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import {
   BadgeCheck,
   BookOpen,
-  ClipboardList,
   GraduationCap,
   Headset,
   LayoutDashboard,
@@ -16,7 +15,6 @@ import {
 const menu = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/student/dashboard", title: "Dashboard" },
   { label: "Modules", icon: BookOpen, href: "/student/modules", title: "Modul Pembelajaran" },
-  { label: "Assignments", icon: ClipboardList, href: "#", title: "Tugas & Kuis" },
   { label: "Transcripts", icon: BadgeCheck, href: "/student/transcripts", title: "Rekap Nilai & Transkrip" },
   { label: "Counseling (BK)", icon: Headset, href: "/student/counseling", title: "Konseling & Bimbingan" },
   { label: "Settings", icon: Settings, href: "/student/settings", title: "Pengaturan Akun" },
