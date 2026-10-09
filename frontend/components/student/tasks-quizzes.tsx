@@ -82,7 +82,7 @@ export function TasksQuizzes() {
           {/* Assignment 2: Remedial active */}
           <StaggerItem>
             <motion.div
-              whileHover={{ y: -3 }}
+              // whileHover={{ y: -3 }}
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
               className="p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
