@@ -9,6 +9,12 @@ import { StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import { api, authApi } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/store/auth-store";
 
+function homeSegment(role: string) {
+  if (role === "admin") return "admin";
+  if (role === "teacher" || role === "guru") return "teacher";
+  return "student";
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -60,13 +66,20 @@ export function LoginForm() {
       toast.success("Login berhasil — menyambungkan ke portal…");
 
       const role = user.role;
-      if (role === "admin") {
-        router.push("/admin/dashboard");
-      } else if (role === "teacher" || role === "guru") {
-        router.push("/teacher/dashboard");
-      } else {
-        router.push("/student/dashboard");
+      let target =
+        role === "admin"
+          ? "/admin/dashboard"
+          : role === "teacher" || role === "guru"
+            ? "/teacher/dashboard"
+            : "/student/dashboard";
+
+      // Honour ?redirect= from middleware when it matches the user's area.
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      if (redirect && redirect.startsWith("/") && redirect.startsWith(`/${homeSegment(role)}`)) {
+        target = redirect;
       }
+
+      router.push(target);
     } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message || "Kesalahan jaringan");
