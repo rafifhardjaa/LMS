@@ -75,7 +75,6 @@ export function LearningModules() {
           {modules.map((m) => (
             <StaggerItem key={m.title}>
               <motion.div
-                whileHover={{ x: 3 }}
                 transition={{ type: "spring", stiffness: 300, damping: 24 }}
                 className="flex items-center justify-between p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 hover:bg-[#edf7f4] transition-colors group"
               >
