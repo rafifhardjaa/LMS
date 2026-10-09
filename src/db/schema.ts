@@ -113,54 +113,6 @@ export const lessonProgress = pgTable("lesson_progress", {
   lessonIdx: index("lesson_progress_lesson_idx").on(table.lessonId),
 }));
 
-export const assignments = pgTable("assignments", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  moduleId: uuid("module_id")
-    .notNull()
-    .references(() => modules.id, { onDelete: "cascade" }),
-  createdBy: uuid("created_by").references(() => users.id, {
-    onDelete: "set null",
-  }),
-  title: varchar("title", { length: 150 }).notNull(),
-  description: text("description"),
-  dueDate: timestamp("due_date"),
-  maxScore: integer("max_score").default(100),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => ({
-  moduleIdx: index("assignment_module_idx").on(table.moduleId),
-}));
-
-export const assignmentAttempts = pgTable("assignment_attempts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  assignmentId: uuid("assignment_id")
-    .notNull()
-    .references(() => assignments.id, { onDelete: "cascade" }),
-  studentId: uuid("student_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  fileUrl: text("file_url").notNull(),
-  attemptNumber: integer("attempt_number").default(1),
-  submittedAt: timestamp("submitted_at").defaultNow(),
-}, (table) => ({
-  assignmentIdx: index("assignment_attempts_assignment_idx").on(table.assignmentId),
-  studentIdx: index("assignment_attempts_student_idx").on(table.studentId),
-}));
-
-export const grades = pgTable("grades", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  attemptId: uuid("attempt_id")
-    .notNull()
-    .references(() => assignmentAttempts.id, { onDelete: "cascade" }),
-  score: integer("score").notNull(),
-  feedback: text("feedback"),
-  gradedBy: uuid("graded_by").references(() => users.id, {
-    onDelete: "set null",
-  }),
-  gradedAt: timestamp("graded_at").defaultNow(),
-}, (table) => ({
-  attemptIdx: index("grade_attempt_idx").on(table.attemptId),
-}));
-
 export const reviews = pgTable("reviews", {
   id: uuid("id").defaultRandom().primaryKey(),
   subjectId: uuid("subject_id")
@@ -231,7 +183,6 @@ export const modulesRelations = relations(modules, ({ one, many }) => ({
     references: [users.id],
   }),
   lessons: many(lessons),
-  assignments: many(assignments),
 }));
 
 export const lessonsRelations = relations(lessons, ({ one, many }) => ({
@@ -262,44 +213,6 @@ export const lessonProgressRelations = relations(lessonProgress, ({ one }) => ({
   lesson: one(lessons, {
     fields: [lessonProgress.lessonId],
     references: [lessons.id],
-  }),
-}));
-
-export const assignmentsRelations = relations(assignments, ({ one, many }) => ({
-  module: one(modules, {
-    fields: [assignments.moduleId],
-    references: [modules.id],
-  }),
-  creator: one(users, {
-    fields: [assignments.createdBy],
-    references: [users.id],
-  }),
-  attempts: many(assignmentAttempts),
-}));
-
-export const assignmentAttemptsRelations = relations(
-  assignmentAttempts,
-  ({ one, many }) => ({
-    assignment: one(assignments, {
-      fields: [assignmentAttempts.assignmentId],
-      references: [assignments.id],
-    }),
-    student: one(users, {
-      fields: [assignmentAttempts.studentId],
-      references: [users.id],
-    }),
-    grades: many(grades),
-  })
-);
-
-export const gradesRelations = relations(grades, ({ one }) => ({
-  attempt: one(assignmentAttempts, {
-    fields: [grades.attemptId],
-    references: [assignmentAttempts.id],
-  }),
-  grader: one(users, {
-    fields: [grades.gradedBy],
-    references: [users.id],
   }),
 }));
 

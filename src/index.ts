@@ -7,7 +7,6 @@ import { subjectsRoute } from "./routes/subjects-route";
 import { modulesRoute } from "./routes/modules-route";
 import { lessonsRoute } from "./routes/lessons-route";
 import { enrollmentsRoute } from "./routes/enrollments-route";
-import { assignmentsRoute } from "./routes/assignments-route";
 import { reviewsRoute } from "./routes/reviews";
 import { notificationsRoute } from "./routes/notifications";
 import { progressRoute } from "./routes/progress";
@@ -36,7 +35,6 @@ const app = new Elysia()
   .use(modulesRoute)
   .use(lessonsRoute)
   .use(enrollmentsRoute)
-  .use(assignmentsRoute)
   .use(reviewsRoute)
   .use(notificationsRoute)
   .use(progressRoute)
