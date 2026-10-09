@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Award,
   BookOpen,
@@ -11,8 +13,8 @@ import {
   Settings,
   User,
   Users,
-  X,
 } from "lucide-react";
+import { useLogout } from "@/hooks/use-logout";
 
 const mainMenu = [
   { label: "Dashboard", icon: LayoutGrid, active: true },
@@ -31,6 +33,7 @@ const helpMenu = [
 ];
 
 export function Sidebar() {
+  const handleLogout = useLogout();
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-white z-50 flex flex-col justify-between shadow-[0_1px_12px_rgba(0,0,0,0.03)]">
       <div className="flex flex-col flex-1 overflow-y-auto px-4 pt-5 gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -139,7 +142,14 @@ export function Sidebar() {
             <span className="text-xs text-[#787584] truncate">Super Admin SMK</span>
           </div>
         </div>
-        <LogOut className="size-[18px] text-[#787584] hover:text-[#93000a]" />
+        <button
+          type="button"
+          title="Logout"
+          onClick={handleLogout}
+          className="p-1 rounded-lg hover:bg-[#f4f2ff] transition-colors"
+        >
+          <LogOut className="size-[18px] text-[#787584] hover:text-[#93000a]" />
+        </button>
       </div>
     </aside>
   );

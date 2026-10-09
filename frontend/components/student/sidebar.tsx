@@ -16,6 +16,7 @@ import {
   StaggerChildren,
   StaggerItem,
 } from "@/components/ui/animations";
+import { useLogout } from "@/hooks/use-logout";
 
 const menu = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/student/dashboard", title: "Dashboard" },
@@ -27,6 +28,7 @@ const menu = [
 
 export function MuridSidebar() {
   const pathname = usePathname();
+  const handleLogout = useLogout();
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white z-50 flex flex-col justify-between py-6 px-6 border-r border-[#cee8e1]/60 shadow-[0_1px_8px_rgba(7,31,28,0.03)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex flex-col gap-8 w-full">
@@ -90,13 +92,14 @@ export function MuridSidebar() {
               <span className="text-[12px] text-[#536360]">Grade 12</span>
             </div>
           </div>
-          <a
-            href="#"
+          <button
+            type="button"
             title="Logout"
+            onClick={handleLogout}
             className="p-1 rounded-lg text-[#536360] hover:bg-[#e2f2ee] hover:text-[#ba1a1a] transition-colors"
           >
             <LogOut className="size-5" />
-          </a>
+          </button>
         </motion.div>
       </div>
     </aside>

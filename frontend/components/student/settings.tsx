@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { FadeIn } from "@/components/ui/animations";
+import { useLogout } from "@/hooks/use-logout";
 
 const tabs = [
   { id: "profil", label: "Profil Siswa", icon: User },
@@ -175,6 +176,7 @@ function SectionCard({
 
 export function StudentSettings() {
   const formRef = useRef<HTMLFormElement>(null);
+  const handleLogout = useLogout();
   const [activeTab, setActiveTab] = useState("profil");
   const [flashId, setFlashId] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
@@ -757,6 +759,7 @@ export function StudentSettings() {
               </div>
               <button
                 type="button"
+                onClick={handleLogout}
                 className="w-full py-2.5 rounded-lg bg-[#ffdad6]/40 text-[#ba1a1a] text-[13px] font-semibold flex items-center justify-center gap-2 hover:bg-[#ffdad6]/70 transition-colors"
               >
                 <LogOut className="size-4" />

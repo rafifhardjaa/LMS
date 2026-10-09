@@ -1,3 +1,5 @@
+"use client";
+
 import {
   BookOpen,
   BarChart3,
@@ -9,6 +11,7 @@ import {
   Settings,
   UserCheck,
 } from "lucide-react";
+import { useLogout } from "@/hooks/use-logout";
 
 const menu = [
   { label: "Dashboard", icon: LayoutGrid, active: true, title: "Dashboard" },
@@ -24,6 +27,7 @@ const menu = [
 ];
 
 export function GuruSidebar() {
+  const handleLogout = useLogout();
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white z-50 flex flex-col justify-between py-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex flex-col w-full">
@@ -74,6 +78,7 @@ export function GuruSidebar() {
         <button
           type="button"
           title="Keluar Akun"
+          onClick={handleLogout}
           className="w-full h-11 flex items-center gap-3 px-3 rounded-xl text-[#EF4444] hover:bg-[#FFEBEB] transition-all text-left"
         >
           <LogOut className="size-[22px] flex-shrink-0" />
