@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { Download, FileText } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  FadeIn,
+  StaggerChildren,
+  StaggerItem,
+} from "@/components/ui/animations";
 
 const filters = ["All", "Mathematics", "Physics", "Informatics"];
 
@@ -33,72 +39,81 @@ export function LearningModules() {
   const [active, setActive] = useState("All");
 
   return (
-    <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h2 className="text-[18px] font-semibold text-[#071f1c]">
-            Learning Modules
-          </h2>
-          <p className="text-[12px] text-[#536360]">
-            Official syllabus handouts, reading chapters &amp; lecture slide
-            decks
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5 bg-[#edf7f4] p-1 rounded-full self-start sm:self-auto">
-          {filters.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setActive(f)}
-              className={`px-4 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                active === f
-                  ? "bg-[#0d5c52] text-white shadow-sm"
-                  : "text-[#536360] hover:text-[#0d5c52]"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {modules.map((m) => (
-          <div
-            key={m.title}
-            className="flex items-center justify-between p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 hover:bg-[#edf7f4] transition-colors group"
-          >
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-[#ffdad6]/70 text-[#ba1a1a] flex items-center justify-center flex-shrink-0">
-                <FileText className="size-[26px]" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[14px] font-semibold text-[#071f1c] group-hover:text-[#0d5c52] transition-colors truncate">
-                  {m.title}
-                </span>
-                <div className="flex items-center gap-2 text-[#536360] text-[12px]">
-                  <span
-                    className={`px-2 py-0.5 rounded text-[11px] font-semibold ${m.chipClassName}`}
-                  >
-                    {m.chip}
-                  </span>
-                  <span>•</span>
-                  <span>{m.size}</span>
-                  <span>•</span>
-                  <span>{m.updated}</span>
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="flex-shrink-0 ml-2 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white hover:bg-[#0d5c52] hover:text-white text-[#0d5c52] text-[13px] font-semibold border border-[#cee8e1] transition-all duration-200 shadow-sm"
-            >
-              <Download className="size-[18px]" />
-              <span className="hidden sm:inline">Download</span>
-            </button>
+    <FadeIn>
+      <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-[18px] font-semibold text-[#071f1c]">
+              Learning Modules
+            </h2>
+            <p className="text-[12px] text-[#536360]">
+              Official syllabus handouts, reading chapters &amp; lecture slide
+              decks
+            </p>
           </div>
-        ))}
-      </div>
-    </section>
+          <div className="flex items-center gap-1.5 bg-[#edf7f4] p-1 rounded-full self-start sm:self-auto">
+            {filters.map((f) => (
+              <motion.button
+                key={f}
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setActive(f)}
+                className={`px-4 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                  active === f
+                    ? "bg-[#0d5c52] text-white shadow-sm"
+                    : "text-[#536360] hover:text-[#0d5c52]"
+                }`}
+              >
+                {f}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        <StaggerChildren staggerDelay={0.08} className="flex flex-col gap-2">
+          {modules.map((m) => (
+            <StaggerItem key={m.title}>
+              <motion.div
+                whileHover={{ x: 3 }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                className="flex items-center justify-between p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 hover:bg-[#edf7f4] transition-colors group"
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-[#ffdad6]/70 text-[#ba1a1a] flex items-center justify-center flex-shrink-0">
+                    <FileText className="size-[26px]" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[14px] font-semibold text-[#071f1c] group-hover:text-[#0d5c52] transition-colors truncate">
+                      {m.title}
+                    </span>
+                    <div className="flex items-center gap-2 text-[#536360] text-[12px]">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[11px] font-semibold ${m.chipClassName}`}
+                      >
+                        {m.chip}
+                      </span>
+                      <span>•</span>
+                      <span>{m.size}</span>
+                      <span>•</span>
+                      <span>{m.updated}</span>
+                    </div>
+                  </div>
+                </div>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex-shrink-0 ml-2 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white hover:bg-[#0d5c52] hover:text-white text-[#0d5c52] text-[13px] font-semibold border border-[#cee8e1] transition-colors duration-200 shadow-sm"
+                >
+                  <Download className="size-[18px]" />
+                  <span className="hidden sm:inline">Download</span>
+                </motion.button>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+      </section>
+    </FadeIn>
   );
 }
