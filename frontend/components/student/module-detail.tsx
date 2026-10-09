@@ -29,9 +29,14 @@ import {
   Terminal,
   CloudUpload,
 } from "lucide-react";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
-import { motion, useInView } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import {
+  FadeIn,
+  SlideIn,
+  StaggerChildren,
+  StaggerItem,
+} from "@/components/ui/animations";
 
 type TabKey = "presensi" | "materi" | "tugas" | "kuis";
 
@@ -136,16 +141,18 @@ export function StudentModuleDetail() {
             <ChevronRight className="size-3.5 text-[#bec9c5]" />
             <span className="text-[#0d5c52] font-bold">Modul 04 Dijkstra</span>
           </nav>
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() =>
               alert("Arsip berkas modul (.zip) sedang disiapkan. Fitur unduh aktif setelah integrasi backend.")
             }
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-[#0d5c52] rounded-xl text-[13px] font-semibold shadow-sm hover:bg-[#d4eee7] transition-all self-start md:self-auto border border-[#cee8e1]/60"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-[#0d5c52] rounded-xl text-[13px] font-semibold shadow-sm hover:bg-[#d4eee7] transition-colors self-start md:self-auto border border-[#cee8e1]/60"
           >
             <FolderArchive className="size-[18px]" />
             Unduh Semua Berkas (.zip)
-          </button>
+          </motion.button>
         </div>
 
         {/* Hero Module Header */}
@@ -213,93 +220,123 @@ export function StudentModuleDetail() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Status Presensi
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-[#a6f2cf] text-[#00513a] flex items-center justify-center">
-                <ShieldCheck className="size-[18px]" />
+        <StaggerChildren staggerDelay={0.08} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2 h-full"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Status Presensi
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-[#a6f2cf] text-[#00513a] flex items-center justify-center">
+                  <ShieldCheck className="size-[18px]" />
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5 text-[14px] font-semibold text-[#071f1c]">
-                <span className="w-2 h-2 rounded-full bg-[#004d40]" />
-                Hadir Terverifikasi
+              <div>
+                <div className="flex items-center gap-1.5 text-[14px] font-semibold text-[#071f1c]">
+                  <span className="w-2 h-2 rounded-full bg-[#004d40]" />
+                  Hadir Terverifikasi
+                </div>
+                <p className="text-[12px] text-[#536360] mt-0.5">07:15 WITA • Face &amp; Geolocation</p>
               </div>
-              <p className="text-[12px] text-[#536360] mt-0.5">07:15 WITA • Face &amp; Geolocation</p>
-            </div>
-            <div className="text-[11px] font-semibold text-[#004d40] bg-[#edf7f4] px-2 py-1 rounded-md flex items-center gap-1">
-              <MapPin className="size-[13px]" />
-              Radius Presensi: 12m (Valid)
-            </div>
-          </div>
+              <div className="text-[11px] font-semibold text-[#004d40] bg-[#edf7f4] px-2 py-1 rounded-md flex items-center gap-1">
+                <MapPin className="size-[13px]" />
+                Radius Presensi: 12m (Valid)
+              </div>
+            </motion.div>
+          </StaggerItem>
 
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Progres Belajar
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-[#abf0e2] text-[#0d5c52] flex items-center justify-center">
-                <BookOpen className="size-[18px]" />
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2 h-full"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Progres Belajar
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-[#abf0e2] text-[#0d5c52] flex items-center justify-center">
+                  <BookOpen className="size-[18px]" />
+                </div>
               </div>
-            </div>
-            <div>
-              <span className="text-[15px] leading-[22px] font-bold text-[#071f1c]">
-                3 dari 4 Bab
-              </span>
-              <p className="text-[12px] text-[#536360] mt-0.5">75% Materi Terserap</p>
-            </div>
-            <div className="w-full bg-[#d4eee7] h-2 rounded-full overflow-hidden">
-              <div className="bg-[#0d5c52] h-full rounded-full" style={{ width: "75%" }} />
-            </div>
-          </div>
+              <div>
+                <span className="text-[15px] leading-[22px] font-bold text-[#071f1c]">
+                  3 dari 4 Bab
+                </span>
+                <p className="text-[12px] text-[#536360] mt-0.5">75% Materi Terserap</p>
+              </div>
+              <div className="w-full bg-[#d4eee7] h-2 rounded-full overflow-hidden">
+                <motion.div
+                  className="bg-[#0d5c52] h-full rounded-full"
+                  initial={{ width: 0 }}
+                  whileInView={{ width: "75%" }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                />
+              </div>
+            </motion.div>
+          </StaggerItem>
 
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Status Tugas Lab
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-[#d4eee7] text-[#071f1c] flex items-center justify-center">
-                <Terminal className="size-[18px]" />
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2 h-full"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Status Tugas Lab
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-[#d4eee7] text-[#071f1c] flex items-center justify-center">
+                  <Terminal className="size-[18px]" />
+                </div>
               </div>
-            </div>
-            <div>
-              <span className="text-[14px] font-semibold text-[#071f1c] block truncate">
-                1 Tugas Praktikum
-              </span>
-              <p className="text-[12px] text-[#ba1a1a] font-medium mt-0.5 flex items-center gap-1">
-                <AlarmClock className="size-[14px]" />
-                Tenggat: Besok, 14:00 WITA
-              </p>
-            </div>
-            <div className="text-[11px] font-semibold text-[#536360] bg-[#edf7f4] px-2 py-1 rounded-md">
-              Status: Draft Berkas Tersimpan
-            </div>
-          </div>
+              <div>
+                <span className="text-[14px] font-semibold text-[#071f1c] block truncate">
+                  1 Tugas Praktikum
+                </span>
+                <p className="text-[12px] text-[#ba1a1a] font-medium mt-0.5 flex items-center gap-1">
+                  <AlarmClock className="size-[14px]" />
+                  Tenggat: Besok, 14:00 WITA
+                </p>
+              </div>
+              <div className="text-[11px] font-semibold text-[#536360] bg-[#edf7f4] px-2 py-1 rounded-md">
+                Status: Draft Berkas Tersimpan
+              </div>
+            </motion.div>
+          </StaggerItem>
 
-          <div className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
-                Nilai Kuis Modul
-              </span>
-              <div className="w-7 h-7 rounded-lg bg-[#a6f2cf] text-[#00513a] flex items-center justify-center">
-                <GraduationCap className="size-[18px]" />
+          <StaggerItem>
+            <motion.div
+              whileHover={{ y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-white p-4 rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] flex flex-col justify-between gap-2 h-full"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-[#536360] uppercase tracking-wider font-semibold">
+                  Nilai Kuis Modul
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-[#a6f2cf] text-[#00513a] flex items-center justify-center">
+                  <GraduationCap className="size-[18px]" />
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-[20px] leading-7 font-bold text-[#0d5c52]">95</span>
-                <span className="text-[12px] text-[#536360]">/ 100</span>
+              <div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[20px] leading-7 font-bold text-[#0d5c52]">95</span>
+                  <span className="text-[12px] text-[#536360]">/ 100</span>
+                </div>
+                <p className="text-[12px] text-[#536360] mt-0.5">Predikat: A+ Sempurna</p>
               </div>
-              <p className="text-[12px] text-[#536360] mt-0.5">Predikat: A+ Sempurna</p>
-            </div>
-            <div className="text-[11px] font-semibold text-[#004d40] bg-[#edf7f4] px-2 py-1 rounded-md">
-              Selesai pada Percobaan ke-2
-            </div>
-          </div>
-        </div>
+              <div className="text-[11px] font-semibold text-[#004d40] bg-[#edf7f4] px-2 py-1 rounded-md">
+                Selesai pada Percobaan ke-2
+              </div>
+            </motion.div>
+          </StaggerItem>
+        </StaggerChildren>
 
         {/* Split Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -308,11 +345,13 @@ export function StudentModuleDetail() {
             {/* Tabs */}
             <div className="bg-white p-1.5 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60 flex items-center overflow-x-auto whitespace-nowrap gap-1">
               {tabs.map((t) => (
-                <button
+                <motion.button
                   key={t.key}
                   type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => setTab(t.key)}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[13px] font-semibold transition-colors ${
                     tab === t.key
                       ? "bg-[#d4eee7] text-[#0d5c52]"
                       : "text-[#536360] hover:bg-[#edf7f4]"
@@ -320,14 +359,23 @@ export function StudentModuleDetail() {
                 >
                   <t.icon className="size-[18px]" />
                   {t.label}
-                  {t.alert && <span className="w-2 h-2 rounded-full bg-[#ba1a1a]" />}
-                </button>
+                  {t.alert && <span className="w-2 h-2 rounded-full bg-[#ba1a1a] animate-pulse" />}
+                </motion.button>
               ))}
             </div>
 
+            <AnimatePresence mode="wait">
+
             {/* Section: Presensi */}
             {tab === "presensi" && (
-              <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60">
+              <motion.div
+                key="presensi"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <h3 className="text-[20px] leading-7 text-[#071f1c] font-semibold">
@@ -343,10 +391,10 @@ export function StudentModuleDetail() {
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-2 mt-1">
+                <StaggerChildren staggerDelay={0.08} className="flex flex-col gap-2 mt-1">
                   {sessions.map((s) => (
+                    <StaggerItem key={s.no}>
                     <div
-                      key={s.no}
                       className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl gap-2 ${
                         s.today ? "bg-[#d4eee7]" : "bg-[#edf7f4]"
                       }`}
@@ -397,8 +445,9 @@ export function StudentModuleDetail() {
                         )}
                       </div>
                     </div>
+                    </StaggerItem>
                   ))}
-                </div>
+                </StaggerChildren>
 
                 <div className="flex items-start gap-2 p-2 rounded-xl bg-[#edf7f4] text-[#536360] text-[12px] mt-1">
                   <Info className="size-[18px] text-[#0d5c52] mt-0.5 shrink-0" />
@@ -408,12 +457,19 @@ export function StudentModuleDetail() {
                     atau dispensasi.
                   </span>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Section: Materi */}
             {tab === "materi" && (
-              <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60">
+              <motion.div
+                key="materi"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-[20px] leading-7 text-[#071f1c] font-semibold">
@@ -428,8 +484,13 @@ export function StudentModuleDetail() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1">
-                  <div className="flex flex-col justify-between p-4 rounded-xl bg-[#edf7f4] hover:bg-[#dff9f2] transition-all">
+                <StaggerChildren staggerDelay={0.08} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1">
+                  <StaggerItem>
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="flex flex-col justify-between p-4 rounded-xl bg-[#edf7f4] hover:bg-[#dff9f2] transition-colors h-full"
+                  >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between">
                         <span className="p-2 rounded-lg bg-[#d4eee7] text-[#0d5c52] flex items-center justify-center">
@@ -450,19 +511,27 @@ export function StudentModuleDetail() {
                       <span className="text-[11px] font-semibold text-[#536360]">
                         PDF • 2.4 MB (15 Hlm)
                       </span>
-                      <button
+                      <motion.button
                         type="button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() =>
                           alert("Bab 1 dibuka. Fitur dokumen aktif setelah integrasi backend.")
                         }
-                        className="px-2 py-1 bg-white text-[#0d5c52] rounded-lg text-[11px] font-semibold hover:bg-[#0d5c52] hover:text-white transition-all shadow-sm"
+                        className="px-2 py-1 bg-white text-[#0d5c52] rounded-lg text-[11px] font-semibold hover:bg-[#0d5c52] hover:text-white transition-colors shadow-sm"
                       >
                         Buka Dokumen
-                      </button>
+                      </motion.button>
                     </div>
-                  </div>
+                  </motion.div>
+                  </StaggerItem>
 
-                  <div className="flex flex-col justify-between p-4 rounded-xl bg-[#edf7f4] hover:bg-[#dff9f2] transition-all">
+                  <StaggerItem>
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="flex flex-col justify-between p-4 rounded-xl bg-[#edf7f4] hover:bg-[#dff9f2] transition-colors h-full"
+                  >
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between">
                         <span className="p-2 rounded-lg bg-[#d4eee7] text-[#0d5c52] flex items-center justify-center">
@@ -484,19 +553,27 @@ export function StudentModuleDetail() {
                       <span className="text-[11px] font-semibold text-[#536360]">
                         Slide Interaktif • 32 Slide
                       </span>
-                      <button
+                      <motion.button
                         type="button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() =>
                           alert("Slide Bab 2 diputar. Fitur slide aktif setelah integrasi backend.")
                         }
-                        className="px-2 py-1 bg-white text-[#0d5c52] rounded-lg text-[11px] font-semibold hover:bg-[#0d5c52] hover:text-white transition-all shadow-sm"
+                        className="px-2 py-1 bg-white text-[#0d5c52] rounded-lg text-[11px] font-semibold hover:bg-[#0d5c52] hover:text-white transition-colors shadow-sm"
                       >
                         Putar Slide
-                      </button>
+                      </motion.button>
                     </div>
-                  </div>
+                  </motion.div>
+                  </StaggerItem>
 
-                  <div className="md:col-span-2 flex flex-col md:flex-row gap-4 p-4 rounded-xl bg-[#edf7f4]">
+                  <StaggerItem className="md:col-span-2">
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="flex flex-col md:flex-row gap-4 p-4 rounded-xl bg-[#edf7f4]"
+                  >
                     <div className="relative w-full md:w-56 h-36 rounded-lg overflow-hidden shrink-0 bg-gradient-to-br from-[#071f1c] via-[#00433b] to-[#0d5c52] flex items-center justify-center group cursor-pointer">
                       <div className="absolute inset-0 bg-[#0d5c52]/40 flex items-center justify-center">
                         <div className="w-12 h-12 rounded-full bg-white/90 text-[#0d5c52] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -530,20 +607,28 @@ export function StudentModuleDetail() {
                         <span className="text-[12px] text-[#536360]">
                           Pemateri: Bpk. Arya Wiguna
                         </span>
-                        <button
+                        <motion.button
                           type="button"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() =>
                             alert("Video Bab 3 diputar ulang. Fitur video aktif setelah integrasi backend.")
                           }
-                          className="px-4 py-1 bg-white text-[#0d5c52] rounded-lg text-[11px] font-semibold hover:bg-[#0d5c52] hover:text-white transition-all shadow-sm"
+                          className="px-4 py-1 bg-white text-[#0d5c52] rounded-lg text-[11px] font-semibold hover:bg-[#0d5c52] hover:text-white transition-colors shadow-sm"
                         >
                           Tonton Ulang
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
+                  </StaggerItem>
 
-                  <div className="md:col-span-2 flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl bg-[#d4eee7] gap-4">
+                  <StaggerItem className="md:col-span-2">
+                  <motion.div
+                    whileHover={{ y: -3 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl bg-[#d4eee7] gap-4"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-[#0d5c52] text-white flex items-center justify-center">
                         <Code className="size-6" />
@@ -557,24 +642,34 @@ export function StudentModuleDetail() {
                         </span>
                       </div>
                     </div>
-                    <button
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() =>
                         alert("Membuka Google Colab. Fitur integrasi Colab aktif setelah integrasi backend.")
                       }
-                      className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0d5c52] text-white rounded-xl text-[13px] font-semibold hover:bg-[#00433b] transition-all whitespace-nowrap shadow-sm"
+                      className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0d5c52] text-white rounded-xl text-[13px] font-semibold hover:bg-[#00433b] transition-colors whitespace-nowrap shadow-sm"
                     >
                       <ExternalLink className="size-[18px]" />
                       Buka di Google Colab
-                    </button>
-                  </div>
-                </div>
-              </div>
+                    </motion.button>
+                  </motion.div>
+                  </StaggerItem>
+                </StaggerChildren>
+              </motion.div>
             )}
 
             {/* Section: Tugas */}
             {tab === "tugas" && (
-              <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60">
+              <motion.div
+                key="tugas"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60"
+              >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                   <div>
                     <span className="px-2 py-0.5 rounded bg-[#ffdad6] text-[#93000a] text-[11px] font-semibold">
@@ -669,34 +764,45 @@ export function StudentModuleDetail() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
-                    <button
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() =>
                         alert("Tugas Praktikum 04 berhasil dikirim (finalisasi). Fitur pengumpulan aktif setelah integrasi backend.")
                       }
-                      className="w-full sm:flex-1 py-2 px-4 bg-[#0d5c52] hover:bg-[#00433b] text-white text-[14px] font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                      className="w-full sm:flex-1 py-2 px-4 bg-[#0d5c52] hover:bg-[#00433b] text-white text-[14px] font-semibold rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
                     >
                       <Send className="size-5" />
                       Kirim Tugas Sekarang (Finalisasi)
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() =>
                         alert("Formulir unggah ulang berkas dibuka. Fitur unggah aktif setelah integrasi backend.")
                       }
-                      className="w-full sm:w-auto py-2 px-4 bg-white text-[#0d5c52] text-[13px] font-semibold rounded-xl hover:bg-[#edf7f4] transition-all flex items-center justify-center gap-1 shadow-sm border border-[#cee8e1]/60"
+                      className="w-full sm:w-auto py-2 px-4 bg-white text-[#0d5c52] text-[13px] font-semibold rounded-xl hover:bg-[#edf7f4] transition-colors flex items-center justify-center gap-1 shadow-sm border border-[#cee8e1]/60"
                     >
                       <CloudUpload className="size-[18px]" />
                       Unggah Ulang Berkas
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Section: Kuis */}
             {tab === "kuis" && (
-              <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60">
+              <motion.div
+                key="kuis"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-[20px] leading-7 text-[#071f1c] font-semibold">
@@ -727,26 +833,30 @@ export function StudentModuleDetail() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 self-stretch sm:self-auto justify-end">
-                    <button
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() =>
                         alert("Pembahasan kuis dibuka. Fitur pembahasan aktif setelah integrasi backend.")
                       }
-                      className="px-4 py-1.5 bg-white text-[#0d5c52] rounded-xl text-[13px] font-semibold hover:bg-[#edf7f4] shadow-sm transition-all flex items-center gap-1"
+                      className="px-4 py-1.5 bg-white text-[#0d5c52] rounded-xl text-[13px] font-semibold hover:bg-[#edf7f4] shadow-sm transition-colors flex items-center gap-1"
                     >
                       <Eye className="size-[18px]" />
                       Lihat Pembahasan
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() =>
                         alert("Sertifikat Modul 04 siap diunduh. Fitur sertifikat aktif setelah integrasi backend.")
                       }
-                      className="px-4 py-1.5 bg-[#0d5c52] text-white rounded-xl text-[13px] font-semibold hover:bg-[#00433b] shadow-sm transition-all flex items-center gap-1"
+                      className="px-4 py-1.5 bg-[#0d5c52] text-white rounded-xl text-[13px] font-semibold hover:bg-[#00433b] shadow-sm transition-colors flex items-center gap-1"
                     >
                       <BadgeCheck className="size-[18px]" />
                       Unduh Sertifikat Modul
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
 
@@ -760,9 +870,13 @@ export function StudentModuleDetail() {
                       const n = i + 1;
                       const wrong = n === quizWrong;
                       return (
-                        <span
+                        <motion.span
                           key={n}
                           title={wrong ? "Soal Salah: Kompleksitas Fibonacci Heap" : undefined}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.25, delay: i * 0.02, ease: "easeOut" }}
                           className={`h-6 rounded text-[11px] font-bold flex items-center justify-center ${
                             wrong
                               ? "bg-[#ffdad6] text-[#93000a] ring-1 ring-[#ba1a1a]"
@@ -770,7 +884,7 @@ export function StudentModuleDetail() {
                           }`}
                         >
                           {n}
-                        </span>
+                        </motion.span>
                       );
                     })}
                   </div>
@@ -782,8 +896,9 @@ export function StudentModuleDetail() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </SlideIn>
 
           {/* Right */}
@@ -802,7 +917,8 @@ export function StudentModuleDetail() {
                 </span>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <StaggerChildren staggerDelay={0.1} className="flex flex-col gap-2">
+                <StaggerItem>
                 <div className="p-2 rounded-xl bg-[#edf7f4] flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold text-[#071f1c]">Sarah Azzahra</span>
@@ -822,6 +938,8 @@ export function StudentModuleDetail() {
                     </span>
                   </div>
                 </div>
+                </StaggerItem>
+                <StaggerItem>
                 <div className="p-2 rounded-xl bg-[#edf7f4] flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold text-[#071f1c]">Danu Ramadhan</span>
@@ -840,7 +958,8 @@ export function StudentModuleDetail() {
                     </span>
                   </div>
                 </div>
-              </div>
+                </StaggerItem>
+              </StaggerChildren>
 
               <div className="relative flex items-center pt-1">
                 <input
@@ -851,18 +970,24 @@ export function StudentModuleDetail() {
                   type="text"
                   className="w-full h-10 pl-3 pr-10 rounded-xl bg-[#edf7f4] text-[12px] text-[#071f1c] placeholder:text-[#536360] outline-none focus:bg-white focus:ring-1 focus:ring-[#0d5c52] transition-all"
                 />
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={sendQuestion}
                   className="absolute right-2 text-[#0d5c52] hover:text-[#00433b] p-1 rounded-lg"
                 >
                   <Send className="size-[18px]" />
-                </button>
+                </motion.button>
               </div>
             </div>
 
             {/* Next Module (Locked) */}
-            <div className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60 flex flex-col gap-2">
+            <motion.div
+              whileHover={{ y: -3 }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60 flex flex-col gap-2"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-[#536360] uppercase tracking-wider">
                   Modul Berikutnya
@@ -886,7 +1011,7 @@ export function StudentModuleDetail() {
                 <Lock className="size-[15px] text-[#0d5c52]" />
                 Selesaikan pengumpulan Tugas Lab 04 untuk membuka akses lebih awal.
               </div>
-            </div>
+            </motion.div>
           </SlideIn>
         </div>
       </div>
