@@ -26,4 +26,4 @@
 
 ### Execution Target
 
-Generate the `src/db/seed.ts` file, update `package.json`, and commit the changes with the message `feat: add database seeder for dummy users`.
+Generate the `src/db/seed.ts` file, update `package.json`, and commit the changes with the message `feat: add database seeder for dummy users`.s
