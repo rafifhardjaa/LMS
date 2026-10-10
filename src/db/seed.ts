@@ -31,7 +31,9 @@ async function seed() {
     }
 
     console.log("Inserting users...");
-    const passwordHash = await Bun.password.hash("password123");
+    const passwordHash = await Bun.password.hash("password123", {
+      algorithm: "argon2id",
+    });
 
     const usersData = await db
       .insert(users)
@@ -57,14 +59,39 @@ async function seed() {
           phone: "081234567892",
           isActive: true,
         },
+        {
+          fullName: "Siswa SIMANIS 2",
+          email: "siswa2@simanis.com",
+          passwordHash,
+          phone: "081234567893",
+          isActive: true,
+        },
+        {
+          fullName: "Siswa SIMANIS 3",
+          email: "siswa3@simanis.com",
+          passwordHash,
+          phone: "081234567894",
+          isActive: true,
+        },
+        {
+          fullName: "Siswa SIMANIS 4",
+          email: "siswa4@simanis.com",
+          passwordHash,
+          phone: "081234567895",
+          isActive: true,
+        },
       ])
+      .onConflictDoNothing({ target: users.email })
       .returning({ id: users.id, email: users.email });
 
     const adminUser = usersData.find((u) => u.email === "admin@simanis.com");
     const guruUser = usersData.find((u) => u.email === "guru@simanis.com");
     const siswaUser = usersData.find((u) => u.email === "siswa@simanis.com");
+    const siswa2User = usersData.find((u) => u.email === "siswa2@simanis.com");
+    const siswa3User = usersData.find((u) => u.email === "siswa3@simanis.com");
+    const siswa4User = usersData.find((u) => u.email === "siswa4@simanis.com");
 
-    if (!adminUser || !guruUser || !siswaUser) {
+    if (!adminUser || !guruUser || !siswaUser || !siswa2User || !siswa3User || !siswa4User) {
       throw new Error("Failed to create users");
     }
 
@@ -73,6 +100,9 @@ async function seed() {
       { userId: adminUser.id, roleId: adminRole.id },
       { userId: guruUser.id, roleId: guruRole.id },
       { userId: siswaUser.id, roleId: siswaRole.id },
+      { userId: siswa2User.id, roleId: siswaRole.id },
+      { userId: siswa3User.id, roleId: siswaRole.id },
+      { userId: siswa4User.id, roleId: siswaRole.id },
     ]);
 
     console.log("Inserting subject...");

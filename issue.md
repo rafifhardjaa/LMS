@@ -1,55 +1,29 @@
-# TASK SPECIFICATION: Fix Supabase Env Validation &amp; Error Handling
+# TASK SPECIFICATION: Create Database Seeder for Dummy Users
 
 ## 🤖 CRITICAL INSTRUCTION FOR AI AGENT
 
-\*\*USE INSTALLED SKILLS:\*\* You are running via automation.
+\*\*Context:\*\* The project uses Bun, ElysiaJS, Drizzle ORM, and PostgreSQL. We need a seed script to populate initial dummy users with different roles for local development.
 
-1. \*\*GIT FLOW:\*\* Buat branch `fix/env-supabase-setup` SEBELUM melakukan perubahan.
+\*\*Current Status:\*\* The database schema has a `users` table with a `password_hash` column that expects an `argon2id` hash.
 
-2. Modifikasi file `.env.example` dan `src/utils/supabase.ts`.
+### Task Checklist:
 
-3. Stage dan commit (`git add .` dan `git commit -m "fix: handle missing supabase env vars gracefully and update env.example"`).
+- \[ \] \*\*1. Create `src/db/seed.ts`\*\*
 
-4. \*\*FINAL PUSH (CRITICAL):\*\* Pindah ke `main` (`git checkout main`), merge (`git merge fix/env-supabase-setup`), dan \*\*WAJIB eksekusi `git push origin main`\*\*.
+  - Import the database connection (e.g., from `src/db/index.ts`) and the `users` schema.
 
----
+  - Create a script to insert at least 3 dummy users representing 3 roles: `admin`, `teacher`, and `student`.
 
-## Context &amp; Objective
+  - \*\*CRITICAL:\*\* The raw password for all dummy users should be `"password123"`. You MUST hash this password using `argon2id` before inserting it into the `password_hash` column. Since this is a Bun environment, use `Bun.password.hash("password123", { algorithm: "argon2id" })` or the project's existing password hashing utility.
 
-Saat tim Frontend menjalankan server backend secara lokal, server mengalami crash (Exit 1) pada proses booting dengan error `supabaseUrl is required` dari library `@supabase/supabase-js`. Hal ini terjadi karena developer Frontend belum memiliki `SUPABASE_URL` dan `SUPABASE_KEY` di file `.env` lokal mereka. 
+  - Ensure the script handles duplicate entries gracefully (e.g., using `.onConflictDoNothing()` based on the email).
 
-Tujuan task ini adalah membuat error menjadi lebih informatif bagi developer lain dan memastikan `.env.example` memiliki panduan variabel yang lengkap.
+  - Add a success `console.log` when the seeding is complete.
 
----
+- \[ \] \*\*2. Update `package.json`\*\*
 
-## Task Checklist
+  - Add `"seed": "bun run src/db/seed.ts"` to the `scripts` object.
 
-- \[ \] \*\*1. Update `.env.example`\*\*
+### Execution Target
 
-  - Pastikan file ini memiliki template variabel Supabase yang jelas. Tambahkan baris berikut jika belum ada:
-
-    \`\`\`env
-
-    # Supabase Config (Wajib diisi untuk fitur Storage/Upload, minta nilainya ke Backend)
-
-    SUPABASE\_URL="\[[https://your-project-id.supabase.co\](https://your-project-id.supabase.co)](https://your-project-id.supabase.co](https://your-project-id.supabase.co))"
-
-    SUPABASE\_KEY="your-anon-or-service-key"
-
-    \`\`\`
-
-- \[ \] \*\*2. Update `src/utils/supabase.ts`\*\*
-
-  - Bungkus atau validasi inisialisasi `createClient` dari Supabase.
-
-  - Tambahkan pengecekan nilai environment variable sebelum `createClient` dipanggil.
-
-  - Jika `process.env.SUPABASE_URL` atau key-nya `undefined`, lakukan `console.warn` dengan pesan instruksi yang jelas (misal: "⚠️ WARNING: SUPABASE\_URL atau SUPABASE\_KEY tidak ditemukan di .env. Server tetap berjalan namun fitur Storage akan gagal").
-
-  - Pastikan server tidak langsung hard-crash di awal booting hanya karena env ini hilang.
-
----
-
-## Execution Target
-
-Modifikasi `.env.example` dan `src/utils/supabase.ts`, pastikan server Elysia tetap bisa melakukan proses `bun run dev` dengan mulus meski environment variabel Supabase masih kosong (hanya memunculkan warning), lalu push perubahannya ke origin/main.
+Generate the `src/db/seed.ts` file, update `package.json`, and commit the changes with the message `feat: add database seeder for dummy users`.s
