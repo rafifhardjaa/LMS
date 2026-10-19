@@ -35,7 +35,7 @@ export function Counseling() {
       <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4 relative overflow-hidden">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1">
-            <Headset className="size-[22px] text-[#0d5c52]" />
+            <Headset className="size-5.5 text-[#0d5c52]" />
             <h2 className="text-[18px] font-semibold text-[#071f1c]">
               Counseling &amp; Student Wellness (BK)
             </h2>
@@ -49,7 +49,7 @@ export function Counseling() {
           {/* Counselor mini card */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-white rounded-xl border border-[#cee8e1]/50">
             <div className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-[#0d5c52] flex items-center justify-center text-white flex-shrink-0 ring-2 ring-[#0d5c52]/20">
+              <div className="w-12 h-12 rounded-full bg-[#0d5c52] flex items-center justify-center text-white shrink-0 ring-2 ring-[#0d5c52]/20">
                 <Headset className="size-6" />
               </div>
               <div className="flex flex-col">
@@ -176,7 +176,7 @@ export function Counseling() {
           {/* Booking action */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
             <div className="flex items-center gap-1 text-[#536360] text-[12px]">
-              <Lock className="size-[18px] text-[#0d5c52]" />
+              <Lock className="size-4.5 text-[#0d5c52]" />
               <span>
                 All discussions remain strictly confidential between counselor
                 &amp; student.
@@ -203,7 +203,7 @@ export function Counseling() {
                 className="p-2 bg-[#e6f4f1] text-[#0d5c52] rounded-xl text-[12px] flex items-center justify-between"
               >
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="size-[18px]" />
+                  <CheckCircle className="size-4.5" />
                   <span>
                     Jadwal konseling terpilih ({day} • {time} •{" "}
                     {mode === "video" ? "Online Video" : "Offline Room 204"})
