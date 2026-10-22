@@ -46,7 +46,12 @@ const menu = [
     href: "/teacher/presensi-siswa",
     title: "Presensi Siswa",
   },
-  { label: "Ekspor Rekap", icon: Download, href: "#", title: "Ekspor Data Raport" },
+  {
+    label: "Ekspor Rekap",
+    icon: Download,
+    href: "/teacher/ekspor-rekap",
+    title: "Ekspor Data Raport",
+  },
 ];
 
 export function GuruSidebar() {
