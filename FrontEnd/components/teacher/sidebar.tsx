@@ -34,7 +34,12 @@ const menu = [
     href: "/teacher/tugas-materi",
     title: "Tugas & Modul Ajar",
   },
-  { label: "Analitik & Nilai", icon: BarChart3, href: "#", title: "Nilai Siswa & Capaian" },
+  {
+    label: "Analitik & Nilai",
+    icon: BarChart3,
+    href: "/teacher/analitik-nilai",
+    title: "Nilai Siswa & Capaian",
+  },
   { label: "Presensi & Siswa", icon: UserCheck, href: "#", title: "Presensi Siswa" },
   { label: "Ekspor Rekap", icon: Download, href: "#", title: "Ekspor Data Raport" },
 ];
