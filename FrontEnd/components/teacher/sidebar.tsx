@@ -40,7 +40,12 @@ const menu = [
     href: "/teacher/analitik-nilai",
     title: "Nilai Siswa & Capaian",
   },
-  { label: "Presensi & Siswa", icon: UserCheck, href: "#", title: "Presensi Siswa" },
+  {
+    label: "Presensi & Siswa",
+    icon: UserCheck,
+    href: "/teacher/presensi-siswa",
+    title: "Presensi Siswa",
+  },
   { label: "Ekspor Rekap", icon: Download, href: "#", title: "Ekspor Data Raport" },
 ];
 
