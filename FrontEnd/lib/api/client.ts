@@ -1,45 +1,45 @@
 /**
- * Eden Treaty API client — type-safe HTTP client for the Elysia backend.
+ * API client untuk backend LMS melalui BFF same-origin.
  *
- * Usage:
- *   import { api, authApi } from "@/lib/api/client"
- *
- *   // Public routes (no auth)
- *   const { data, error } = await api.auth.login.post({ identifier, password })
- *   const { data, error } = await api.auth.register.post({ email, nomor_induk, tanggal_lahir })
- *
- *   // Protected routes (requires Bearer token)
- *   const { data, error } = await authApi(token).users.current.get()
- *   const { data, error } = await authApi(token).users.logout.delete()
+ * Semua request dikirim ke `/api/v1/*` (proxy) atau `/api/auth/*` (route
+ * handler sesi). Browser tidak pernah memegang JWT: token disimpan di
+ * cookie HttpOnly yang di-set oleh server, sehingga request terautentikasi
+ * memakai cookie tersebut, bukan header Authorization dari JavaScript.
  */
 
 import type {
-  RegisterRequest,
+  BackendModule,
+  ChangePasswordRequest,
+  CreateDiscussionRequest,
+  Discussion,
+  DiscussionReply,
   LoginRequest,
   LoginResponse,
-  ChangePasswordRequest,
   ApiSuccess,
   ApiMessage,
   ApiError,
+  ProgressSummary,
   User,
 } from "./types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+// Same-origin: route handler Next.js yang meneruskan ke backend.
+const BASE_URL = "";
 
 // ─── Low-level fetch helper ──────────────────────────────────────────────────
 
 async function apiFetch<T>(
   path: string,
-  options: RequestInit = {}
+  { headers, ...options }: RequestInit = {}
 ): Promise<{ data: T | null; error: ApiError | null; status: number }> {
   const url = `${BASE_URL}${path}`;
 
   const res = await fetch(url, {
+    ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers ?? {}),
+      ...(headers ?? {}),
     },
-    ...options,
+    credentials: "same-origin",
   });
 
   let body: unknown;
@@ -60,19 +60,13 @@ async function apiFetch<T>(
   return { data: body as T, error: null, status: res.status };
 }
 
-// ─── Auth header helper ──────────────────────────────────────────────────────
-
-function bearerHeader(token: string): Record<string, string> {
-  return { Authorization: `Bearer ${token}` };
-}
-
 // ─── Public API (no auth) ────────────────────────────────────────────────────
 
 export const api = {
   auth: {
-    /** POST /api/v1/auth/register — registrasi siswa (link aktivasi dikirim via email) */
-    register: (body: RegisterRequest) =>
-      apiFetch<ApiMessage>("/api/v1/auth/register", {
+    /** POST /api/auth/login — BFF yang men-set cookie HttpOnly */
+    login: (body: LoginRequest) =>
+      apiFetch<LoginResponse>("/api/auth/login", {
         method: "POST",
         body: JSON.stringify(body),
       }),
@@ -80,13 +74,6 @@ export const api = {
     /** POST /api/v1/auth/activate — buat password dari token email aktivasi */
     activate: (body: { token: string; password: string }) =>
       apiFetch<ApiSuccess<User>>("/api/v1/auth/activate", {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
-
-    /** POST /api/v1/auth/login — login dengan email atau nomor induk */
-    login: (body: LoginRequest) =>
-      apiFetch<LoginResponse>("/api/v1/auth/login", {
         method: "POST",
         body: JSON.stringify(body),
       }),
@@ -107,48 +94,79 @@ export const api = {
   },
 } as const;
 
-// ─── Authenticated API (requires Bearer token) ───────────────────────────────
+// ─── Authenticated API (cookie HttpOnly) ─────────────────────────────────────
 
-export function authApi(token: string) {
-  return {
-    auth: {
-      changePassword: {
-        /** PUT /api/v1/auth/password — ganti password, mengembalikan token baru */
-        put: (body: ChangePasswordRequest) =>
-          apiFetch<LoginResponse>("/api/v1/auth/password", {
-            method: "PUT",
-            headers: bearerHeader(token),
-            body: JSON.stringify(body),
-          }),
-      },
+export const modulesApi = {
+  /** GET /api/v1/modules — daftar modul dari backend */
+  list: () => apiFetch<ApiSuccess<BackendModule[]>>("/api/v1/modules"),
+
+  /** GET /api/v1/modules/:id — detail modul */
+  get: (moduleId: string) =>
+    apiFetch<ApiSuccess<BackendModule>>(`/api/v1/modules/${moduleId}`),
+} as const;
+
+export const progressApi = {
+  /** GET /api/v1/progress/module/:moduleId — progress siswa di suatu modul */
+  byModule: (moduleId: string) =>
+    apiFetch<ApiSuccess<ProgressSummary>>(
+      `/api/v1/progress/module/${moduleId}`
+    ),
+} as const;
+
+export const discussionsApi = {
+  /** GET /api/v1/modules/:moduleId/discussions */
+  list: (moduleId: string) =>
+    apiFetch<ApiSuccess<Discussion[]>>(
+      `/api/v1/modules/${moduleId}/discussions`
+    ),
+
+  /** POST /api/v1/modules/:moduleId/discussions */
+  create: (moduleId: string, body: CreateDiscussionRequest) =>
+    apiFetch<ApiSuccess<Discussion>>(
+      `/api/v1/modules/${moduleId}/discussions`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      }
+    ),
+
+  /** POST /api/v1/modules/:moduleId/discussions/:discussionId/replies */
+  reply: (
+    moduleId: string,
+    discussionId: string,
+    body: CreateDiscussionRequest
+  ) =>
+    apiFetch<ApiSuccess<DiscussionReply>>(
+      `/api/v1/modules/${moduleId}/discussions/${discussionId}/replies`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      }
+    ),
+} as const;
+
+export const authApi = {
+  auth: {
+    changePassword: {
+      /** PUT /api/auth/change-password — ganti password + rotasi cookie sesi */
+      put: (body: ChangePasswordRequest) =>
+        apiFetch<ApiSuccess<User>>("/api/auth/change-password", {
+          method: "PUT",
+          body: JSON.stringify(body),
+        }),
+    },
+  },
+
+  users: {
+    current: {
+      /** GET /api/auth/session — data user dari cookie sesi */
+      get: () => apiFetch<ApiSuccess<User>>("/api/auth/session"),
     },
 
-    users: {
-      current: {
-        /** GET /api/v1/users/current — get logged-in user info */
-        get: () =>
-          apiFetch<ApiSuccess<User>>("/api/v1/users/current", {
-            headers: bearerHeader(token),
-          }),
-      },
-
-      logout: {
-        /** DELETE /api/v1/users/logout — invalidate session */
-        delete: () =>
-          apiFetch<ApiSuccess<"OK">>("/api/v1/users/logout", {
-            method: "DELETE",
-            headers: bearerHeader(token),
-          }),
-      },
+    logout: {
+      /** POST /api/auth/logout — hapus cookie sesi di server */
+      delete: () =>
+        apiFetch<ApiSuccess<"OK">>("/api/auth/logout", { method: "POST" }),
     },
-  } as const;
-}
-
-// ─── Convenience: build authApi from localStorage token ──────────────────────
-
-export function getAuthApi() {
-  if (typeof window === "undefined") return null;
-  const token = localStorage.getItem("lms_token");
-  if (!token) return null;
-  return authApi(token);
-}
+  },
+} as const;

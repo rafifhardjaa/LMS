@@ -1,11 +1,23 @@
 import { db } from "./index";
-import { roles, users, userRoles, subjects, modules } from "./schema";
+import {
+  roles,
+  users,
+  userRoles,
+  subjects,
+  modules,
+  enrollments,
+  moduleDiscussions,
+  moduleDiscussionReplies,
+} from "./schema";
 
 async function seed() {
   console.log("🌱 Starting database seeding...");
 
   try {
     console.log("Clearing tables...");
+    await db.delete(moduleDiscussionReplies);
+    await db.delete(moduleDiscussions);
+    await db.delete(enrollments);
     await db.delete(modules);
     await db.delete(subjects);
     await db.delete(userRoles);
@@ -127,30 +139,119 @@ async function seed() {
       { userId: siswa4User.id, roleId: siswaRole.id },
     ]);
 
-    console.log("Inserting subject...");
+    console.log("Inserting subjects...");
     const subjectData = await db
       .insert(subjects)
-      .values({
-        name: "Matematika Dasar",
-        code: "MATH101",
-        description: "Pelajaran matematika dasar untuk pemula",
-        createdBy: adminUser.id,
-      })
-      .returning({ id: subjects.id });
+      .values([
+        {
+          name: "Informatika & Sains Komputasi",
+          code: "INF101",
+          description:
+            "Algoritma, struktur data, dan penerapan komputasi untuk kelas XII.",
+          createdBy: adminUser.id,
+        },
+        {
+          name: "Matematika Dasar",
+          code: "MATH101",
+          description: "Pelajaran matematika dasar untuk pemula",
+          createdBy: adminUser.id,
+        },
+      ])
+      .returning({ id: subjects.id, code: subjects.code });
 
-    const subject = subjectData[0];
-    if (!subject) {
-      throw new Error("Failed to create subject");
+    const informatikaSubject = subjectData.find((s) => s.code === "INF101");
+    const mathSubject = subjectData.find((s) => s.code === "MATH101");
+    if (!informatikaSubject || !mathSubject) {
+      throw new Error("Failed to create subjects");
     }
 
-    console.log("Inserting module...");
-    await db.insert(modules).values({
-      subjectId: subject.id,
-      teacherId: guruUser.id,
-      title: "Modul 1: Pengenalan Bilangan",
-      description: "Pengenalan konsep bilangan dasar",
-      orderIndex: 0,
-    });
+    console.log("Inserting modules...");
+    const moduleData = await db
+      .insert(modules)
+      .values([
+        {
+          subjectId: informatikaSubject.id,
+          teacherId: guruUser.id,
+          title: "Algoritma Pemrograman & Optimasi Big-O",
+          description:
+            "Analisis efisiensi algoritma, struktur data graf, dan optimasi kompleksitas Big-O.",
+          orderIndex: 0,
+        },
+        {
+          subjectId: mathSubject.id,
+          teacherId: guruUser.id,
+          title: "Modul 1: Pengenalan Bilangan",
+          description: "Pengenalan konsep bilangan dasar",
+          orderIndex: 1,
+        },
+      ])
+      .returning({ id: modules.id, title: modules.title });
+
+    const algorithmModule = moduleData.find(
+      (m) => m.title === "Algoritma Pemrograman & Optimasi Big-O"
+    );
+    if (!algorithmModule) {
+      throw new Error("Failed to create algorithm module");
+    }
+
+    console.log("Enrolling demo students in Informatika...");
+    await db.insert(enrollments).values([
+      {
+        studentId: siswaUser.id,
+        subjectId: informatikaSubject.id,
+        status: "active",
+      },
+      {
+        studentId: siswa4User.id,
+        subjectId: informatikaSubject.id,
+        status: "active",
+      },
+    ]);
+
+    console.log("Inserting sample discussions...");
+    const now = Date.now();
+    const discussionData = await db
+      .insert(moduleDiscussions)
+      .values([
+        {
+          moduleId: algorithmModule.id,
+          authorId: siswa4User.id,
+          body: "Pak, apakah bobot edge latensi boleh bernilai 0 jika antar switch terhubung direct fiber optic?",
+          createdAt: new Date(now - 2 * 60 * 60 * 1000),
+        },
+        {
+          moduleId: algorithmModule.id,
+          authorId: siswa4User.id,
+          body: "Apakah library NetworkX boleh digunakan untuk visualisasi Matplotlib di tugas lab?",
+          createdAt: new Date(now - 26 * 60 * 60 * 1000),
+        },
+      ])
+      .returning({ id: moduleDiscussions.id, body: moduleDiscussions.body });
+
+    const edgeQuestion = discussionData.find((d) =>
+      d.body.startsWith("Pak, apakah bobot edge")
+    );
+    const libraryQuestion = discussionData.find((d) =>
+      d.body.startsWith("Apakah library NetworkX")
+    );
+    if (!edgeQuestion || !libraryQuestion) {
+      throw new Error("Failed to create sample discussions");
+    }
+
+    await db.insert(moduleDiscussionReplies).values([
+      {
+        discussionId: edgeQuestion.id,
+        authorId: guruUser.id,
+        body: "Bisa, namun disarankan diberi bobot minimum 1ms untuk mencegah infinite tie-loop.",
+        createdAt: new Date(now - 90 * 60 * 1000),
+      },
+      {
+        discussionId: libraryQuestion.id,
+        authorId: guruUser.id,
+        body: "Sangat dianjurkan. Lihat referensi Bab 3 video demonstrasi untuk contoh lengkapnya.",
+        createdAt: new Date(now - 25 * 60 * 60 * 1000),
+      },
+    ]);
 
     console.log("✅ Database seeding completed successfully!");
     process.exit(0);

@@ -25,16 +25,6 @@ export interface User {
 
 // ─── Request / Response shapes ───────────────────────────────────────────────
 
-/**
- * Registrasi mandiri hanya untuk siswa dan harus cocok dengan roster
- * yang diimpor admin (nomor induk + tanggal lahir).
- */
-export interface RegisterRequest {
-  email: string;
-  nomor_induk: string;
-  tanggal_lahir: string; // YYYY-MM-DD
-}
-
 /** `identifier` = email terdaftar atau nomor induk (NIS/NIP). */
 export interface LoginRequest {
   identifier: string;
@@ -42,7 +32,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  data: string; // Bearer token
+  data: User;
   must_change_password?: boolean;
   success?: boolean;
   message?: string;
@@ -66,4 +56,52 @@ export interface ApiError {
   error?: string;
   message?: string;
   code?: string;
+}
+
+// ─── Modules & Discussions ──────────────────────────────────────────────────
+
+export interface BackendModule {
+  id: string;
+  subject_id: string;
+  subject_name: string | null;
+  teacher_id: string | null;
+  teacher_name: string | null;
+  title: string;
+  description: string | null;
+  order_index: number;
+  created_at: string;
+}
+
+export interface DiscussionAuthor {
+  id: string;
+  full_name: string;
+  role: UserRole;
+  avatar_url: string | null;
+}
+
+export interface DiscussionReply {
+  id: string;
+  discussion_id: string;
+  body: string;
+  created_at: string;
+  author: DiscussionAuthor;
+}
+
+export interface Discussion {
+  id: string;
+  module_id: string;
+  body: string;
+  created_at: string;
+  author: DiscussionAuthor;
+  replies: DiscussionReply[];
+}
+
+export interface CreateDiscussionRequest {
+  body: string;
+}
+
+// ─── Progress ───────────────────────────────────────────────────────────────
+
+export interface ProgressSummary {
+  percentage: number;
 }
