@@ -33,11 +33,20 @@ const helpMenu = [
   { label: "Support & Log", icon: LifeBuoy, href: "/admin/support" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const handleLogout = useLogout();
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white z-50 flex flex-col justify-between shadow-[0_1px_12px_rgba(0,0,0,0.03)]">
+    <aside
+      className={`fixed left-0 top-0 z-[70] flex h-screen w-64 flex-col justify-between bg-white shadow-[0_1px_12px_rgba(0,0,0,0.03)] transition-transform duration-200 ease-out lg:translate-x-0 ${
+        open ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       <div className="flex flex-col flex-1 overflow-y-auto px-4 pt-5 gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Brand */}
         <div className="flex items-center gap-3 px-2 mb-2">
@@ -70,6 +79,7 @@ export function Sidebar() {
               <a
                 key={label}
                 href={href}
+                onClick={onClose}
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                   active
@@ -99,6 +109,7 @@ export function Sidebar() {
                 <a
                   key={label}
                   href={href}
+                  onClick={onClose}
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
                     active

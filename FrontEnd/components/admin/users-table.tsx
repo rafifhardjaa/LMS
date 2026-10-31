@@ -153,7 +153,7 @@ const actionClassMap = {
 export function UsersTable() {
   return (
     <FadeIn>
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col gap-4">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col gap-4 max-lg:p-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex flex-col">
             <h2 className="text-lg font-bold text-[#181c20]">
@@ -164,7 +164,7 @@ export function UsersTable() {
               dan verifikasi dapodik
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 max-lg:flex-wrap">
             <motion.button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#eceef3] border border-[#e0e2e7]/50 text-xs font-semibold shadow-sm transition-all"
@@ -185,7 +185,7 @@ export function UsersTable() {
         </div>
 
         <div className="overflow-x-auto rounded-xl">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs max-lg:min-w-[860px]">
             <thead className="bg-[#f1f4f9] text-[#4e566c] font-semibold uppercase text-[10px] tracking-wider">
               <tr>
                 <th className="py-3.5 px-4">Pengguna / NIP/NISN</th>

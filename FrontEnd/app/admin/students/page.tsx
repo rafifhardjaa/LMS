@@ -13,7 +13,7 @@ export default function StudentsPage() {
         <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
           <SlideIn direction="left">
             <div className="max-w-[480px]">
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-medium text-[#4e566c]">
+              <div className="mb-2 flex items-center gap-2 max-lg:flex-wrap text-[11px] font-medium text-[#4e566c]">
                 <span className="rounded-full bg-[#e5deff] px-3 py-1 text-[#4331a8]">SMK MATARAM • KURIKULUM MERDEKA</span>
                 <span>• Tahun Ajaran 2026/2027 Ganjil (Fase E &amp; F)</span>
               </div>

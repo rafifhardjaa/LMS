@@ -13,7 +13,7 @@ export default function TeachersPage() {
         <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
           <SlideIn direction="left">
             <div className="max-w-[440px]">
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-medium text-[#4e566c]">
+              <div className="mb-2 flex items-center gap-2 max-lg:flex-wrap text-[11px] font-medium text-[#4e566c]">
                 <span className="rounded-full bg-[#e5deff] px-3 py-1 text-[#4331a8]">SMK MATARAM • KURIKULUM MERDEKA</span>
                 <span>T.A. 2026/2027 Ganjil</span>
               </div>
@@ -29,7 +29,7 @@ export default function TeachersPage() {
         </div>
       </FadeIn>
       <TeacherStats />
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <TeachersTable />
         <TeachersSidePanels />
       </div>

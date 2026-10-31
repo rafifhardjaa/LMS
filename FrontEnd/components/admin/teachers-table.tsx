@@ -72,7 +72,7 @@ export function TeachersTable() {
             <h2 className="text-lg font-bold text-[#181c20]">Daftar Pendidik & Pengampu</h2>
             <span className="rounded-full bg-[#e5deff] px-2.5 py-1 text-[11px] font-semibold text-[#4331a8]">Total {filtered.length} Guru</span>
           </div>
-          <div className="flex items-center gap-3 text-xs text-[#4e566c]">
+          <div className="flex items-center gap-3 max-lg:flex-wrap text-xs text-[#4e566c]">
             <span>Menampilkan {rows.length} dari {filtered.length} guru</span>
             <div className="flex items-center gap-1">
               <button type="button" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage(page - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronLeft className="size-4" /></button>

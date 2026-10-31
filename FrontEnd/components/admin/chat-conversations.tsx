@@ -24,7 +24,7 @@ export function ChatConversations() {
   const rows = conversations.filter((c) => !query.trim() || c.name.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
-    <section className="flex min-h-[640px] flex-col overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
+    <section className="flex min-h-[640px] max-lg:min-h-[480px] flex-col overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
       <div className="flex items-center justify-between px-4 py-4">
         <h2 className="text-sm font-bold text-[#181c20]">Daftar Percakapan</h2>
         <button type="button" aria-label="Percakapan baru" onClick={() => window.alert("Buat Percakapan Baru")} className="flex size-8 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff]"><Plus className="size-4" /></button>

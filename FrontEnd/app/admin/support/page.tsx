@@ -219,7 +219,7 @@ export default function SupportPage() {
       </header>
 
       {/* Stats */}
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Status Tiket Bantuan"
           icon={Ticket}
@@ -287,7 +287,7 @@ export default function SupportPage() {
         </StatCard>
       </div>
 
-      <div className="mt-6 grid items-start gap-6 xl:grid-cols-[1.27fr_1fr]">
+      <div className="mt-6 grid max-lg:grid-cols-1 items-start gap-6 xl:grid-cols-[1.27fr_1fr]">
         {/* Left column */}
         <div className="min-w-0 space-y-6">
           <section className={`${card} p-6`}>
@@ -376,7 +376,7 @@ export default function SupportPage() {
                             <span className="flex size-6 items-center justify-center rounded-full bg-[#6552d4] text-[10px] font-bold text-white">IT</span>
                             Ditugaskan: Dimas Prasetya (NOC L2)
                           </span>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 max-lg:flex-wrap">
                             <button type="button" onClick={() => window.alert(`Balas tiket ${t.id}.`)} className={softButton}>Balas Tiket</button>
                             <button type="button" onClick={() => window.alert(`Tugaskan teknisi untuk ${t.id}.`)} className="inline-flex h-9 items-center rounded-full bg-[#6552d4] px-3 text-[12px] font-bold text-white hover:bg-[#5442c0]">Tugaskan Teknisi</button>
                           </div>
@@ -387,7 +387,7 @@ export default function SupportPage() {
                           <span className="flex items-center gap-1.5 text-[11px] text-[#3a3c48]">
                             <History className="size-3.5" /> Verifikasi data wali diperlukan
                           </span>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 max-lg:flex-wrap">
                             <button type="button" onClick={() => window.alert(`Balas tiket ${t.id}.`)} className={softButton}>Balas Tiket</button>
                             <button type="button" onClick={() => window.alert("OTP baru dikirim ke siswa.")} className={softButton}>Kirim OTP Baru</button>
                           </div>
@@ -416,14 +416,14 @@ export default function SupportPage() {
           </section>
 
           {/* Syslog terminal */}
-          <section className="bg-[#111827] p-6 font-mono text-[#e5e7eb] shadow-[0_8px_24px_rgba(17,24,39,0.18)]">
+          <section className="bg-[#111827] p-6 max-lg:p-4 font-mono text-[#e5e7eb] shadow-[0_8px_24px_rgba(17,24,39,0.18)]">
             <div className="flex items-center gap-3">
               <span className="flex gap-1.5" aria-hidden>
                 <i className="size-3 rounded-full bg-[#ef4444]" />
                 <i className="size-3 rounded-full bg-[#f59e0b]" />
                 <i className="size-3 rounded-full bg-[#22c55e]" />
               </span>
-              <span className="text-[12px] font-bold text-[#cbd5e1]">syslog://simanis-pro.audit.stream</span>
+              <span className="min-w-0 break-all text-[12px] font-bold text-[#cbd5e1]">syslog://simanis-pro.audit.stream</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2 font-sans">
               <button
@@ -463,11 +463,11 @@ export default function SupportPage() {
             <ul className="mt-5 space-y-5" aria-live={autoRefresh ? "polite" : "off"}>
               {visibleLogs.length === 0 && <li className="text-[12px] text-[#64748b]">Tidak ada entri log untuk level ini.</li>}
               {visibleLogs.map((l) => (
-                <li key={l.time} className="flex gap-2 text-[13px] leading-[1.6]">
+                <li key={l.time} className="flex gap-2 text-[13px] leading-[1.6] max-lg:flex-wrap max-lg:gap-y-1">
                   <span className="shrink-0 pt-0.5 font-sans text-[10px] text-[#64748b]">{l.time}</span>
                   <span className={`h-fit shrink-0 rounded px-1.5 font-sans text-[10px] font-bold ${levelStyle[l.level]}`}>{l.level}</span>
                   <span className="shrink-0 text-[#94a3b8]">{l.source}</span>
-                  <span className={l.level === "WARN" ? "text-[#facc15]" : "text-[#e5e7eb]"}>{l.text}</span>
+                  <span className={`max-lg:basis-full ${l.level === "WARN" ? "text-[#facc15]" : "text-[#e5e7eb]"}`}>{l.text}</span>
                 </li>
               ))}
             </ul>

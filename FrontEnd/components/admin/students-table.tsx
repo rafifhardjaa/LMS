@@ -90,7 +90,7 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
               <h2 className="text-lg font-bold text-[#181c20]">Daftar Siswa &amp; Peserta Didik</h2>
               <span className="rounded-full bg-[#e5deff] px-2 py-0.5 text-[11px] font-semibold text-[#4331a8]">1.842 Total</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-lg:flex-wrap">
               <button type="button" onClick={() => window.alert("Filter Lanjutan")} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#eceef3] px-3 text-[11px] font-medium text-[#4e566c] hover:bg-[#e0e2e7]"><SlidersHorizontal className="size-3.5" /> Filter Lanjutan</button>
               <button type="button" onClick={() => window.alert("Kolom Tampilan")} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#eceef3] px-3 text-[11px] font-medium text-[#4e566c] hover:bg-[#e0e2e7]"><Columns3 className="size-3.5" /> Kolom Tampilan</button>
             </div>

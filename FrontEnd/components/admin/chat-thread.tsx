@@ -19,8 +19,8 @@ export function ChatThread() {
   };
 
   return (
-    <section className="flex min-h-[640px] flex-col overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
-      <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-3">
+    <section className="flex min-h-[640px] max-lg:min-h-[480px] flex-col overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
+      <div className="flex items-center justify-between gap-3 border-b border-[#eef0f5] px-4 py-3 max-lg:flex-wrap">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#6c5dd3] text-[10px] font-bold text-white">PB</span>
           <div className="min-w-0">
@@ -28,7 +28,7 @@ export function ChatThread() {
             <p className="truncate text-[10px] text-[#787584]">Konselor: Mrs. Sarah Jenkins, M.Psi <span className="mx-1">•</span> <span className="inline-flex items-center gap-1"><Lock className="size-2.5" /> Enkripsi 256-Bit</span></p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5 max-lg:ml-auto">
           <button type="button" aria-label="Panel detail siswa" onClick={() => window.alert("Buka Panel Detail Siswa")} className="flex size-8 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff]"><SlidersHorizontal className="size-3.5" /></button>
           <button type="button" aria-label="Transfer konselor" onClick={() => window.alert("Transfer ke Konselor Lain")} className="flex size-8 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff]"><UserRoundCog className="size-3.5" /></button>
           <button type="button" aria-label="Laporkan insiden" onClick={() => window.alert("Laporkan Insiden BK")} className="flex size-8 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff]"><ShieldCheck className="size-3.5" /></button>
@@ -61,10 +61,10 @@ export function ChatThread() {
         <div className="flex flex-wrap gap-2">
           {templates.map(({ label, icon: Icon, alert }) => <button key={label} type="button" onClick={() => window.alert(alert)} className="inline-flex items-center gap-1.5 rounded-full bg-[#f1f4f9] px-3 py-1.5 text-[10px] font-semibold text-[#4331a8] hover:bg-[#e5deff]"><Icon className="size-3" /> {label}</button>)}
         </div>
-        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-[#f1f4f9] px-3 py-2">
+        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-[#f1f4f9] px-3 py-2 max-lg:flex-wrap">
           <button type="button" aria-label="Lampirkan berkas" onClick={() => window.alert("Lampirkan Berkas")} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-[#4e566c] shadow-sm hover:text-[#6c5dd3]"><Paperclip className="size-4" /></button>
           <input value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} placeholder="Tulis balasan reassuring & empatik..." aria-label="Tulis pesan" className="h-8 min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-[#787584]" />
-          <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-[9px] font-semibold text-[#4e566c]"><input type="checkbox" checked={secretNotes} onChange={(e) => setSecretNotes(e.target.checked)} className="size-3.5 accent-[#6c5dd3]" /> Catatan Rahasia</label>
+          <label className="flex shrink-0 cursor-pointer items-center gap-1.5 max-lg:order-last max-lg:w-full text-[9px] font-semibold text-[#4e566c]"><input type="checkbox" checked={secretNotes} onChange={(e) => setSecretNotes(e.target.checked)} className="size-3.5 accent-[#6c5dd3]" /> Catatan Rahasia</label>
           <button type="button" onClick={send} aria-label="Kirim pesan" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#5343b9] text-white shadow-[0_4px_10px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"><Send className="size-3.5" /></button>
         </div>
       </div>
