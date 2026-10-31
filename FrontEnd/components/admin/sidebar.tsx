@@ -14,28 +14,39 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useLogout } from "@/hooks/use-logout";
 
 const mainMenu = [
-  { label: "Dashboard", icon: LayoutGrid, active: true },
-  { label: "Teachers (Guru)", icon: User },
-  { label: "Students (Siswa)", icon: Users },
-  { label: "Course (Mapel)", icon: BookOpen },
-  { label: "Resource (Modul)", icon: Folder },
-  { label: "Certificate (LSP)", icon: Award },
-  { label: "Chat Konseling", icon: MessageCircle },
-  { label: "Transaction", icon: ReceiptText },
+  { label: "Dashboard", icon: LayoutGrid, href: "/admin/dashboard" },
+  { label: "Teachers (Guru)", icon: User, href: "/admin/teachers" },
+  { label: "Students (Siswa)", icon: Users, href: "/admin/students" },
+  { label: "Course (Mapel)", icon: BookOpen, href: "/admin/course" },
+  { label: "Resource (Modul)", icon: Folder, href: "/admin/resource" },
+  { label: "Certification (LSP)", icon: Award, href: "/admin/certification" },
+  { label: "Chat Konseling", icon: MessageCircle, href: "/admin/chatkonseling" },
+  { label: "Transaction", icon: ReceiptText, href: "/admin/transaksi" },
 ];
 
 const helpMenu = [
-  { label: "Settings", icon: Settings },
-  { label: "Support & Log", icon: LifeBuoy },
+  { label: "Settings", icon: Settings, href: "/admin/settings" },
+  { label: "Support & Log", icon: LifeBuoy, href: "/admin/support" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
+  const pathname = usePathname();
   const handleLogout = useLogout();
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white z-50 flex flex-col justify-between shadow-[0_1px_12px_rgba(0,0,0,0.03)]">
+    <aside
+      className={`fixed left-0 top-0 z-[70] flex h-screen w-64 flex-col justify-between bg-white shadow-[0_1px_12px_rgba(0,0,0,0.03)] transition-transform duration-200 ease-out lg:translate-x-0 ${
+        open ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       <div className="flex flex-col flex-1 overflow-y-auto px-4 pt-5 gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Brand */}
         <div className="flex items-center gap-3 px-2 mb-2">
@@ -46,9 +57,6 @@ export function Sidebar() {
             <div className="flex items-center gap-1.5">
               <span className="text-[19px] text-[#181c20] tracking-tight font-bold">
                 SiManis
-              </span>
-              <span className="px-1.5 py-0.5 rounded bg-[#e5deff] text-[#4331a8] text-[10px] font-bold uppercase tracking-wider">
-                PRO
               </span>
             </div>
             <span className="text-[10px] text-[#787584] font-semibold tracking-wider uppercase">
@@ -65,10 +73,13 @@ export function Sidebar() {
             </span>
           </div>
           <nav className="space-y-1">
-            {mainMenu.map(({ label, icon: Icon, active }) => (
+            {mainMenu.map(({ label, icon: Icon, href }) => {
+              const active = pathname === href;
+              return (
               <a
                 key={label}
-                href="#"
+                href={href}
+                onClick={onClose}
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                   active
@@ -79,7 +90,8 @@ export function Sidebar() {
                 <Icon className="size-5" />
                 <span className="text-sm font-semibold">{label}</span>
               </a>
-            ))}
+              );
+            })}
           </nav>
         </div>
 
@@ -91,26 +103,34 @@ export function Sidebar() {
             </span>
           </div>
           <nav className="space-y-1">
-            {helpMenu.map(({ label, icon: Icon }) => (
-              <a
-                key={label}
-                href="#"
-                className="flex items-center gap-3 px-3 py-2 rounded-xl text-[#4e566c] hover:bg-[#eceef3] hover:text-[#181c20] transition-all"
-              >
-                <Icon className="size-5" />
-                <span className="text-sm font-semibold">{label}</span>
-              </a>
-            ))}
+            {helpMenu.map(({ label, icon: Icon, href }) => {
+              const active = pathname === href;
+              return (
+                <a
+                  key={label}
+                  href={href}
+                  onClick={onClose}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
+                    active
+                      ? "bg-[#6c5dd3] text-white font-semibold shadow-[0_4px_12px_-2px_rgba(108,93,211,0.35)]"
+                      : "text-[#4e566c] hover:bg-[#eceef3] hover:text-[#181c20]"
+                  }`}
+                >
+                  <Icon className="size-5" />
+                  <span className="text-sm font-semibold">{label}</span>
+                </a>
+              );
+            })}
           </nav>
         </div>
 
         {/* Promo banner */}
-        {/* <div className="relative p-4 rounded-2xl bg-[#f1f4f9] border border-[#e0e2e7]/30 flex flex-col gap-2 mt-auto overflow-hidden">
+        <div className="relative p-4 rounded-2xl bg-[#f1f4f9] border border-[#e0e2e7]/30 flex flex-col gap-2 mt-auto overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="w-7 h-7 rounded-lg bg-[#e5deff] flex items-center justify-center text-[#6c5dd3]">
               <School className="size-4" />
             </div>
-            <X className="size-4 text-[#787584] cursor-pointer hover:text-[#181c20]" />
           </div>
           <div>
             <span className="text-xs font-bold text-[#181c20] block">
@@ -128,7 +148,7 @@ export function Sidebar() {
               What&apos;s new?
             </button>
           </div>
-        </div> */}
+        </div>
       </div>
 
       {/* User profile */}

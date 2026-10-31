@@ -26,7 +26,7 @@ export default function DashboardPage() {
               </p>
             </div>
           </SlideIn>
-          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex items-center gap-2.5">
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex items-center gap-2.5 max-lg:flex-wrap">
             <StaggerItem>
               <motion.button
                 type="button"
