@@ -1,74 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
-import { modulesApi } from "@/lib/api/client";
+import { modulesApi, progressApi } from "@/lib/api/client";
 import {
   ArrowDownUp,
-  Atom,
   BookOpen,
   CheckCircle2,
   ChevronDown,
-  Code,
   Download,
-  Eye,
-  FileText,
-  FolderOpen,
   Home,
-  Layers,
   LayoutGrid,
   Library,
   List,
-  Mic,
-  Palette,
-  Play,
   PlayCircle,
-  Presentation,
   Search,
   SearchX,
-  Sigma,
   Users,
-  Video,
 } from "lucide-react";
 import { FadeIn, StaggerChildren, StaggerItem, CountUp } from "@/components/ui/animations";
+import {
+  buildSubjectTabs,
+  progressDisplay,
+  toModuleCard,
+  type ModuleCard,
+  type ModuleProgress,
+} from "@/components/student/module-catalog";
 
-type SubjectKey = "cs" | "physics" | "math" | "vocational" | "language";
-type StatusKey = "in_progress" | "completed" | "new";
-type StatusFilter = "all" | StatusKey;
-
-type Module = {
-  id: string;
-  title: string;
-  kicker: string;
-  desc: string;
-  subject: SubjectKey;
-  subjectLabel: string;
-  subjectClass: string;
-  tag: string;
-  tagClass: string;
-  image: string;
-  info: { icon: typeof BookOpen; text: string }[];
-  progress: number;
-  status: StatusKey;
-  action: string;
-  actionIcon: typeof Play;
-};
+type StatusFilter = "all" | "in_progress" | "completed" | "new";
 
 const inter = { fontFamily: "var(--font-inter), system-ui, sans-serif" } as const;
 const jakarta = { fontFamily: "var(--font-plus-jakarta), system-ui, sans-serif" } as const;
-
-const subjectTabs: { key: "all" | SubjectKey; label: string }[] = [
-  { key: "all", label: "Semua Mata Pelajaran" },
-  { key: "cs", label: "Informatika & Ilmu Komputer" },
-  { key: "physics", label: "Fisika Terapan & Robotika" },
-  { key: "math", label: "Matematika Tingkat Lanjut" },
-  { key: "vocational", label: "Kejuruan (DKV / TKR)" },
-  { key: "language", label: "Bahasa & Literasi" },
-];
 
 const statusOptions: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "Semua Status" },
@@ -84,212 +49,108 @@ const classOptions = [
   "Materi Ekstrakurikuler Khusus",
 ];
 
-const modules: Module[] = [
-  {
-    id: "algo-big-o",
-    title: "Algoritma Pemrograman & Optimasi Big-O",
-    kicker: "FASE F • KELAS XII",
-    desc: "Catatan kuliah struktural, analisis efisiensi memori, slide presentasi guru, dan 14 bank latihan soal interaktif.",
-    subject: "cs",
-    subjectLabel: "Informatika",
-    subjectClass: "bg-[#0d5c52] text-white",
-    tag: "Kurikulum Merdeka",
-    tagClass: "bg-white/90 text-[#0d5c52] backdrop-blur-sm",
-    image: "/modules/algo-big-o.jpg",
-    info: [
-      { icon: BookOpen, text: "6 Bab Lengkap" },
-      { icon: FolderOpen, text: "12 Bahan Ajar" },
-    ],
-    progress: 70,
-    status: "in_progress",
-    action: "Buka Modul",
-    actionIcon: PlayCircle,
-  },
-  {
-    id: "thermo-wave",
-    title: "Termodinamika & Gelombang Mekanik",
-    kicker: "FASE F • SAINS FISIKA",
-    desc: "Panduan praktikum virtual PhET Interactive Simulations, bank soal latihan mandiri, dan rekaman demonstrasi termodinamika.",
-    subject: "physics",
-    subjectLabel: "Fisika Terapan",
-    subjectClass: "bg-[#00796b] text-white",
-    tag: "Ada Remedial",
-    tagClass: "bg-[#ffdad6] text-[#93000a]",
-    image: "/modules/thermo-wave.jpg",
-    info: [
-      { icon: Atom, text: "5 Bab Inti" },
-      { icon: Presentation, text: "8 Lab Sheet" },
-    ],
-    progress: 45,
-    status: "in_progress",
-    action: "Buka Modul",
-    actionIcon: PlayCircle,
-  },
-  {
-    id: "calc-matrix",
-    title: "Kalkulus Lanjut & Aljabar Linier Matriks",
-    kicker: "FASE F • OLIMPIADE & UTBK",
-    desc: "Diktat materi eksklusif SMK Mataram, bank soal seleksi PTN Mandiri ITB/UI, dan solusi penyelesaian matriks orde tinggi.",
-    subject: "math",
-    subjectLabel: "Matematika Lanjut",
-    subjectClass: "bg-[#0d5c52] text-white",
-    tag: "Persiapan UTBK",
-    tagClass: "bg-[#a6f2cf] text-[#002115]",
-    image: "/modules/calc-matrix.jpg",
-    info: [
-      { icon: Sigma, text: "8 Bab Silabus" },
-      { icon: FileText, text: "15 Dokumen PDF" },
-    ],
-    progress: 100,
-    status: "completed",
-    action: "Ulas Kembali",
-    actionIcon: Eye,
-  },
-  {
-    id: "ai-ml",
-    title: "Kecerdasan Buatan & Machine Learning",
-    kicker: "FASE F • TEKNOLOGI TERAPAN",
-    desc: "Dataset latih CSV, Google Colab Jupyter notebooks terintegrasi, dan modul sintaksis PyTorch/TensorFlow dasar.",
-    subject: "cs",
-    subjectLabel: "Informatika Peminatan",
-    subjectClass: "bg-[#14b8a6] text-white",
-    tag: "Baru Diunggah",
-    tagClass: "bg-[#71f8e4] text-[#00201c]",
-    image: "/modules/ai-ml.jpg",
-    info: [
-      { icon: Code, text: "4 Bab Praktik" },
-      { icon: Layers, text: "Colab Notebooks" },
-    ],
-    progress: 0,
-    status: "new",
-    action: "Mulai Belajar",
-    actionIcon: Play,
-  },
-  {
-    id: "english-research",
-    title: "English for Academic & Technical Research",
-    kicker: "FASE F • KOMUNIKASI GLOBAL",
-    desc: "Academic writing guidelines, panduan pembuatan esai beasiswa riset luar negeri, dan audio listening technical conference.",
-    subject: "language",
-    subjectLabel: "Bahasa & Literasi",
-    subjectClass: "bg-[#00796b] text-white",
-    tag: "Sains & Teknologi",
-    tagClass: "bg-white/90 text-[#0d5c52] backdrop-blur-sm",
-    image: "/modules/english-research.jpg",
-    info: [
-      { icon: Mic, text: "4 Bab Audio Lab" },
-      { icon: FileText, text: "Format Esai Ilmiah" },
-    ],
-    progress: 100,
-    status: "completed",
-    action: "Ulas Audio & Teks",
-    actionIcon: Eye,
-  },
-  {
-    id: "uiux-dkv",
-    title: "Desain Sistem & Antarmuka UI/UX Modern",
-    kicker: "FASE F • DESAIN PRODUK",
-    desc: "Design tokens, wireframing komponen atomik, Figma master design kit, dan panduan usability testing standar industri digital.",
-    subject: "vocational",
-    subjectLabel: "Kejuruan DKV",
-    subjectClass: "bg-[#0d5c52] text-white",
-    tag: "Proyek Kolaboratif",
-    tagClass: "bg-[#a6f2cf] text-[#002115]",
-    image: "/modules/uiux-dkv.jpg",
-    info: [
-      { icon: Layers, text: "6 Bab Proyek" },
-      { icon: Palette, text: "Figma UI Assets" },
-    ],
-    progress: 82,
-    status: "in_progress",
-    action: "Buka Modul",
-    actionIcon: PlayCircle,
-  },
-];
-
-function progressText(m: Module) {
-  if (m.status === "new")
-    return { text: "0% Belum Dimulai", className: "text-[#6f7976]" };
-  if (m.status === "completed")
-    return {
-      text: "100% Selesai",
-      className: "text-[#0d5c52] flex items-center gap-1",
-    };
-  return {
-    text: `${m.progress}% Selesai`,
-    className: m.subject === "physics" ? "text-[#00796b]" : "text-[#0d5c52]",
-  };
-}
-
-function barClass(m: Module) {
-  if (m.status === "new") return "bg-[#bec9c5]";
-  if (m.subject === "physics") return "bg-[#00796b]";
-  return "bg-[#0d5c52]";
-}
-
 export function StudentModules() {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const [subject, setSubject] = useState<"all" | SubjectKey>("all");
+  const [subject, setSubject] = useState("all");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [openingModule, setOpeningModule] = useState<string | null>(null);
 
-  async function openModule(module: Module) {
-    if (module.id !== "algo-big-o") {
-      toast.info(
-        `Modul "${module.title}" dibuka. Fitur pembelajaran aktif setelah integrasi backend.`
-      );
-      return;
-    }
-    if (openingModule) return;
-
-    setOpeningModule(module.id);
-    try {
-      const result = await queryClient.fetchQuery({
-        queryKey: ["modules"],
-        queryFn: () => modulesApi.list(),
-        staleTime: 0,
-      });
+  const modulesQuery = useQuery({
+    queryKey: ["modules"],
+    queryFn: async () => {
+      const result = await modulesApi.list();
       if (result.error) {
-        toast.error(
-          result.error.message || result.error.error || "Gagal memuat modul."
+        throw new Error(
+          result.error.message || result.error.error || "Gagal memuat daftar modul."
         );
-        return;
       }
-      const backendModules = result.data?.data ?? [];
-      const target =
-        backendModules.find((item) => item.title === module.title) ??
-        backendModules.find((item) => item.title.includes("Algoritma")) ??
-        backendModules[0];
+      if (!result.data) {
+        throw new Error("Respons daftar modul tidak valid.");
+      }
+      return result.data.data;
+    },
+    staleTime: 30_000,
+  });
+  const backendModules = modulesQuery.data ?? [];
+  const progressQueries = useQueries({
+    queries: backendModules.map((module) => ({
+      queryKey: ["progress", "module", module.id],
+      queryFn: async () => {
+        const result = await progressApi.byModule(module.id);
+        if (result.error) {
+          const error = new Error(
+            result.error.message || result.error.error || "Gagal memuat progress modul."
+          ) as Error & { status?: number };
+          error.status = result.status;
+          throw error;
+        }
+        return result.data?.data.percentage ?? 0;
+      },
+      staleTime: 30_000,
+      retry: 0,
+    })),
+  });
+  const progressByModule = new Map<string, ModuleProgress>(
+    backendModules.map((module, index) => {
+      const query = progressQueries[index];
+      return [
+        module.id,
+        {
+          percentage: query?.isError ? null : (query?.data ?? null),
+          loading: query?.isLoading ?? false,
+          errorStatus:
+            query?.isError && query.error instanceof Error
+              ? (query.error as Error & { status?: number }).status
+              : undefined,
+        },
+      ];
+    })
+  );
+  const subjectTabs = buildSubjectTabs(backendModules);
+  const displayModules = backendModules.map((module) =>
+    toModuleCard(
+      module,
+      progressByModule.get(module.id) ?? { percentage: null, loading: false }
+    )
+  );
+  const totalModules = displayModules.length;
+  const completedModules = displayModules.filter(
+    (module) => module.status === "completed"
+  ).length;
+  const inProgressModules = displayModules.filter(
+    (module) => module.status === "in_progress"
+  ).length;
+  const completionPercent =
+    totalModules === 0
+      ? 0
+      : Math.floor((completedModules / totalModules) * 100);
 
-      if (!target) {
-        toast.error("Modul belum tersedia di server.");
-        return;
-      }
-      router.push(`/student/modules/${target.id}`);
-    } catch {
-      toast.error("Gagal memuat daftar modul.");
-    } finally {
-      setOpeningModule(null);
-    }
+  function openModule(module: ModuleCard) {
+    router.push(`/student/modules/${module.id}`);
   }
 
-  const visibleModules = useMemo(() => {
+  const filteredModules = displayModules.filter((module) => {
     const q = query.trim().toLowerCase();
-    const filtered = modules.filter((m) => {
-      const matchesSubject = subject === "all" || m.subject === subject;
-      const matchesStatus = status === "all" || m.status === status;
-      const haystack = [m.title, m.desc, m.kicker, m.subjectLabel, ...m.info.map((i) => i.text)]
-        .join(" ")
-        .toLowerCase();
-      const matchesQuery = q === "" || haystack.includes(q);
-      return matchesSubject && matchesStatus && matchesQuery;
-    });
-    return sort === "newest" ? filtered : [...filtered].reverse();
-  }, [subject, status, query, sort]);
+    const matchesSubject = subject === "all" || module.subjectId === subject;
+    const matchesStatus = status === "all" || module.status === status;
+    const haystack = [
+      module.title,
+      module.desc,
+      module.kicker,
+      module.subjectLabel,
+      ...module.info.map((item) => item.text),
+    ]
+      .join(" ")
+      .toLowerCase();
+    const matchesQuery = q === "" || haystack.includes(q);
+    return matchesSubject && matchesStatus && matchesQuery;
+  });
+  const visibleModules = [...filteredModules].sort((a, b) => {
+    const diff = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+    return sort === "newest" ? -diff : diff;
+  });
 
   return (
     <FadeIn className="w-full">
@@ -367,7 +228,7 @@ export function StudentModules() {
               <div className="relative mt-4">
                 <div className="flex items-baseline gap-2">
                   <span className="text-[32px] font-bold leading-10 text-[#071f1c]">
-                    <CountUp to={28} duration={1.2} />
+                    <CountUp to={totalModules} duration={1.2} />
                   </span>
                   <span className="text-[13px] font-semibold leading-[18px] text-[#0d5c52]">
                     Modul Aktif
@@ -375,10 +236,10 @@ export function StudentModules() {
                 </div>
                 <div className="mt-1 flex items-center gap-1.5 text-[12px] leading-[18px] text-[#3f4946]">
                   <span className="size-2 rounded-full bg-[#0d5c52]" />
-                  <span>18 Wajib</span>
+                  <span>{Math.max(subjectTabs.length - 1, 0)} Mata Pelajaran</span>
                   <span className="text-[#bec9c5]">•</span>
                   <span className="size-2 rounded-full bg-[#00796b]" />
-                  <span>10 Peminatan</span>
+                  <span>Data Backend</span>
                 </div>
               </div>
             </div>
@@ -398,20 +259,20 @@ export function StudentModules() {
               <div className="relative mt-4">
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-[32px] font-bold leading-10 text-[#071f1c]">
-                    <CountUp to={19} duration={1.2} />{" "}
+                    <CountUp to={completedModules} duration={1.2} />{" "}
                     <span className="text-[15px] font-normal leading-[22px] text-[#3f4946]">
-                      / 28
+                      / {totalModules}
                     </span>
                   </span>
                   <span className="rounded-full bg-[#a6f2cf] px-2 py-0.5 text-[11px] font-bold leading-[14px] text-[#002115]">
-                    68% Tuntas
+                    {completionPercent}% Tuntas
                   </span>
                 </div>
                 <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-[#cee8e1]">
                   <motion.div
                     className="h-full rounded-full bg-[#0d5c52]"
                     initial={{ width: 0 }}
-                    whileInView={{ width: "68%" }}
+                    whileInView={{ width: `${completionPercent}%` }}
                     viewport={{ once: true }}
                     transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
                   />
@@ -425,22 +286,22 @@ export function StudentModules() {
               <div className="pointer-events-none absolute -bottom-4 -right-4 size-20 rounded-full bg-[#edf7f4]/60 transition-transform duration-300 group-hover:scale-125" />
               <div className="relative flex items-center justify-between gap-3">
                 <span className="text-[11px] font-semibold uppercase leading-[14px] tracking-[0.04em] text-[#3f4946]">
-                  Bahan Bacaan &amp; E-Book
+                  Sedang Berjalan
                 </span>
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#d4eee7] text-[#0d5c52]">
-                  <Library className="size-5" />
+                  <PlayCircle className="size-5" />
                 </span>
               </div>
               <div className="relative mt-4">
                 <div className="flex items-baseline gap-2">
                   <span className="text-[32px] font-bold leading-10 text-[#071f1c]">
-                    <CountUp to={42} duration={1.2} />
+                    <CountUp to={inProgressModules} duration={1.2} />
                   </span>
-                  <span className="text-[13px] leading-[18px] text-[#3f4946]">Dokumen</span>
+                  <span className="text-[13px] leading-[18px] text-[#3f4946]">Modul</span>
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-[12px] leading-[18px] text-[#3f4946]">
-                  <FileText className="size-[15px] text-[#0d5c52]" />
-                  Format PDF, e-Pub &amp; Diktat Resmi
+                  <PlayCircle className="size-[15px] text-[#0d5c52]" />
+                  Modul dengan progress di atas 0%
                 </p>
               </div>
             </div>
@@ -451,24 +312,24 @@ export function StudentModules() {
               <div className="pointer-events-none absolute -bottom-4 -right-4 size-20 rounded-full bg-[#edf7f4]/60 transition-transform duration-300 group-hover:scale-125" />
               <div className="relative flex items-center justify-between gap-3">
                 <span className="text-[11px] font-semibold uppercase leading-[14px] tracking-[0.04em] text-[#3f4946]">
-                  Lab &amp; Praktikum
+                  Mata Pelajaran
                 </span>
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#a6f2cf] text-[#002115]">
-                  <Video className="size-5" />
+                  <Library className="size-5" />
                 </span>
               </div>
               <div className="relative mt-4">
                 <div className="flex items-baseline gap-2">
                   <span className="text-[32px] font-bold leading-10 text-[#071f1c]">
-                    <CountUp to={14} duration={1.2} />
+                    <CountUp to={Math.max(subjectTabs.length - 1, 0)} duration={1.2} />
                   </span>
                   <span className="text-[13px] font-semibold leading-[18px] text-[#0d5c52]">
-                    Sesi Rekaman
+                    Mapel Aktif
                   </span>
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-[12px] leading-[18px] text-[#3f4946]">
-                  <Video className="size-[15px] text-[#0d5c52]" />
-                  Video Eksperimen Kualitas 1080p
+                  <Library className="size-[15px] text-[#0d5c52]" />
+                  Diambil dari katalog backend
                 </p>
               </div>
             </div>
@@ -481,11 +342,11 @@ export function StudentModules() {
             <div className="flex min-w-max items-center gap-1">
               {subjectTabs.map((t) => (
                 <button
-                  key={t.key}
+                  key={t.id}
                   type="button"
-                  onClick={() => setSubject(t.key)}
+                  onClick={() => setSubject(t.id)}
                   className={`whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-semibold leading-[18px] transition-all ${
-                    subject === t.key
+                    subject === t.id
                       ? "bg-[#0d5c52] text-white shadow-sm"
                       : "bg-white text-[#3f4946] hover:bg-[#d4eee7] hover:text-[#0d5c52]"
                   }`}
@@ -564,7 +425,45 @@ export function StudentModules() {
         </div>
 
         {/* Modules Grid */}
-        {visibleModules.length === 0 ? (
+        {modulesQuery.isLoading ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((item) => (
+              <div
+                key={item}
+                className="h-80 animate-pulse rounded-xl bg-white shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)]"
+              />
+            ))}
+          </div>
+        ) : modulesQuery.isError ? (
+          <FadeIn>
+            <div className="flex flex-col items-center gap-3 rounded-xl bg-white p-10 text-center text-[#3f4946]">
+              <span className="text-[15px] font-semibold leading-[22px]">
+                {modulesQuery.error instanceof Error
+                  ? modulesQuery.error.message
+                  : "Gagal memuat daftar modul."}
+              </span>
+              <button
+                type="button"
+                onClick={() => void modulesQuery.refetch()}
+                className="rounded-lg bg-[#0d5c52] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#004d40]"
+              >
+                Coba lagi
+              </button>
+            </div>
+          </FadeIn>
+        ) : backendModules.length === 0 ? (
+          <FadeIn>
+            <div className="flex flex-col items-center gap-2 rounded-xl bg-white p-10 text-center text-[#3f4946]">
+              <BookOpen className="size-8 text-[#bec9c5]" />
+              <span className="text-[15px] font-semibold leading-[22px]">
+                Belum ada modul yang tersedia.
+              </span>
+              <span className="text-[13px] leading-[18px]">
+                Modul akan tampil di sini setelah guru menambahkannya.
+              </span>
+            </div>
+          </FadeIn>
+        ) : visibleModules.length === 0 ? (
           <FadeIn>
             <div className="flex flex-col items-center gap-2 rounded-xl bg-white p-10 text-center text-[#3f4946]">
               <SearchX className="size-8 text-[#bec9c5]" />
@@ -586,20 +485,23 @@ export function StudentModules() {
             }
           >
             {visibleModules.map((m) => {
-              const pText = progressText(m);
+              const pDisplay = progressDisplay(m);
               const ActionIcon = m.actionIcon;
-              const src = m.image;
               return (
                 <StaggerItem key={m.id}>
                   <div className="group flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] transition-shadow duration-200 hover:shadow-md">
                     <div className="relative h-44 w-full overflow-hidden bg-[#e2f2ee]">
-                      <Image
-                        src={src}
-                        alt=""
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 304px"
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
+                      {m.image ? (
+                        <Image
+                          src={m.image}
+                          alt=""
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 304px"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#d4eee7] via-[#cee8e1] to-[#00796b]" />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                       <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                         <span
@@ -634,11 +536,7 @@ export function StudentModules() {
                         {m.info.map((info) => (
                           <div key={info.text} className="flex items-center gap-1.5">
                             <info.icon
-                              className={`size-4 shrink-0 ${
-                                m.subject === "physics" || m.subject === "language"
-                                  ? "text-[#00796b]"
-                                  : "text-[#0d5c52]"
-                              }`}
+                              className={`size-4 shrink-0 ${m.accentTextClass}`}
                             />
                             <span className="text-[11px] font-semibold leading-[14px] text-[#3f4946]">
                               {info.text}
@@ -650,17 +548,17 @@ export function StudentModules() {
                         <div className="flex items-center justify-between gap-2 text-[11px] font-semibold leading-[14px] text-[#3f4946]">
                           <span className="min-w-0">Status Pemahaman</span>
                           <span
-                            className={`shrink-0 whitespace-nowrap text-right font-semibold ${pText.className}`}
+                            className={`shrink-0 whitespace-nowrap text-right font-semibold ${pDisplay.textClass}`}
                           >
                             {m.status === "completed" && <CheckCircle2 className="size-3.5" />}
-                            {pText.text}
+                            {pDisplay.text}
                           </span>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#cee8e1]">
                           <motion.div
-                            className={`h-full rounded-full ${barClass(m)}`}
+                            className={`h-full rounded-full ${pDisplay.barClass}`}
                             initial={{ width: 0 }}
-                            whileInView={{ width: `${Math.max(m.progress, 3)}%` }}
+                            whileInView={{ width: `${Math.max(m.progress ?? 0, 3)}%` }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.9, ease: "easeOut" }}
                           />
@@ -672,9 +570,8 @@ export function StudentModules() {
                       <motion.button
                         type="button"
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => void openModule(m)}
-                        disabled={openingModule === m.id}
-                        className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-2 text-[14px] font-semibold leading-5 transition-colors disabled:cursor-wait disabled:opacity-70 ${
+                        onClick={() => openModule(m)}
+                        className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-3 py-2 text-[14px] font-semibold leading-5 transition-colors ${
                           m.status === "new"
                             ? "bg-[#0d5c52] text-white hover:bg-[#004d40]"
                             : "bg-[#d4eee7] text-[#0d5c52] hover:bg-[#cee8e1]"

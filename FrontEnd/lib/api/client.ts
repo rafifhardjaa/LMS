@@ -18,6 +18,7 @@ import type {
   ApiSuccess,
   ApiMessage,
   ApiError,
+  ProgressSummary,
   User,
 } from "./types";
 
@@ -102,6 +103,14 @@ export const modulesApi = {
   /** GET /api/v1/modules/:id — detail modul */
   get: (moduleId: string) =>
     apiFetch<ApiSuccess<BackendModule>>(`/api/v1/modules/${moduleId}`),
+} as const;
+
+export const progressApi = {
+  /** GET /api/v1/progress/module/:moduleId — progress siswa di suatu modul */
+  byModule: (moduleId: string) =>
+    apiFetch<ApiSuccess<ProgressSummary>>(
+      `/api/v1/progress/module/${moduleId}`
+    ),
 } as const;
 
 export const discussionsApi = {

@@ -194,12 +194,19 @@ async function seed() {
       throw new Error("Failed to create algorithm module");
     }
 
-    console.log("Enrolling siswa4 in Informatika...");
-    await db.insert(enrollments).values({
-      studentId: siswa4User.id,
-      subjectId: informatikaSubject.id,
-      status: "active",
-    });
+    console.log("Enrolling demo students in Informatika...");
+    await db.insert(enrollments).values([
+      {
+        studentId: siswaUser.id,
+        subjectId: informatikaSubject.id,
+        status: "active",
+      },
+      {
+        studentId: siswa4User.id,
+        subjectId: informatikaSubject.id,
+        status: "active",
+      },
+    ]);
 
     console.log("Inserting sample discussions...");
     const now = Date.now();
