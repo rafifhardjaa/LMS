@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bell, Search, Sparkles, User } from "lucide-react";
+import { Bell, Search, User } from "lucide-react";
 import { PulseDot } from "@/components/ui/animations";
 
 export function MuridTopbar() {
@@ -12,15 +12,15 @@ export function MuridTopbar() {
           <h1 className="text-[18px] font-semibold text-[#071f1c] leading-tight tracking-tight">
             Welcome Back, Sebastian!
           </h1>
-          <p className="text-[12px] text-[#536360] truncate">
+          <p className="text-[12px] leading-[18px] text-[#536360] truncate">
             Track your progress, master new skills and stay on top of your
             schedule.
           </p>
         </div>
 
-        <div className="flex-1 max-w-xl">
+        <div className="flex-1 max-w-[425px]">
           <div className="relative flex items-center">
-            <Search className="absolute left-4 size-5 text-[#536360]" />
+            <Search className="absolute left-4 size-[15px] text-[#536360]" />
             <input
               type="text"
               placeholder="Search Courses, Modules, or Counselors..."
@@ -36,21 +36,13 @@ export function MuridTopbar() {
             whileTap={{ scale: 0.94 }}
             className="relative w-10 h-10 rounded-full bg-[#f2f9f7] flex items-center justify-center text-[#536360] hover:bg-[#edf7f4] transition-colors"
           >
-            <Bell className="size-[22px]" />
+            <Bell className="size-[18px]" />
             <PulseDot className="bg-[#14b8a6] ring-2 ring-white" wrapClassName="absolute top-2 right-2" />
-          </motion.button>
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.96 }}
-            className="flex items-center gap-1 px-6 py-2 bg-[#0d5c52] text-white text-[13px] font-semibold rounded-full shadow-[0_4px_16px_rgba(13,92,82,0.28)] hover:bg-[#00433b] transition-colors duration-200"
-          >
-            <span>+ Ask AI Tutor</span>
-            <Sparkles className="size-4" />
           </motion.button>
           <motion.div
             className="w-9 h-9 rounded-full bg-[#0d5c52] flex items-center justify-center shadow-sm"
           >
-            <User className="size-[18px] text-white" />
+            <User className="size-[14px] text-white" />
           </motion.div>
         </div>
       </div>

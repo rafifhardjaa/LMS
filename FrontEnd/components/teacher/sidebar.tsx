@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BookOpen,
   BarChart3,
@@ -14,20 +16,47 @@ import {
 import { useLogout } from "@/hooks/use-logout";
 
 const menu = [
-  { label: "Dashboard", icon: LayoutGrid, active: true, title: "Dashboard" },
+  {
+    label: "Dashboard",
+    icon: LayoutGrid,
+    href: "/teacher/dashboard",
+    title: "Dashboard",
+  },
   {
     label: "Mata Pelajaran",
     icon: BookOpen,
+    href: "/teacher/mata-pelajaran",
     title: "Mata Pelajaran & Kurikulum",
   },
-  { label: "Tugas & Materi", icon: ClipboardList, title: "Tugas & Modul Ajar" },
-  { label: "Analitik & Nilai", icon: BarChart3, title: "Nilai Siswa & Capaian" },
-  { label: "Presensi & Siswa", icon: UserCheck, title: "Presensi Siswa" },
-  { label: "Ekspor Rekap", icon: Download, title: "Ekspor Data Raport" },
+  {
+    label: "Tugas & Materi",
+    icon: ClipboardList,
+    href: "/teacher/tugas-materi",
+    title: "Tugas & Modul Ajar",
+  },
+  {
+    label: "Analitik & Nilai",
+    icon: BarChart3,
+    href: "/teacher/analitik-nilai",
+    title: "Nilai Siswa & Capaian",
+  },
+  {
+    label: "Presensi & Siswa",
+    icon: UserCheck,
+    href: "/teacher/presensi-siswa",
+    title: "Presensi Siswa",
+  },
+  {
+    label: "Ekspor Rekap",
+    icon: Download,
+    href: "/teacher/ekspor-rekap",
+    title: "Ekspor Data Raport",
+  },
 ];
 
 export function GuruSidebar() {
   const handleLogout = useLogout();
+  const pathname = usePathname();
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white z-50 flex flex-col justify-between py-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex flex-col w-full">
@@ -47,22 +76,28 @@ export function GuruSidebar() {
         </div>
 
         <nav className="flex flex-col gap-1 w-full px-2">
-          {menu.map(({ label, icon: Icon, active, title }) => (
-            <a
-              key={label}
-              href="#"
-              title={title}
-              aria-current={active ? "page" : undefined}
-              className={`relative w-full h-11 flex items-center gap-3 px-3 rounded-xl transition-all ${
-                active
-                  ? "bg-[#FFEBEB] text-[#b71422] font-bold before:content-[''] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:bg-[#b71422] before:rounded-r"
-                  : "text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0d1c2e]"
-              }`}
-            >
-              <Icon className="size-[22px] flex-shrink-0" />
-              <span className="text-[14px] font-semibold truncate">{label}</span>
-            </a>
-          ))}
+          {menu.map(({ label, icon: Icon, href, title }) => {
+            const active =
+              href !== "#" &&
+              (pathname === href || pathname.startsWith(`${href}/`));
+
+            return (
+              <Link
+                key={label}
+                href={href}
+                title={title}
+                aria-current={active ? "page" : undefined}
+                className={`relative w-full h-11 flex items-center gap-3 px-3 rounded-xl transition-all ${
+                  active
+                    ? "bg-[#FFEBEB] text-[#b71422] font-bold before:content-[''] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:bg-[#b71422] before:rounded-r"
+                    : "text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0d1c2e]"
+                }`}
+              >
+                <Icon className="size-[22px] flex-shrink-0" />
+                <span className="text-[14px] font-semibold truncate">{label}</span>
+              </Link>
+            );
+          })}
         </nav>
       </div>
 

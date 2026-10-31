@@ -4,6 +4,7 @@ import {
   FORBIDDEN_MESSAGE,
   createModule,
   deleteModule,
+  getModuleDetail,
   listModules,
   updateModule,
 } from "../services/modules-services";
@@ -31,6 +32,31 @@ export const modulesRoute = new Elysia({ prefix: "/api/v1/modules" })
         security: [{ BearerAuth: [] }],
       },
       query: t.Object({ subject_id: t.Optional(t.String()) }),
+    }
+  )
+  .get(
+    "/:moduleId",
+    async ({ params, status }: any) => {
+      try {
+        const data = await getModuleDetail(params.moduleId);
+        return status(200, {
+          success: true,
+          message: "Module retrieved",
+          data,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru", "siswa"]),
+      detail: {
+        tags: ["Modules"],
+        summary: "Detail modul",
+        security: [{ BearerAuth: [] }],
+      },
+      params: t.Object({ moduleId: t.String() }),
     }
   )
   .post(
@@ -66,10 +92,10 @@ export const modulesRoute = new Elysia({ prefix: "/api/v1/modules" })
     }
   )
   .put(
-    "/:id",
+    "/:moduleId",
     async ({ params, body, user, status }: any) => {
       try {
-        const updated = await updateModule(params.id, user, {
+        const updated = await updateModule(params.moduleId, user, {
           title: body.title,
           description: body.description,
           orderIndex: body.order_index,
@@ -89,7 +115,7 @@ export const modulesRoute = new Elysia({ prefix: "/api/v1/modules" })
         description: "Guru hanya bisa update modul miliknya sendiri. Admin bisa update semua.",
         security: [{ BearerAuth: [] }],
       },
-      params: t.Object({ id: t.String() }),
+      params: t.Object({ moduleId: t.String() }),
       body: t.Object({
         title: t.Optional(t.String()),
         description: t.Optional(t.String()),
@@ -98,9 +124,9 @@ export const modulesRoute = new Elysia({ prefix: "/api/v1/modules" })
       }),
     }
   )
-  .delete("/:id", async ({ params, user, status }: any) => {
+  .delete("/:moduleId", async ({ params, user, status }: any) => {
     try {
-      await deleteModule(params.id, user);
+      await deleteModule(params.moduleId, user);
       return status(200, { success: true, message: "Module deleted" });
     } catch (error) {
       const err = handleError(error);
@@ -113,5 +139,5 @@ export const modulesRoute = new Elysia({ prefix: "/api/v1/modules" })
       summary: "Hapus modul",
       security: [{ BearerAuth: [] }],
     },
-    params: t.Object({ id: t.String() }),
+    params: t.Object({ moduleId: t.String() }),
   });

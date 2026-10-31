@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageTransition } from "@/components/ui/page-transition";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/providers/query-provider";
+import { SessionProvider } from "@/lib/providers/session-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,9 +36,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <TooltipProvider>
-            <PageTransition>{children}</PageTransition>
-          </TooltipProvider>
+          <SessionProvider>
+            <TooltipProvider>
+              <PageTransition>{children}</PageTransition>
+            </TooltipProvider>
+          </SessionProvider>
         </QueryProvider>
         <Toaster richColors position="top-right" />
       </body>

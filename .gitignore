@@ -62,3 +62,6 @@ tasks/
 
 # database backups
 BackEnd/backups/
+
+# local scratch / design exports
+code.html

@@ -39,13 +39,13 @@ export function MuridSidebar() {
           className="flex items-center gap-2 px-1"
         >
           <div className="w-10 h-10 rounded-xl bg-[#0d5c52] flex items-center justify-center text-white shadow-[0_4px_14px_rgba(13,92,82,0.3)] flex-shrink-0">
-            <GraduationCap className="size-6" />
+            <GraduationCap className="size-[18px]" />
           </div>
           <div className="flex flex-col">
             <span className="text-[15px] font-semibold text-[#071f1c] leading-tight tracking-tight">
               SiManis
             </span>
-            <span className="text-[11px] font-semibold text-[#536360]">
+            <span className="text-[11px] font-semibold text-[#536360] uppercase tracking-tight">
               Student Workspace
             </span>
           </div>
@@ -60,14 +60,14 @@ export function MuridSidebar() {
               href={href}
               title={title}
               aria-current={active ? "page" : undefined}
-              className={`w-full flex items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 ${
+              className={`w-full flex h-10 items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 ${
                 active
                   ? "bg-[#d4eee7] text-[#0d5c52] font-semibold shadow-sm"
-                  : "text-[#536360] font-semibold hover:bg-[#edf7f4] hover:text-[#0d5c52]"
+                  : "text-[#404a47] font-semibold hover:bg-[#edf7f4] hover:text-[#0d5c52]"
               }`}
             >
-              <Icon className="size-[22px] flex-shrink-0" />
-              <span className="text-[14px] truncate">{label}</span>
+              <Icon className="size-4 flex-shrink-0" />
+              <span className="text-[16px] truncate">{label}</span>
             </a>
             </StaggerItem>
             );
@@ -87,7 +87,7 @@ export function MuridSidebar() {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-[13px] font-semibold text-[#071f1c] truncate max-w-[90px]">
-                Pawell
+                Sebastian
               </span>
               <span className="text-[12px] text-[#536360]">Grade 12</span>
             </div>

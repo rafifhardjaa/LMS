@@ -3,58 +3,62 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "@/lib/api/types";
 
 interface AuthState {
-  token: string | null;
   user: User | null;
   isAuthenticated: boolean;
 
   // Actions
-  setAuth: (token: string, user: User) => void;
   setUser: (user: User) => void;
   clearAuth: () => void;
 }
 
-/** Sync token to cookie so Next.js middleware can read it server-side */
-function setTokenCookie(token: string | null) {
-  if (typeof document === "undefined") return;
-  if (token) {
-    // Expire in 7 days; path=/ so middleware matches all routes
-    const maxAge = 7 * 24 * 60 * 60;
-    document.cookie = `lms_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  } else {
-    document.cookie = "lms_token=; path=/; max-age=0";
+const STORAGE_KEY = "lms_auth";
+
+/**
+ * Versi lama menyimpan JWT di localStorage. Hapus sisa token itu sebelum
+ * store dihidrasi agar tidak ada lagi kredensial yang bisa dicuri XSS.
+ */
+function purgeLegacyToken() {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as { state?: Record<string, unknown> };
+    if (parsed.state && "token" in parsed.state) {
+      delete parsed.state.token;
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
+  } catch {
+    window.localStorage.removeItem(STORAGE_KEY);
   }
 }
+
+purgeLegacyToken();
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: null,
       user: null,
       isAuthenticated: false,
 
-      setAuth: (token, user) => {
-        setTokenCookie(token);
-        set({ token, user, isAuthenticated: true });
-      },
+      setUser: (user) => set({ user, isAuthenticated: true }),
 
-      setUser: (user) => set({ user }),
-
-      clearAuth: () => {
-        setTokenCookie(null);
-        set({ token: null, user: null, isAuthenticated: false });
-      },
+      clearAuth: () => set({ user: null, isAuthenticated: false }),
     }),
     {
-      name: "lms_auth",
+      name: STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
-      // Only persist token — user will be re-fetched on mount
-      partialize: (state) => ({ token: state.token }),
-      // Re-sync cookie when store rehydrates from localStorage
-      onRehydrateStorage: () => (state) => {
-        if (state?.token) {
-          setTokenCookie(state.token);
-          state.isAuthenticated = true;
+      // Hanya profil user yang dipersist — token hidup di cookie HttpOnly.
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      version: 2,
+      migrate: (persisted) => {
+        const state = persisted as Partial<AuthState> | undefined;
+        if (!state?.user) {
+          return { user: null, isAuthenticated: false };
         }
+        return { user: state.user, isAuthenticated: true };
       },
     }
   )

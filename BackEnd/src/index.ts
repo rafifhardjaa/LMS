@@ -7,6 +7,7 @@ import { authRoute } from "./routes/auth-route";
 import { adminUsersRoute } from "./routes/admin-users-route";
 import { subjectsRoute } from "./routes/subjects-route";
 import { modulesRoute } from "./routes/modules-route";
+import { discussionsRoute } from "./routes/discussions-route";
 import { lessonsRoute } from "./routes/lessons-route";
 import { enrollmentsRoute } from "./routes/enrollments-route";
 import { reviewsRoute } from "./routes/reviews";
@@ -74,8 +75,24 @@ Akun guru dibuat oleh admin melalui \`POST /api/v1/admin/users\`.
   ],
 };
 
+// ── CORS ─────────────────────────────────────────────────────────────
+// Hanya origin frontend yang dikonfigurasi yang boleh memanggil API dari
+// browser. Origin tambahan (mis. preview deployment) dapat didaftarkan
+// lewat CORS_ORIGINS, dipisah koma.
+const appUrl = (process.env.APP_URL ?? "http://localhost:3001").replace(
+  /\/+$/,
+  ""
+);
+const allowedOrigins = [
+  ...new Set(
+    [appUrl, ...(process.env.CORS_ORIGINS ?? "").split(",")]
+      .map((origin) => origin.trim().replace(/\/+$/, ""))
+      .filter(Boolean)
+  ),
+];
+
 const app = new Elysia()
-  .use(cors())
+  .use(cors({ origin: allowedOrigins }))
   .use(swagger({ path: "/docs", documentation }))
   .use(swagger({ path: "/swagger", documentation }))
   .use(
@@ -90,6 +107,7 @@ const app = new Elysia()
   .use(adminUsersRoute)
   .use(subjectsRoute)
   .use(modulesRoute)
+  .use(discussionsRoute)
   .use(lessonsRoute)
   .use(enrollmentsRoute)
   .use(reviewsRoute)

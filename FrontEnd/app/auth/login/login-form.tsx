@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, EyeOff, Lock, UserPlus } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock } from "lucide-react";
 import { StaggerChildren, StaggerItem } from "@/components/ui/animations";
-import { api, authApi } from "@/lib/api/client";
+import { api } from "@/lib/api/client";
 import { useAuthStore } from "@/lib/store/auth-store";
 
 function homeSegment(role: string) {
@@ -44,24 +45,13 @@ export function LoginForm() {
       }
 
       if (!data?.data) {
-        toast.error("Token tidak diterima dari server");
+        toast.error("Data pengguna tidak diterima dari server");
         setLoading(false);
         return;
       }
 
-      const token = data.data;
-
-      const { data: currentData, error: currentError } =
-        await authApi(token).users.current.get();
-
-      if (currentError || !currentData?.data) {
-        toast.error("Gagal mengambil data pengguna");
-        setLoading(false);
-        return;
-      }
-
-      const user = currentData.data;
-      useAuthStore.getState().setAuth(token, user);
+      const user = data.data;
+      useAuthStore.getState().setUser(user);
 
       // Akun dengan password awal wajib mengganti password sebelum
       // mengakses fitur lain (dijaga juga di backend).
@@ -107,14 +97,7 @@ export function LoginForm() {
               Single Sign On
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
-              Login menggunakan akun yang sudah terdaftar atau{" "}
-              <a
-                href="#"
-                className="font-bold text-indigo-600 hover:underline"
-              >
-                Create Account
-              </a>
-              .
+              Login menggunakan akun yang sudah terdaftar.
             </p>
           </div>
           <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
@@ -188,40 +171,18 @@ export function LoginForm() {
             <ArrowRight className="size-3.5" />
           </motion.button>
           <div className="flex justify-start pt-1">
-            <a
-              href="#"
+            <Link
+              href="/auth/forgot-password"
               className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
             >
               Lupa Password?
-            </a>
+            </Link>
           </div>
         </form>
       </StaggerItem>
 
       <StaggerItem>
         <div className="mt-5 space-y-4">
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                <UserPlus className="size-4.5 text-indigo-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-slate-900">Belum punya akun?</h3>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Daftar akun baru untuk mengakses portal LMS SMK Mataram. Proses
-                  registrasi cepat dan aman.
-                </p>
-                <a
-                  href="/auth/register"
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition"
-                >
-                  Buat Akun Sekarang
-                  <ArrowRight className="size-3.5" />
-                </a>
-              </div>
-            </div>
-          </div>
-
           <p className="text-xs text-slate-600 text-center">
             Butuh bantuan verifikasi akun?{" "}
             <a

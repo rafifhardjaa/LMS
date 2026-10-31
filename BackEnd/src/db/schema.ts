@@ -178,6 +178,47 @@ export const notifications = pgTable("notifications", {
   userIdx: index("notification_user_idx").on(table.userId),
 }));
 
+export const moduleDiscussions = pgTable(
+  "module_discussions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    moduleId: uuid("module_id")
+      .notNull()
+      .references(() => modules.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    moduleCreatedIdx: index("module_discussion_module_created_idx").on(
+      table.moduleId,
+      table.createdAt
+    ),
+  })
+);
+
+export const moduleDiscussionReplies = pgTable(
+  "module_discussion_replies",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    discussionId: uuid("discussion_id")
+      .notNull()
+      .references(() => moduleDiscussions.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    discussionCreatedIdx: index(
+      "module_discussion_reply_discussion_created_idx"
+    ).on(table.discussionId, table.createdAt),
+  })
+);
+
 // ── Relasi (WAJIB: users ↔ roles via user_roles) ───────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -185,6 +226,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   subjectsCreated: many(subjects),
   modulesTaught: many(modules),
   authTokens: many(authTokens),
+  moduleDiscussions: many(moduleDiscussions),
+  moduleDiscussionReplies: many(moduleDiscussionReplies),
 }));
 
 export const authTokensRelations = relations(authTokens, ({ one }) => ({
@@ -227,6 +270,7 @@ export const modulesRelations = relations(modules, ({ one, many }) => ({
     references: [users.id],
   }),
   lessons: many(lessons),
+  discussions: many(moduleDiscussions),
 }));
 
 export const lessonsRelations = relations(lessons, ({ one, many }) => ({
@@ -277,3 +321,32 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const moduleDiscussionsRelations = relations(
+  moduleDiscussions,
+  ({ one, many }) => ({
+    module: one(modules, {
+      fields: [moduleDiscussions.moduleId],
+      references: [modules.id],
+    }),
+    author: one(users, {
+      fields: [moduleDiscussions.authorId],
+      references: [users.id],
+    }),
+    replies: many(moduleDiscussionReplies),
+  })
+);
+
+export const moduleDiscussionRepliesRelations = relations(
+  moduleDiscussionReplies,
+  ({ one }) => ({
+    discussion: one(moduleDiscussions, {
+      fields: [moduleDiscussionReplies.discussionId],
+      references: [moduleDiscussions.id],
+    }),
+    author: one(users, {
+      fields: [moduleDiscussionReplies.authorId],
+      references: [users.id],
+    }),
+  })
+);

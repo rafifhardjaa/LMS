@@ -15,8 +15,7 @@ function homeFor(role?: string) {
 
 export function ChangePasswordForm() {
   const router = useRouter();
-  const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -24,10 +23,10 @@ export function ChangePasswordForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!token) {
+    if (!isAuthenticated) {
       router.replace("/auth/login");
     }
-  }, [token, router]);
+  }, [isAuthenticated, router]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -48,11 +47,10 @@ export function ChangePasswordForm() {
       toast.error("Password baru harus berbeda dari password awal");
       return;
     }
-    if (!token) return;
 
     setLoading(true);
     try {
-      const { data, error } = await authApi(token).auth.changePassword.put({
+      const { data, error } = await authApi.auth.changePassword.put({
         current_password: currentPassword,
         new_password: newPassword,
       });
@@ -62,12 +60,11 @@ export function ChangePasswordForm() {
         return;
       }
 
-      const nextToken = data.data;
-      const current = await authApi(nextToken).users.current.get();
-      useAuthStore.getState().setAuth(nextToken, current.data?.data ?? user!);
+      const current = data.data;
+      useAuthStore.getState().setUser(current);
 
       toast.success("Password berhasil diganti");
-      router.push(homeFor(current.data?.data?.role ?? user?.role));
+      router.push(homeFor(current.role));
     } catch {
       toast.error("Kesalahan jaringan");
     } finally {
@@ -75,7 +72,12 @@ export function ChangePasswordForm() {
     }
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      await authApi.users.logout.delete();
+    } catch {
+      // ignore network errors — local session is cleared regardless
+    }
     useAuthStore.getState().clearAuth();
     router.replace("/auth/login");
   }

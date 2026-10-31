@@ -1,20 +1,22 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { modules, subjects, users } from "../db/schema";
 import { canonicalRole } from "../middleware/auth-middleware";
+import { NotFoundError } from "../utils/response";
 
 export const FORBIDDEN_MESSAGE = "Akses ditolak: Peran tidak valid";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function assertUuid(id: string) {
+export function assertUuid(id: string) {
   if (!UUID_RE.test(id)) {
     throw new Error("ID tidak valid");
   }
 }
 
-async function findModuleById(id: string) {
+export async function findModuleById(id: string) {
+  assertUuid(id);
   const rows = await db
     .select()
     .from(modules)
@@ -23,13 +25,40 @@ async function findModuleById(id: string) {
   return rows[0];
 }
 
-async function assertCanManageModule(
+export async function getModuleDetail(id: string) {
+  assertUuid(id);
+  const rows = await db
+    .select({
+      id: modules.id,
+      subject_id: modules.subjectId,
+      subject_name: subjects.name,
+      teacher_id: modules.teacherId,
+      teacher_name: users.fullName,
+      title: modules.title,
+      description: modules.description,
+      order_index: modules.orderIndex,
+      created_at: modules.createdAt,
+    })
+    .from(modules)
+    .leftJoin(subjects, eq(modules.subjectId, subjects.id))
+    .leftJoin(users, eq(modules.teacherId, users.id))
+    .where(eq(modules.id, id))
+    .limit(1);
+
+  const module = rows[0];
+  if (!module) {
+    throw new NotFoundError("Module tidak ditemukan");
+  }
+  return module;
+}
+
+export async function assertCanManageModule(
   id: string,
   actor: { id: string; role: string }
 ) {
   const module = await findModuleById(id);
   if (!module) {
-    throw new Error("Module tidak ditemukan");
+    throw new NotFoundError("Module tidak ditemukan");
   }
   const role = canonicalRole(actor.role);
   if (role === "admin") return module;
@@ -92,9 +121,11 @@ export async function listModules(filter?: { subjectId?: string }) {
     .leftJoin(users, eq(modules.teacherId, users.id));
   if (filter?.subjectId) {
     assertUuid(filter.subjectId);
-    return base.where(eq(modules.subjectId, filter.subjectId));
+    return base
+      .where(eq(modules.subjectId, filter.subjectId))
+      .orderBy(asc(modules.orderIndex), asc(modules.createdAt));
   }
-  return base;
+  return base.orderBy(asc(modules.orderIndex), asc(modules.createdAt));
 }
 
 export async function updateModule(

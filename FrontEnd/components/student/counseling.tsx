@@ -35,12 +35,12 @@ export function Counseling() {
       <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4 relative overflow-hidden">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1">
-            <Headset className="size-[22px] text-[#0d5c52]" />
-            <h2 className="text-[18px] font-semibold text-[#071f1c]">
+            <Headset className="size-5.5 text-[#0d5c52]" />
+            <h2 className="text-lg font-semibold text-[#071f1c]">
               Counseling &amp; Student Wellness (BK)
             </h2>
           </div>
-          <p className="text-[12px] text-[#536360]">
+          <p className="text-xs text-[#536360]">
             Book private 1-on-1 sessions with certified school guidance counselors
           </p>
         </div>
@@ -49,26 +49,26 @@ export function Counseling() {
           {/* Counselor mini card */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-white rounded-xl border border-[#cee8e1]/50">
             <div className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-[#0d5c52] flex items-center justify-center text-white flex-shrink-0 ring-2 ring-[#0d5c52]/20">
+              <div className="w-12 h-12 rounded-full bg-[#0d5c52] flex items-center justify-center text-white shrink-0 ring-2 ring-[#0d5c52]/20">
                 <Headset className="size-6" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1">
-                  <span className="text-[14px] font-semibold text-[#071f1c]">
+                  <span className="text-sm font-semibold text-[#071f1c]">
                     Mrs. Sarah Jenkins, M.Psi
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-[#d4eee7] text-[#0d5c52] text-[11px] font-bold flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-full bg-[#d4eee7] text-[#0d5c52] text-xs font-bold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#14b8a6]" />
                     Available Today
                   </span>
                 </div>
-                <span className="text-[12px] text-[#536360]">
+                <span className="text-xs text-[#536360]">
                   Student Guidance &amp; Academic Wellness Counselor
                 </span>
               </div>
             </div>
             {/* Mode toggle */}
-            <div className="flex items-center bg-[#edf7f4] p-1 rounded-full text-[11px] font-semibold border border-[#cee8e1]/50">
+            <div className="flex items-center bg-[#edf7f4] p-1 rounded-full text-xs font-semibold border border-[#cee8e1]/50">
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.98 }}
@@ -101,7 +101,7 @@ export function Counseling() {
           {/* Date & time picker */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
             <div className="lg:col-span-6 flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-[#536360] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-[#536360] uppercase tracking-wider">
                 Select Consultation Date
               </span>
               <StaggerChildren
@@ -122,14 +122,14 @@ export function Counseling() {
                       }`}
                     >
                       <span
-                        className={`text-[11px] ${
+                        className={`text-xs ${
                           day === d.day ? "font-bold" : "text-[#536360]"
                         }`}
                       >
                         {d.day}
                       </span>
                       <span
-                        className={`text-[14px] ${
+                        className={`text-sm ${
                           day === d.day
                             ? "font-bold"
                             : "font-semibold text-[#071f1c]"
@@ -143,7 +143,7 @@ export function Counseling() {
               </StaggerChildren>
             </div>
             <div className="lg:col-span-6 flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-[#536360] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-[#536360] uppercase tracking-wider">
                 Available Time Slots
               </span>
               <StaggerChildren
@@ -157,7 +157,7 @@ export function Counseling() {
                       whileHover={{ scale: 1.04 }}
                       whileTap={{ scale: 0.96 }}
                       onClick={() => setTime(t)}
-                      className={`w-full py-2 px-1 text-center rounded-xl text-[11px] font-semibold transition-colors ${
+                      className={`w-full py-2 px-1 text-center rounded-xl text-xs font-semibold transition-colors ${
                         time === t
                           ? "bg-[#0d5c52] text-white shadow-[0_4px_12px_rgba(13,92,82,0.25)]"
                           : "bg-white border border-[#cee8e1]/50 text-[#071f1c] hover:bg-[#e2f2ee]"
@@ -173,8 +173,8 @@ export function Counseling() {
 
           {/* Booking action */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
-            <div className="flex items-center gap-1 text-[#536360] text-[12px]">
-              <Lock className="size-[18px] text-[#0d5c52]" />
+            <div className="flex items-center gap-1 text-[#536360] text-xs">
+              <Lock className="size-4.5 text-[#0d5c52]" />
               <span>
                 All discussions remain strictly confidential between counselor
                 &amp; student.
@@ -184,7 +184,7 @@ export function Counseling() {
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={handleBook}
-              className="w-full sm:w-auto px-10 py-2 rounded-full bg-[#0d5c52] text-white hover:bg-[#00433b] text-[13px] font-semibold shadow-[0_4px_16px_rgba(13,92,82,0.25)] transition-colors duration-200"
+              className="w-full sm:w-auto px-10 py-2 rounded-full bg-[#0d5c52] text-white hover:bg-[#00433b] text-sm font-semibold shadow-[0_4px_16px_rgba(13,92,82,0.25)] transition-colors duration-200"
             >
               Book Consultation Schedule
             </motion.button>
@@ -197,10 +197,10 @@ export function Counseling() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                className="p-2 bg-[#e6f4f1] text-[#0d5c52] rounded-xl text-[12px] flex items-center justify-between"
+                className="p-2 bg-[#e6f4f1] text-[#0d5c52] rounded-xl text-xs flex items-center justify-between"
               >
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="size-[18px]" />
+                  <CheckCircle className="size-4.5" />
                   <span>
                     Jadwal konseling terpilih ({day} • {time} •{" "}
                     {mode === "video" ? "Online Video" : "Offline Room 204"})
@@ -209,7 +209,7 @@ export function Counseling() {
                 </div>
                 <button
                   type="button"
-                  className="text-[11px] font-bold hover:underline"
+                  className="text-xs font-bold hover:underline"
                   onClick={() => setShowToast(false)}
                 >
                   TUTUP
