@@ -99,3 +99,9 @@ export interface Discussion {
 export interface CreateDiscussionRequest {
   body: string;
 }
+
+// ─── Progress ───────────────────────────────────────────────────────────────
+
+export interface ProgressSummary {
+  percentage: number;
+}

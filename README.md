@@ -1,7 +1,7 @@
 # SiManis — Learning Management System
 
 ![Bun](https://img.shields.io/badge/Bun-1.4+-black?logo=bun)
-![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -15,7 +15,7 @@ Platform manajemen pembelajaran (LMS) untuk SMK Mataram — mencakup manajemen s
 ```
 LMS/
 ├── BackEnd/      # REST API — Bun + Elysia + Drizzle ORM
-├── FrontEnd/     # Web App — Next.js 15 + Tailwind CSS
+├── FrontEnd/     # Web App — Next.js 16 + Tailwind CSS
 └── README.md
 ```
 
@@ -29,7 +29,7 @@ LMS/
 | Backend Framework | [Elysia](https://elysiajs.com) |
 | ORM | [Drizzle ORM](https://orm.drizzle.team) |
 | Database | PostgreSQL (via [Supabase](https://supabase.com) atau Docker) |
-| Frontend Framework | [Next.js 15](https://nextjs.org) |
+| Frontend Framework | [Next.js 16](https://nextjs.org) |
 | Styling | [Tailwind CSS v4](https://tailwindcss.com) |
 | UI Components | [Shadcn/UI](https://ui.shadcn.com) |
 | State Management | [Zustand](https://zustand-demo.pmnd.rs) + [TanStack Query](https://tanstack.com/query) |
@@ -189,11 +189,22 @@ Kalau DBeaver masih hanya menampilkan satu database, aktifkan opsi **Show all da
 | `POST` | `/api/v1/modules/:moduleId/discussions` | siswa enrolled | Buat pertanyaan (maks. 2000 karakter) |
 | `POST` | `/api/v1/modules/:moduleId/discussions/:discussionId/replies` | guru pemilik, admin | Balas pertanyaan |
 
+### Progress — `/api/v1/progress`
+
+| Method | Endpoint | Auth | Keterangan |
+|---|---|---|---|
+| `POST` | `/api/v1/progress/lesson/:lessonId` | siswa enrolled | Tandai lesson selesai atau batalkan |
+| `GET` | `/api/v1/progress/subject/:subjectId` | siswa enrolled | Persentase lesson selesai di satu mapel |
+| `GET` | `/api/v1/progress/module/:moduleId` | siswa enrolled | Persentase lesson selesai di satu modul |
+
+> Progress dihitung untuk user yang login dan hanya tersedia jika enrollment-nya
+> berstatus `active`.
+
 > Role yang tersedia: `admin` \| `guru` \| `siswa`
 
 Data seed development menyertakan subject **Informatika & Sains Komputasi**, modul
-**Algoritma Pemrograman & Optimasi Big-O**, enrollment `siswa4@simanis.com`, dan dua
-diskusi contoh beserta balasan guru.
+**Algoritma Pemrograman & Optimasi Big-O**, enrollment `siswa@simanis.com` dan
+`siswa4@simanis.com`, serta dua diskusi contoh beserta balasan guru.
 
 ---
 
