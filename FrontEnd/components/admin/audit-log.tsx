@@ -43,7 +43,7 @@ const auditEntries = [
 export function AuditLog() {
   return (
     <FadeIn>
-      <div className="rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 bg-white flex flex-col gap-4">
+      <div className="rounded-2xl p-6 max-lg:p-4 shadow-sm border border-[#e0e2e7]/40 bg-white flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <h2 className="text-base font-bold text-[#181c20]">
@@ -72,7 +72,7 @@ export function AuditLog() {
                   <entry.icon className="size-4" />
                 </div>
                 <div className="flex flex-col min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between max-lg:gap-2">
                     <span className="font-bold text-xs text-[#181c20]">
                       {entry.title}
                     </span>
