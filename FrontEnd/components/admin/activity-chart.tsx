@@ -30,8 +30,8 @@ export function ActivityChart() {
 
   return (
     <FadeIn>
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col justify-between max-lg:p-4">
+        <div className="flex items-center justify-between mb-4 max-lg:flex-wrap max-lg:gap-3">
           <div className="flex items-center gap-2.5">
             <h2 className="text-lg font-bold text-[#181c20]">
               Monitoring Aktivitas Sekolah Mingguan
@@ -49,7 +49,7 @@ export function ActivityChart() {
           </button>
         </div>
 
-        <div className="flex items-center gap-4 text-xs mb-4">
+        <div className="flex items-center gap-4 text-xs mb-4 max-lg:flex-wrap max-lg:gap-y-2">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#6c5dd3]" />
             <span className="text-[#4e566c] font-medium">Pengerjaan Tugas</span>
