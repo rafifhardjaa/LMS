@@ -1,11 +1,12 @@
 "use client";
 
 import { CalendarPlus, Download, TicketPlus } from "lucide-react";
+import { motion } from "framer-motion";
 import { ChatConversations } from "@/components/admin/chat-conversations";
 import { ChatDetailPanel } from "@/components/admin/chat-detail-panel";
 import { ChatStats } from "@/components/admin/chat-stats";
 import { ChatThread } from "@/components/admin/chat-thread";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function ChatKonselingPage() {
   return (
@@ -22,11 +23,41 @@ export default function ChatKonselingPage() {
               <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Layanan bimbingan konseling terpadu: kelola percakapan rahasia siswa, agenda tatap muka, dokumentasi rekam medis BK, hingga koordinasi tindak lanjut dengan wali murid.</p>
             </div>
           </SlideIn>
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => window.alert("Jadwalkan Tatap Muka")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><CalendarPlus className="size-4" /> Jadwalkan Tatap Muka</button>
-            <button type="button" onClick={() => window.alert("Ekspor Log Konseling (.xlsx)")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><Download className="size-4" /> Ekspor Log (.xlsx)</button>
-            <button type="button" onClick={() => window.alert("Buat Tiket Baru")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"><TicketPlus className="size-4" /> Buat Tiket Baru</button>
-          </div>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-2">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Jadwalkan Tatap Muka")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <CalendarPlus className="size-4" /> Jadwalkan Tatap Muka
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Ekspor Log Konseling (.xlsx)")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4" /> Ekspor Log (.xlsx)
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Buat Tiket Baru")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <TicketPlus className="size-4" /> Buat Tiket Baru
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
         </section>
       </FadeIn>
       <ChatStats />

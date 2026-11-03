@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import {
   Activity,
   BookOpen,
@@ -181,113 +183,150 @@ export default function SupportPage() {
   return (
     <div className="w-full pt-7 text-[#1d1f2b]">
       {/* Header */}
-      <header>
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-wide">
-          <span className="rounded-full bg-[#e9e5ff] px-3 py-1 text-[#4f3eb7]">
-            ● PUSAT DUKUNGAN TEKNIS &amp; LOG AUDIT • T.A. 2026/2027 GANJIL • STATUS SERVER NORMAL
-          </span>
-          <span className="size-1 rounded-full bg-[#727789]" />
-          <span className="font-medium text-[#3a3c48]">Node ID: srv-mtr-01.primary</span>
-        </div>
+      <FadeIn>
+        <header>
+          <SlideIn direction="left">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-wide">
+              <span className="rounded-full bg-[#e9e5ff] px-3 py-1 text-[#4f3eb7]">
+                ● PUSAT DUKUNGAN TEKNIS &amp; LOG AUDIT • T.A. 2026/2027 GANJIL • STATUS SERVER NORMAL
+              </span>
+              <span className="size-1 rounded-full bg-[#727789]" />
+              <span className="font-medium text-[#3a3c48]">Node ID: srv-mtr-01.primary</span>
+            </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={() => window.alert("Berkas log sedang diunduh.")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#2b2d3a] hover:bg-[#e5e9ef]">
-            <Download className="size-4" /> Unduh Berkas Log
-          </button>
-          <button type="button" onClick={() => window.alert("Laporan diekspor sebagai .xlsx.")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#2b2d3a] hover:bg-[#e5e9ef]">
-            <FileSpreadsheet className="size-4" /> Ekspor Laporan (.xlsx)
-          </button>
-          <button type="button" onClick={() => window.alert("Form tiket bantuan baru dibuka.")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6552d4] px-5 text-[14px] font-bold text-white shadow-[0_6px_12px_rgba(93,74,204,0.25)] hover:bg-[#5442c0]">
-            <TicketPlus className="size-4" /> + Buat Tiket Bantuan
-          </button>
-        </div>
+            <h1 className="mt-3 text-[28px] font-bold leading-tight tracking-[-1px] text-[#1c1e28] lg:text-[30px]">
+              Pusat Bantuan IT &amp; Jejak Log Sistem SiManis
+            </h1>
+            <div className="mt-1.5 flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
+              <p className="max-w-[800px] text-[13px] leading-[1.55] text-[#57596a]">
+                Monitoring tiket gangguan teknis, status konektivitas infrastruktur Dapodik/Cloud, riwayat audit aktivitas administrator &amp; integrasi pelaporan kendala sekolah.
+              </p>
+              <span className="flex shrink-0 items-center gap-2 text-[10px] font-medium leading-3 text-[#3a3c48]">
+                <ShieldCheck className="size-4 text-[#5e4dd1]" />
+                Log Audit Terenkripsi
+                <br />
+                SHA-256
+              </span>
+            </div>
+          </SlideIn>
 
-        <h1 className="mt-3 text-[28px] font-bold leading-tight tracking-[-1px] text-[#1c1e28] lg:text-[30px]">
-          Pusat Bantuan IT &amp; Jejak Log Sistem SiManis
-        </h1>
-        <div className="mt-1.5 flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
-          <p className="max-w-[800px] text-[13px] leading-[1.55] text-[#57596a]">
-            Monitoring tiket gangguan teknis, status konektivitas infrastruktur Dapodik/Cloud, riwayat audit aktivitas administrator &amp; integrasi pelaporan kendala sekolah.
-          </p>
-          <span className="flex shrink-0 items-center gap-2 text-[10px] font-medium leading-3 text-[#3a3c48]">
-            <ShieldCheck className="size-4 text-[#5e4dd1]" />
-            Log Audit Terenkripsi
-            <br />
-            SHA-256
-          </span>
-        </div>
-      </header>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="mt-4 flex flex-wrap gap-2">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Berkas log sedang diunduh.")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#2b2d3a] hover:bg-[#e5e9ef]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4" /> Unduh Berkas Log
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Laporan diekspor sebagai .xlsx.")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#2b2d3a] hover:bg-[#e5e9ef]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <FileSpreadsheet className="size-4" /> Ekspor Laporan (.xlsx)
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Form tiket bantuan baru dibuka.")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6552d4] px-5 text-[14px] font-bold text-white shadow-[0_6px_12px_rgba(93,74,204,0.25)] hover:bg-[#5442c0]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <TicketPlus className="size-4" /> + Buat Tiket Bantuan
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
+        </header>
+      </FadeIn>
 
       {/* Stats */}
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Status Tiket Bantuan"
-          icon={Ticket}
-          footer={
-            <div className="flex gap-4">
-              <span className="flex items-start gap-1.5"><i className="mt-1 size-1.5 rounded-full bg-[#5e4dd1]" />11<br />Selesai</span>
-              <span className="flex items-start gap-1.5 text-[#d72d3c]"><i className="mt-1 size-1.5 rounded-full bg-[#d72d3c]" />3<br />Penanganan</span>
-            </div>
-          }
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[28px] font-bold leading-none text-[#1c1e28]">14 <span className="text-[13px] font-medium text-[#3a3c48]">Tiket</span></p>
-            <span className="rounded-full bg-[#e9e5ff] px-3 py-1 text-[11px] font-bold leading-3 text-[#5e4dd1]">Respon &lt;<br />12m</span>
-          </div>
-          <p className="mt-2 text-[13px] text-[#3a3c48]">Aktif</p>
-        </StatCard>
-
-        <StatCard
-          label="Uptime Server & Sistem"
-          icon={Server}
-          footer={
-            <div className="flex justify-between gap-2">
-              <span>Latensi<br />Jaringan: <b>24ms</b></span>
-              <span className="font-bold text-[#00a56a]">0 Kejadian<br />Fatal</span>
-            </div>
-          }
-        >
-          <div className="flex items-center gap-2">
-            <p className="text-[28px] font-bold leading-none text-[#1c1e28]">99.98%</p>
-            <span className="rounded-full bg-[#e8faf2] px-3 py-1 text-[11px] font-bold leading-3 text-[#00a56a]">30 Hari<br />Stabil</span>
-          </div>
-        </StatCard>
-
-        <StatCard
-          label="Audit Log Hari Ini"
-          icon={ShieldHalf}
-          footer={
-            <div className="flex justify-between gap-2">
-              <span>Keamanan:<br /><b className="text-[#00a56a]">Terenkripsi AES</b></span>
-              <span>Buffer:<br /><b>0.4 MB/s</b></span>
-            </div>
-          }
-        >
-          <div className="flex items-center gap-4">
-            <p className="text-[28px] font-bold leading-none text-[#1c1e28]">2,840</p>
-            <span className="rounded-full bg-[#e9e5ff] px-2 py-0.5 text-[11px] font-bold text-[#5e4dd1]">+14.2% Vol</span>
-          </div>
-        </StatCard>
-
-        <StatCard
-          label="Konektivitas Integrasi API"
-          icon={Network}
-          footer={
+      <StaggerChildren className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4" staggerDelay={0.06}>
+        <StaggerItem>
+          <StatCard
+            label="Status Tiket Bantuan"
+            icon={Ticket}
+            footer={
+              <div className="flex gap-4">
+                <span className="flex items-start gap-1.5"><i className="mt-1 size-1.5 rounded-full bg-[#5e4dd1]" />11<br />Selesai</span>
+                <span className="flex items-start gap-1.5 text-[#d72d3c]"><i className="mt-1 size-1.5 rounded-full bg-[#d72d3c]" />3<br />Penanganan</span>
+              </div>
+            }
+          >
             <div className="flex items-center justify-between gap-2">
-              <span>Dapodik, SSO, S3, WA<br />Gateway</span>
-              <CircleCheck className="size-4 shrink-0 text-[#00a56a]" />
+              <p className="text-[28px] font-bold leading-none text-[#1c1e28]">14 <span className="text-[13px] font-medium text-[#3a3c48]">Tiket</span></p>
+              <span className="rounded-full bg-[#e9e5ff] px-3 py-1 text-[11px] font-bold leading-3 text-[#5e4dd1]">Respon &lt;<br />12m</span>
             </div>
-          }
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[28px] font-bold leading-none text-[#1c1e28]">4 / 4</p>
-            <span className="rounded-full bg-[#e8faf2] px-3 py-1 text-[11px] font-bold leading-3 text-[#00a56a]">100%<br />Online</span>
-          </div>
-          <p className="mt-2 text-[13px] text-[#3a3c48]">Layanan</p>
-        </StatCard>
-      </div>
+            <p className="mt-2 text-[13px] text-[#3a3c48]">Aktif</p>
+          </StatCard>
+        </StaggerItem>
 
-      <div className="mt-6 grid max-lg:grid-cols-1 items-start gap-6 xl:grid-cols-[1.27fr_1fr]">
+        <StaggerItem>
+          <StatCard
+            label="Uptime Server & Sistem"
+            icon={Server}
+            footer={
+              <div className="flex justify-between gap-2">
+                <span>Latensi<br />Jaringan: <b>24ms</b></span>
+                <span className="font-bold text-[#00a56a]">0 Kejadian<br />Fatal</span>
+              </div>
+            }
+          >
+            <div className="flex items-center gap-2">
+              <p className="text-[28px] font-bold leading-none text-[#1c1e28]">99.98%</p>
+              <span className="rounded-full bg-[#e8faf2] px-3 py-1 text-[11px] font-bold leading-3 text-[#00a56a]">30 Hari<br />Stabil</span>
+            </div>
+          </StatCard>
+        </StaggerItem>
+
+        <StaggerItem>
+          <StatCard
+            label="Audit Log Hari Ini"
+            icon={ShieldHalf}
+            footer={
+              <div className="flex justify-between gap-2">
+                <span>Keamanan:<br /><b className="text-[#00a56a]">Terenkripsi AES</b></span>
+                <span>Buffer:<br /><b>0.4 MB/s</b></span>
+              </div>
+            }
+          >
+            <div className="flex items-center gap-4">
+              <p className="text-[28px] font-bold leading-none text-[#1c1e28]">2,840</p>
+              <span className="rounded-full bg-[#e9e5ff] px-2 py-0.5 text-[11px] font-bold text-[#5e4dd1]">+14.2% Vol</span>
+            </div>
+          </StatCard>
+        </StaggerItem>
+
+        <StaggerItem>
+          <StatCard
+            label="Konektivitas Integrasi API"
+            icon={Network}
+            footer={
+              <div className="flex items-center justify-between gap-2">
+                <span>Dapodik, SSO, S3, WA<br />Gateway</span>
+                <CircleCheck className="size-4 shrink-0 text-[#00a56a]" />
+              </div>
+            }
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[28px] font-bold leading-none text-[#1c1e28]">4 / 4</p>
+              <span className="rounded-full bg-[#e8faf2] px-3 py-1 text-[11px] font-bold leading-3 text-[#00a56a]">100%<br />Online</span>
+            </div>
+            <p className="mt-2 text-[13px] text-[#3a3c48]">Layanan</p>
+          </StatCard>
+        </StaggerItem>
+      </StaggerChildren>
+
+      <FadeIn>
+        <div className="mt-6 grid max-lg:grid-cols-1 items-start gap-6 xl:grid-cols-[1.27fr_1fr]">
         {/* Left column */}
         <div className="min-w-0 space-y-6">
           <section className={`${card} p-6`}>
@@ -589,6 +628,7 @@ export default function SupportPage() {
           </section>
         </aside>
       </div>
+      </FadeIn>
     </div>
   );
 }

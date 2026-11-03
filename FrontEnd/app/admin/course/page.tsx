@@ -1,10 +1,11 @@
 "use client";
 
 import { CirclePlus, Download, RefreshCw } from "lucide-react";
+import { motion } from "framer-motion";
 import { CourseSidePanels } from "@/components/admin/course-side-panels";
 import { CourseStats } from "@/components/admin/course-stats";
 import { CourseTable } from "@/components/admin/course-table";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function CoursePage() {
   return (
@@ -21,15 +22,47 @@ export default function CoursePage() {
               <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Kelola 35 mata pelajaran aktif, distribusi kelompok kejuruan &amp; umum, alokasi jam pelajaran (JP), dan pemetaan modul kurikulum merdeka SMK Mataram.</p>
             </div>
           </SlideIn>
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => window.alert("Ekspor KOSP (PDF/XLS)")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><Download className="size-4" /> Ekspor KOSP (PDF/XLS)</button>
-            <button type="button" onClick={() => window.alert("Sinkron Dapodik")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#e5deff] px-4 text-sm font-semibold text-[#4331a8] hover:bg-[#d9d0ff]"><RefreshCw className="size-4" /> Sinkron Dapodik</button>
-            <button type="button" onClick={() => window.alert("Tambah Mapel Baru")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"><CirclePlus className="size-4" /> Tambah Mapel Baru</button>
-          </div>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-2">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Ekspor KOSP (PDF/XLS)")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4" /> Ekspor KOSP (PDF/XLS)
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Sinkron Dapodik")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#e5deff] px-4 text-sm font-semibold text-[#4331a8] hover:bg-[#d9d0ff]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <RefreshCw className="size-4" /> Sinkron Dapodik
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Tambah Mapel Baru")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <CirclePlus className="size-4" /> Tambah Mapel Baru
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
         </section>
       </FadeIn>
       <CourseStats />
-      <CourseTable aside={<CourseSidePanels />} />
+      <FadeIn>
+        <CourseTable aside={<CourseSidePanels />} />
+      </FadeIn>
     </div>
   );
 }

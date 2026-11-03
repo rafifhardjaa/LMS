@@ -1,6 +1,7 @@
 "use client";
 
 import { DoorClosed, KeyRound, TrendingUp, UserCheck, Users } from "lucide-react";
+import { motion } from "framer-motion";
 import { CountUp, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 const stats = [
@@ -44,7 +45,11 @@ export function StudentStats() {
     <StaggerChildren className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" staggerDelay={0.06}>
       {stats.map(({ label, value, suffix, decimals, icon: Icon, tone, footer }, index) => (
         <StaggerItem key={index}>
-          <div className="flex h-[160px] flex-col rounded-2xl border border-[#eef0f5] bg-white p-5 shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
+          <motion.div
+            className="flex h-[160px] flex-col rounded-2xl border border-[#eef0f5] bg-white p-5 shadow-[0_8px_24px_rgba(32,44,90,0.04)]"
+            whileHover={{ y: -4, boxShadow: "0 12px 28px -4px rgba(0,0,0,0.08)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 22 }}
+          >
             <div className="flex items-start justify-between gap-2">
               <p className="text-[10px] font-semibold uppercase leading-[18px] tracking-[0.02em] text-[#4e566c]">{label}</p>
               <span className={`flex size-10 shrink-0 items-center justify-center rounded-2xl ${tone}`}>
@@ -53,7 +58,7 @@ export function StudentStats() {
             </div>
             <p className="mt-2 whitespace-nowrap text-[24px] font-bold leading-7 tracking-tight text-[#181c20]"><CountUp to={value} decimals={decimals} /><span className="ml-1 text-xs font-normal text-[#787584]">{suffix}</span></p>
             <div className="mt-auto flex min-h-7 items-center justify-between gap-1 text-[9px] leading-[11px]">{footer}</div>
-          </div>
+          </motion.div>
         </StaggerItem>
       ))}
     </StaggerChildren>

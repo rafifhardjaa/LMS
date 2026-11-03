@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import {
   BadgeCheck,
   Banknote,
@@ -116,37 +118,65 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full pt-5 text-[#1d1f2b]">
-      <header className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
-        <div className="max-w-[570px]">
-          <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-wide">
-            <span className="rounded-full bg-[#e9e5ff] px-3 py-1 text-[#4f3eb7]">PUSAT PENGATURAN SISTEM</span>
-            <span className="size-1 rounded-full bg-[#727789]" />
-            <span className="text-[#555968]">T.A. 2026/2027 GANJIL</span>
-            <span className="size-1 rounded-full bg-[#727789]" />
-            <span className="text-[#00a56a]">● HAK AKSES SUPER ADMIN</span>
-          </div>
-          <h1 className="mt-3 text-[30px] font-bold leading-[1.16] tracking-[-1px] text-[#1c1e28] sm:text-[32px]">
-            Pengaturan &amp; Konfigurasi Sistem
-            <br />
-            SiManis
-          </h1>
-          <p className="mt-2 max-w-[535px] text-[13px] leading-[1.55] text-[#57596a]">
-            Manajemen identitas sekolah, sinkronisasi API Dapodik &amp; Pusdatin, gateway pembayaran host-to-host,
-            konfigurasi SSO SAML 2.0, serta manajemen hak akses &amp; backup basis data SMK Negeri Mataram.
-          </p>
-        </div>
-        <div className="flex max-w-[420px] flex-wrap justify-start gap-2 lg:justify-end">
-          <button type="button" onClick={() => window.alert("Cadangan konfigurasi dipulihkan.")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#555968] hover:bg-[#e5e9ef]">
-            <RefreshCcw className="size-4" /> Pulihkan Cadangan
-          </button>
-          <button type="button" onClick={() => window.alert("Audit konfigurasi diekspor sebagai JSON.")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#555968] hover:bg-[#e5e9ef]">
-            <Download className="size-4" /> Ekspor Audit (.json)
-          </button>
-          <button type="button" onClick={saveAll} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5d4acc] px-5 text-[13px] font-bold text-white shadow-[0_6px_12px_rgba(93,74,204,0.25)] hover:bg-[#4e3db9]">
-            <Save className="size-4" /> Simpan Semua Perubahan
-          </button>
-        </div>
-      </header>
+      <FadeIn>
+        <header className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
+          <SlideIn direction="left">
+            <div className="max-w-[570px]">
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-wide">
+                <span className="rounded-full bg-[#e9e5ff] px-3 py-1 text-[#4f3eb7]">PUSAT PENGATURAN SISTEM</span>
+                <span className="size-1 rounded-full bg-[#727789]" />
+                <span className="text-[#555968]">T.A. 2026/2027 GANJIL</span>
+                <span className="size-1 rounded-full bg-[#727789]" />
+                <span className="text-[#00a56a]">● HAK AKSES SUPER ADMIN</span>
+              </div>
+              <h1 className="mt-3 text-[30px] font-bold leading-[1.16] tracking-[-1px] text-[#1c1e28] sm:text-[32px]">
+                Pengaturan &amp; Konfigurasi Sistem
+                <br />
+                SiManis
+              </h1>
+              <p className="mt-2 max-w-[535px] text-[13px] leading-[1.55] text-[#57596a]">
+                Manajemen identitas sekolah, sinkronisasi API Dapodik &amp; Pusdatin, gateway pembayaran host-to-host,
+                konfigurasi SSO SAML 2.0, serta manajemen hak akses &amp; backup basis data SMK Negeri Mataram.
+              </p>
+            </div>
+          </SlideIn>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex max-w-[420px] flex-wrap justify-start gap-2 lg:justify-end">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Cadangan konfigurasi dipulihkan.")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#555968] hover:bg-[#e5e9ef]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <RefreshCcw className="size-4" /> Pulihkan Cadangan
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Audit konfigurasi diekspor sebagai JSON.")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#eef1f5] px-4 text-[13px] font-semibold text-[#555968] hover:bg-[#e5e9ef]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4" /> Ekspor Audit (.json)
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={saveAll}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5d4acc] px-5 text-[13px] font-bold text-white shadow-[0_6px_12px_rgba(93,74,204,0.25)] hover:bg-[#4e3db9]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Save className="size-4" /> Simpan Semua Perubahan
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
+        </header>
+      </FadeIn>
 
       <nav aria-label="Kategori pengaturan" className="mt-7 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map(({ id, label, icon: Icon }) => {
@@ -169,7 +199,8 @@ export default function SettingsPage() {
 
       {saved && <p role="status" className="mt-1 text-[11px] font-semibold text-[#00a56a]">Perubahan lokal tersimpan.</p>}
 
-      <main className="mt-4 grid max-lg:grid-cols-1 items-start gap-6 xl:grid-cols-[1.14fr_0.78fr]">
+      <FadeIn>
+        <main className="mt-4 grid max-lg:grid-cols-1 items-start gap-6 xl:grid-cols-[1.14fr_0.78fr]">
         <div className="space-y-6">
           <section className="bg-white p-6 shadow-[0_4px_18px_rgba(45,61,95,0.035)]">
             <SectionTitle icon={Building2} title="Profil & Identitas Lembaga" description="Master data legalitas institusi pendidikan resmi" badge="◉ Terakreditasi BAN-SM" />
@@ -323,6 +354,7 @@ export default function SettingsPage() {
           </section>
         </aside>
       </main>
+      </FadeIn>
     </div>
   );
 }

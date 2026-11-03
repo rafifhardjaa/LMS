@@ -1,10 +1,11 @@
 "use client";
 
 import { CirclePlus, Download, ArrowLeftRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { TransactionSidePanels } from "@/components/admin/transaction-side-panels";
 import { TransactionStats } from "@/components/admin/transaction-stats";
 import { TransactionTable } from "@/components/admin/transaction-table";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function TransactionPage() {
   return (
@@ -21,15 +22,47 @@ export default function TransactionPage() {
               <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Pengelolaan real-time pembayaran SPP reguler, asesmen sertifikasi LSP-P1, CBT semester, infaq komite, serta automasi rekonsiliasi kas perbankan SMK Mataram.</p>
             </div>
           </SlideIn>
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => window.alert("Ekspor Rekap Transaksi (.xlsx)")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><Download className="size-4" /> Ekspor Rekap (.xlsx)</button>
-            <button type="button" onClick={() => window.alert("Rekonsiliasi Bank")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><ArrowLeftRight className="size-4" /> Rekonsiliasi Bank</button>
-            <button type="button" onClick={() => window.alert("Buat Tagihan / Invoice")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"><CirclePlus className="size-4" /> Buat Tagihan / Invoice</button>
-          </div>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-2">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Ekspor Rekap Transaksi (.xlsx)")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4" /> Ekspor Rekap (.xlsx)
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Rekonsiliasi Bank")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <ArrowLeftRight className="size-4" /> Rekonsiliasi Bank
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Buat Tagihan / Invoice")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <CirclePlus className="size-4" /> Buat Tagihan / Invoice
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
         </section>
       </FadeIn>
       <TransactionStats />
-      <TransactionTable aside={<TransactionSidePanels />} />
+      <FadeIn>
+        <TransactionTable aside={<TransactionSidePanels />} />
+      </FadeIn>
     </div>
   );
 }

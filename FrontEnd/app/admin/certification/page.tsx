@@ -1,10 +1,11 @@
 "use client";
 
 import { Award, CirclePlus, CloudCog, Download } from "lucide-react";
+import { motion } from "framer-motion";
 import { CertificationSidePanels } from "@/components/admin/certification-side-panels";
 import { CertificationStats } from "@/components/admin/certification-stats";
 import { CertificationTable } from "@/components/admin/certification-table";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function CertificationPage() {
   return (
@@ -26,15 +27,47 @@ export default function CertificationPage() {
               </div>
             </div>
           </SlideIn>
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => window.alert("Unduh Rekap (.xlsx)")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><Download className="size-4" /> Unduh Rekap (.xlsx)</button>
-            <button type="button" onClick={() => window.alert("Sinkronisasi BNSP")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><CloudCog className="size-4" /> Sinkronisasi BNSP</button>
-            <button type="button" onClick={() => window.alert("Ajukan Uji Kompetensi Baru")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"><CirclePlus className="size-4" /> Ajukan Uji Kompetensi Baru</button>
-          </div>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-2">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Unduh Rekap (.xlsx)")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4" /> Unduh Rekap (.xlsx)
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Sinkronisasi BNSP")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <CloudCog className="size-4" /> Sinkronisasi BNSP
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Ajukan Uji Kompetensi Baru")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <CirclePlus className="size-4" /> Ajukan Uji Kompetensi Baru
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
         </section>
       </FadeIn>
       <CertificationStats />
-      <CertificationTable aside={<CertificationSidePanels />} />
+      <FadeIn>
+        <CertificationTable aside={<CertificationSidePanels />} />
+      </FadeIn>
     </div>
   );
 }

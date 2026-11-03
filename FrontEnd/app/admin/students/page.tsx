@@ -1,10 +1,11 @@
 "use client";
 
 import { Download, RefreshCw, UserPlus } from "lucide-react";
+import { motion } from "framer-motion";
 import { StudentStats } from "@/components/admin/student-stats";
 import { StudentsSidePanels } from "@/components/admin/students-side-panels";
 import { StudentsTable } from "@/components/admin/students-table";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function StudentsPage() {
   return (
@@ -21,15 +22,47 @@ export default function StudentsPage() {
               <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data 1.842 siswa aktif, distribusi rombel kelas, status aktivasi akun SSO Dapodik, dan rekap kelengkapan administrasi peserta didik SMK Mataram.</p>
             </div>
           </SlideIn>
-          <div className="flex flex-wrap items-center gap-3">
-            <button type="button" onClick={() => window.alert("Ekspor Data")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"><Download className="size-4 text-[#4e566c]" /> Ekspor Data</button>
-            <button type="button" onClick={() => window.alert("Sinkronisasi Dapodik")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#e5deff] px-4 text-sm font-semibold text-[#4331a8] hover:bg-[#d9d0ff]"><RefreshCw className="size-4" /> Sinkronisasi Dapodik</button>
-            <button type="button" onClick={() => window.alert("Tambah Siswa Baru")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"><UserPlus className="size-4" /> + Tambah Siswa Baru</button>
-          </div>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-3">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Ekspor Data")}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4 text-[#4e566c]" /> Ekspor Data
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Sinkronisasi Dapodik")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#e5deff] px-4 text-sm font-semibold text-[#4331a8] hover:bg-[#d9d0ff]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <RefreshCw className="size-4" /> Sinkronisasi Dapodik
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Tambah Siswa Baru")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <UserPlus className="size-4" /> + Tambah Siswa Baru
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
         </div>
       </FadeIn>
       <StudentStats />
-      <StudentsTable aside={<StudentsSidePanels />} />
+      <FadeIn>
+        <StudentsTable aside={<StudentsSidePanels />} />
+      </FadeIn>
     </div>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { CloudUpload, Download, RefreshCw } from "lucide-react";
+import { motion } from "framer-motion";
 import { ResourceSidePanels } from "@/components/admin/resource-side-panels";
 import { ResourceStats } from "@/components/admin/resource-stats";
 import { ResourceTable } from "@/components/admin/resource-table";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function ResourcePage() {
   return (
@@ -21,15 +22,47 @@ export default function ResourcePage() {
               <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Pusat pengelolaan 142 modul ajar digital, bahan tayang presentasi, jobsheet praktikum lab, dan bank perangkat ajar terverifikasi waka kurikulum untuk 4 konsentrasi kejuruan.</p>
             </div>
           </SlideIn>
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => window.alert("Unduh Rekap Modul (.xlsx)")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><Download className="size-4" /> Unduh Rekap (.xlsx)</button>
-            <button type="button" onClick={() => window.alert("Sinkronisasi PMM")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"><RefreshCw className="size-4" /> Sinkronisasi PMM</button>
-            <button type="button" onClick={() => window.alert("Unggah Modul Baru")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"><CloudUpload className="size-4" /> Unggah Modul Baru</button>
-          </div>
+          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-2">
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Unduh Rekap Modul (.xlsx)")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <Download className="size-4" /> Unduh Rekap (.xlsx)
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Sinkronisasi PMM")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4 text-sm font-semibold text-[#4e566c] hover:bg-[#eceef3]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <RefreshCw className="size-4" /> Sinkronisasi PMM
+              </motion.button>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.button
+                type="button"
+                onClick={() => window.alert("Unggah Modul Baru")}
+                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <CloudUpload className="size-4" /> Unggah Modul Baru
+              </motion.button>
+            </StaggerItem>
+          </StaggerChildren>
         </section>
       </FadeIn>
       <ResourceStats />
-      <ResourceTable aside={<ResourceSidePanels />} />
+      <FadeIn>
+        <ResourceTable aside={<ResourceSidePanels />} />
+      </FadeIn>
     </div>
   );
 }
