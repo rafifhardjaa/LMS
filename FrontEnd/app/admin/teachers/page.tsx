@@ -6,8 +6,11 @@ import { TeacherStats } from "@/components/admin/teacher-stats";
 import { TeachersSidePanels } from "@/components/admin/teachers-side-panels";
 import { TeachersTable } from "@/components/admin/teachers-table";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 export default function TeachersPage() {
+  const role = useAuthStore((state) => state.user?.role ?? "admin");
+  const isAdmin = role === "admin";
   return (
     <div className="flex w-full flex-col gap-7 pt-4">
       <FadeIn>
@@ -59,13 +62,13 @@ export default function TeachersPage() {
           </StaggerChildren>
         </div>
       </FadeIn>
-      <TeacherStats />
-      <FadeIn>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <TeachersTable />
-          <TeachersSidePanels />
+          <TeacherStats />
+          <FadeIn>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <TeachersTable isAdmin={isAdmin} />
+              <TeachersSidePanels />
+            </div>
+          </FadeIn>
         </div>
-      </FadeIn>
-    </div>
-  );
-}
+      );
+    }
