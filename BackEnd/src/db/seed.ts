@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { db } from "./index";
 import {
   roles,
@@ -8,7 +9,19 @@ import {
   enrollments,
   moduleDiscussions,
   moduleDiscussionReplies,
+  majors,
+  gradeLevels,
+  classes,
+  teacherSubjects,
+  teacherClassrooms,
 } from "./schema";
+import {
+  majorsData,
+  gradeLevelsData,
+  classesData,
+  teachersData,
+  subjectsData,
+} from "./seed-data";
 
 async function seed() {
   console.log("🌱 Starting database seeding...");
@@ -19,19 +32,20 @@ async function seed() {
     await db.delete(moduleDiscussions);
     await db.delete(enrollments);
     await db.delete(modules);
+    await db.delete(teacherSubjects);
+    await db.delete(teacherClassrooms);
     await db.delete(subjects);
     await db.delete(userRoles);
     await db.delete(users);
+    await db.delete(classes);
+    await db.delete(gradeLevels);
+    await db.delete(majors);
     await db.delete(roles);
 
     console.log("Inserting roles...");
     const rolesData = await db
       .insert(roles)
-      .values([
-        { name: "admin" },
-        { name: "guru" },
-        { name: "siswa" },
-      ])
+      .values([{ name: "admin" }, { name: "guru" }, { name: "siswa" }])
       .returning({ id: roles.id, name: roles.name });
 
     const adminRole = rolesData.find((r) => r.name === "admin");
@@ -42,7 +56,7 @@ async function seed() {
       throw new Error("Failed to create roles");
     }
 
-    console.log("Inserting users...");
+    console.log("Inserting demo users...");
     const passwordHash = await Bun.password.hash("password123", {
       algorithm: "argon2id",
     });
@@ -71,11 +85,21 @@ async function seed() {
           isActive: true,
         },
         {
+          fullName: "Guru SIMANIS",
+          email: "guru@simanis.com",
+          nomorInduk: "198703212011012002",
+          tanggalLahir: "1987-03-21",
+          passwordHash,
+          passwordChangedAt: new Date(),
+          phone: "081234567891",
+          isActive: true,
+        },
+        {
           fullName: "Siswa SIMANIS",
           email: "siswa@simanis.com",
           nomorInduk: "1023014587",
           tanggalLahir: "2010-01-15",
-          kelas: "X RPL 1",
+          kelas: "X RPL A",
           passwordHash,
           passwordChangedAt: new Date(),
           phone: "081234567892",
@@ -86,7 +110,7 @@ async function seed() {
           email: "siswa2@simanis.com",
           nomorInduk: "1023014588",
           tanggalLahir: "2010-02-20",
-          kelas: "X RPL 1",
+          kelas: "X RPL A",
           passwordHash,
           passwordChangedAt: new Date(),
           phone: "081234567893",
@@ -97,7 +121,7 @@ async function seed() {
           email: "siswa3@simanis.com",
           nomorInduk: "1023014589",
           tanggalLahir: "2010-03-25",
-          kelas: "X RPL 2",
+          kelas: "X RPL B",
           passwordHash,
           passwordChangedAt: new Date(),
           phone: "081234567894",
@@ -108,7 +132,7 @@ async function seed() {
           email: "siswa4@simanis.com",
           nomorInduk: "1023014590",
           tanggalLahir: "2010-04-30",
-          kelas: "X RPL 2",
+          kelas: "X RPL B",
           passwordHash,
           passwordChangedAt: new Date(),
           phone: "081234567895",
@@ -125,11 +149,18 @@ async function seed() {
     const siswa3User = usersData.find((u) => u.email === "siswa3@simanis.com");
     const siswa4User = usersData.find((u) => u.email === "siswa4@simanis.com");
 
-    if (!adminUser || !guruUser || !siswaUser || !siswa2User || !siswa3User || !siswa4User) {
-      throw new Error("Failed to create users");
+    if (
+      !adminUser ||
+      !guruUser ||
+      !siswaUser ||
+      !siswa2User ||
+      !siswa3User ||
+      !siswa4User
+    ) {
+      throw new Error("Failed to create demo users");
     }
 
-    console.log("Assigning roles to users...");
+    console.log("Assigning demo roles...");
     await db.insert(userRoles).values([
       { userId: adminUser.id, roleId: adminRole.id },
       { userId: guruUser.id, roleId: guruRole.id },
@@ -139,8 +170,149 @@ async function seed() {
       { userId: siswa4User.id, roleId: siswaRole.id },
     ]);
 
+    console.log("Inserting majors...");
+    const majorsInserted = await db
+      .insert(majors)
+      .values(majorsData)
+      .returning({ id: majors.id, code: majors.code });
+    const majorByCode = new Map(majorsInserted.map((m) => [m.code, m.id]));
+
+    console.log("Inserting grade levels...");
+    const gradesInserted = await db
+      .insert(gradeLevels)
+      .values(gradeLevelsData)
+      .returning({ id: gradeLevels.id, code: gradeLevels.code });
+    const gradeByCode = new Map(gradesInserted.map((g) => [g.code, g.id]));
+
+    console.log("Inserting classes...");
+    const classesInserted = await db
+      .insert(classes)
+      .values(
+        classesData.map((c) => ({
+          name: c.name,
+          section: c.section,
+          majorId: majorByCode.get(c.majorCode)!,
+          gradeLevelId: gradeByCode.get(c.gradeCode)!,
+        }))
+      )
+      .returning({ id: classes.id, name: classes.name });
+    const classByName = new Map(classesInserted.map((c) => [c.name, c.id]));
+    const classMeta = new Map(classesData.map((c) => [c.name, c]));
+
+    console.log("Linking demo students to classes...");
+    await db
+      .update(users)
+      .set({ classId: classByName.get("X RPL A") ?? null })
+      .where(eq(users.id, siswaUser.id));
+    await db
+      .update(users)
+      .set({ classId: classByName.get("X RPL A") ?? null })
+      .where(eq(users.id, siswa2User.id));
+    await db
+      .update(users)
+      .set({ classId: classByName.get("X RPL B") ?? null })
+      .where(eq(users.id, siswa3User.id));
+    await db
+      .update(users)
+      .set({ classId: classByName.get("X RPL B") ?? null })
+      .where(eq(users.id, siswa4User.id));
+
+    console.log(`Inserting ${teachersData.length} teachers...`);
+    const teacherUsers = await db
+      .insert(users)
+      .values(
+        teachersData.map((t) => ({
+          fullName: t.fullName,
+          email: t.email,
+          nomorInduk: t.nomorInduk,
+          passwordHash,
+          passwordChangedAt: new Date(),
+          isActive: true,
+        }))
+      )
+      .returning({ id: users.id, email: users.email });
+    const teacherByEmail = new Map(teacherUsers.map((u) => [u.email, u.id]));
+
+    if (teacherByEmail.size !== teachersData.length) {
+      throw new Error("Failed to create all teacher accounts");
+    }
+
+    console.log("Assigning guru role to teachers...");
+    await db.insert(userRoles).values(
+      teachersData.map((t) => ({
+        userId: teacherByEmail.get(t.email)!,
+        roleId: guruRole.id,
+      }))
+    );
+
+    console.log("Assigning teachers to classrooms...");
+    const teacherClassroomRows: { teacherId: string; classId: string }[] = [];
+    for (const teacher of teachersData) {
+      const teacherId = teacherByEmail.get(teacher.email);
+      if (!teacherId) continue;
+      for (const className of teacher.classNames) {
+        const classId = classByName.get(className);
+        if (!classId) continue;
+        teacherClassroomRows.push({ teacherId, classId });
+      }
+    }
+    await db.insert(teacherClassrooms).values(teacherClassroomRows);
+
     console.log("Inserting subjects...");
     const subjectData = await db
+      .insert(subjects)
+      .values(
+        subjectsData.map((s) => ({
+          name: s.name,
+          code: s.code,
+          majorId: s.majorCode ? (majorByCode.get(s.majorCode) ?? null) : null,
+          gradeLevelId: gradeByCode.get(s.gradeCode)!,
+          semester: s.semester,
+          academicYear: s.academicYear,
+          createdBy: adminUser.id,
+        }))
+      )
+      .returning({
+        id: subjects.id,
+        code: subjects.code,
+        majorId: subjects.majorId,
+        gradeLevelId: subjects.gradeLevelId,
+      });
+
+    const subjectIdsByMajorGrade = new Map<string, string[]>();
+    for (const s of subjectData) {
+      if (!s.majorId || !s.gradeLevelId) continue;
+      const key = `${s.majorId}|${s.gradeLevelId}`;
+      const list = subjectIdsByMajorGrade.get(key) ?? [];
+      list.push(s.id);
+      subjectIdsByMajorGrade.set(key, list);
+    }
+
+    console.log("Assigning subjects to teachers...");
+    const teacherSubjectRows: { teacherId: string; subjectId: string }[] = [];
+    const assignedSubjectPairs = new Set<string>();
+    for (const teacher of teachersData) {
+      const teacherId = teacherByEmail.get(teacher.email);
+      if (!teacherId) continue;
+      for (const className of teacher.classNames) {
+        const meta = classMeta.get(className);
+        if (!meta) continue;
+        const majorId = majorByCode.get(meta.majorCode);
+        const gradeLevelId = gradeByCode.get(meta.gradeCode);
+        if (!majorId || !gradeLevelId) continue;
+        const subjectIds = subjectIdsByMajorGrade.get(`${majorId}|${gradeLevelId}`) ?? [];
+        for (const subjectId of subjectIds) {
+          const pairKey = `${teacherId}|${subjectId}`;
+          if (assignedSubjectPairs.has(pairKey)) continue;
+          assignedSubjectPairs.add(pairKey);
+          teacherSubjectRows.push({ teacherId, subjectId });
+        }
+      }
+    }
+    await db.insert(teacherSubjects).values(teacherSubjectRows);
+
+    console.log("Inserting demo subjects...");
+    const demosubjectData = await db
       .insert(subjects)
       .values([
         {
@@ -148,21 +320,27 @@ async function seed() {
           code: "INF101",
           description:
             "Algoritma, struktur data, dan penerapan komputasi untuk kelas XII.",
+          gradeLevelId: gradeByCode.get("XII")!,
+          semester: "Ganjil",
+          academicYear: "2026/2027",
           createdBy: adminUser.id,
         },
         {
           name: "Matematika Dasar",
           code: "MATH101",
           description: "Pelajaran matematika dasar untuk pemula",
+          gradeLevelId: gradeByCode.get("X")!,
+          semester: "Ganjil",
+          academicYear: "2026/2027",
           createdBy: adminUser.id,
         },
       ])
       .returning({ id: subjects.id, code: subjects.code });
 
-    const informatikaSubject = subjectData.find((s) => s.code === "INF101");
-    const mathSubject = subjectData.find((s) => s.code === "MATH101");
+    const informatikaSubject = demosubjectData.find((s) => s.code === "INF101");
+    const mathSubject = demosubjectData.find((s) => s.code === "MATH101");
     if (!informatikaSubject || !mathSubject) {
-      throw new Error("Failed to create subjects");
+      throw new Error("Failed to create demo subjects");
     }
 
     console.log("Inserting modules...");
@@ -253,7 +431,9 @@ async function seed() {
       },
     ]);
 
-    console.log("✅ Database seeding completed successfully!");
+    console.log(
+      `✅ Seeding complete: ${majorsInserted.length} majors, ${gradesInserted.length} grade levels, ${classesInserted.length} classes, ${teacherUsers.length} teachers, ${subjectData.length} subjects.`
+    );
     process.exit(0);
   } catch (error) {
     console.error("❌ Seeding failed:", error);

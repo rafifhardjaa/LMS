@@ -2,9 +2,7 @@
 
 import { CirclePlus, Download, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
-import { CourseSidePanels } from "@/components/admin/course-side-panels";
-import { CourseStats } from "@/components/admin/course-stats";
-import { CourseTable } from "@/components/admin/course-table";
+import { CourseMasterData } from "@/components/admin/course-master-data";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function CoursePage() {
@@ -19,7 +17,7 @@ export default function CoursePage() {
                 <span className="rounded-full bg-[#eceef3] px-3 py-1 text-[#4e566c]">T.A. 2026/2027 GANJIL • FASE E &amp; F</span>
               </div>
               <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[30px]">Manajemen Mata<br className="hidden sm:block" /> Pelajaran &amp; Kurikulum</h1>
-              <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Kelola 35 mata pelajaran aktif, distribusi kelompok kejuruan &amp; umum, alokasi jam pelajaran (JP), dan pemetaan modul kurikulum merdeka SMK Mataram.</p>
+              <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Kelola master data jurusan, mata pelajaran kejuruan &amp; umum per tingkatan, rombongan belajar, serta guru pengampu SMK Mataram.</p>
             </div>
           </SlideIn>
           <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-2">
@@ -48,7 +46,7 @@ export default function CoursePage() {
             <StaggerItem>
               <motion.button
                 type="button"
-                onClick={() => window.alert("Tambah Mapel Baru")}
+                onClick={() => window.alert("Gunakan tab Mata Pelajaran lalu tombol Tambah Mapel.")}
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -59,9 +57,8 @@ export default function CoursePage() {
           </StaggerChildren>
         </section>
       </FadeIn>
-      <CourseStats />
       <FadeIn>
-        <CourseTable aside={<CourseSidePanels />} />
+        <CourseMasterData />
       </FadeIn>
     </div>
   );

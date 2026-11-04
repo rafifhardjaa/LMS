@@ -22,6 +22,20 @@
       "when": 1792585707583,
       "tag": "0002_old_harry_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793820344338,
+      "tag": "0003_jazzy_war_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793821008493,
+      "tag": "0004_fearless_kulan_gath",
+      "breakpoints": true
     }
   ]
 }

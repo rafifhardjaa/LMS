@@ -27,7 +27,7 @@ const BASE_URL = "";
 
 // ─── Low-level fetch helper ──────────────────────────────────────────────────
 
-async function apiFetch<T>(
+export async function apiFetch<T>(
   path: string,
   { headers, ...options }: RequestInit = {}
 ): Promise<{ data: T | null; error: ApiError | null; status: number }> {
