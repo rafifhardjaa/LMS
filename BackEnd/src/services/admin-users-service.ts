@@ -6,7 +6,7 @@
 
 import { and, eq, ne } from "drizzle-orm";
 import { db } from "../db";
-import { roles, userRoles, users } from "../db/schema";
+import { classes, roles, userRoles, users } from "../db/schema";
 import { revokeAuthTokens } from "../lib/auth-token";
 import {
   buildDefaultPassword,
@@ -84,6 +84,17 @@ async function assertIdentityAvailable(input: {
  * Admin memberi tahu password tersebut; user wajib menggantinya saat
  * login pertama.
  */
+async function resolveClassByName(name?: string | null) {
+  const trimmed = name?.trim();
+  if (!trimmed) return null;
+  const rows = await db
+    .select({ id: classes.id })
+    .from(classes)
+    .where(eq(classes.name, trimmed))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 export async function createManagedUser(input: ManagedUserInput) {
   const fullName = cleanName(input.fullName, "Nama");
   const nomorInduk = normalizeNomorInduk(input.nomorInduk);
@@ -103,6 +114,9 @@ export async function createManagedUser(input: ManagedUserInput) {
   const passwordHash = await hashPassword(defaultPassword);
   const roleRow = await ensureRole(input.role);
 
+  const classRow =
+    input.role === "siswa" ? await resolveClassByName(input.kelas) : null;
+
   const created = await db.transaction(async (tx) => {
     const inserted = await tx
       .insert(users)
@@ -112,6 +126,8 @@ export async function createManagedUser(input: ManagedUserInput) {
         nomorInduk,
         tanggalLahir,
         kelas: input.role === "siswa" ? input.kelas?.trim() || null : null,
+        classId:
+          input.role === "siswa" && classRow ? classRow.id : null,
         passwordHash,
         isActive: true,
         passwordChangedAt: null,
@@ -290,10 +306,11 @@ export async function importStudents(input: {
       }
       seen.add(nomorInduk);
 
-      const fullName = cleanName(row.full_name ?? "", "Nama");
-      const tanggalLahir = normalizeTanggalLahir(row.tanggal_lahir ?? "");
+const fullName = cleanName(row.full_name ?? "", "Nama");
+      const tanggalLahir = normalizeTanggalLahir(row.tanggalahir ?? "");
       const kelas = row.kelas?.trim() || null;
       const email = row.email ? normalizeEmail(row.email) : undefined;
+      const classRow = kelas ? await resolveClassByName(kelas) : null;
       const defaultPassword = buildDefaultPassword(tanggalLahir, nomorInduk);
 
       const existingRows = await db
@@ -322,6 +339,7 @@ export async function importStudents(input: {
             fullName,
             tanggalLahir,
             kelas,
+            classId: classRow?.id ?? null,
             email: email ?? existing.email,
             ...(input.activate
               ? {
@@ -345,6 +363,7 @@ export async function importStudents(input: {
               nomorInduk,
               tanggalLahir,
               kelas,
+              classId: classRow?.id ?? null,
               email,
               passwordHash: input.activate
                 ? await hashPassword(defaultPassword)
