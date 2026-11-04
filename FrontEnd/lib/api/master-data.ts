@@ -95,6 +95,20 @@ export interface TeacherSummary {
   classCount: number;
 }
 
+export interface StudentSummary {
+  id: string;
+  fullName: string;
+  nomorInduk: string | null;
+  email: string | null;
+  kelas: string | null;
+  isActive: boolean;
+  className: string | null;
+  majorCode: string | null;
+  majorName: string | null;
+  gradeCode: string | null;
+  gradeName: string | null;
+}
+
 export interface MajorInput {
   code: string;
   name: string;
@@ -237,6 +251,46 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<TeacherSummary[]>>(
         `/api/v1/teachers${queryString({ q })}`
       ),
+  },
+  students: {
+    list: (filters: {
+      q?: string;
+      classId?: string;
+      majorId?: string;
+      gradeLevelId?: string;
+      status?: "active" | "inactive" | "all";
+    } = {}) =>
+      apiFetch<ApiSuccess<StudentSummary[]>>(
+        `/api/v1/students${queryString(filters)}`
+      ),
+    create: (body: {
+      fullName: string;
+      nomorInduk?: string;
+      tanggalLahir?: string;
+      email?: string | null;
+      classId?: string | null;
+      isActive?: boolean;
+    }) =>
+      apiFetch<ApiSuccess<StudentSummary>>("/api/v1/students", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: string, body: Partial<{
+      fullName: string;
+      nomorInduk?: string;
+      tanggalLahir?: string;
+      email?: string | null;
+      classId?: string | null;
+      isActive?: boolean;
+    }>) =>
+      apiFetch<ApiSuccess<StudentSummary>>(`/api/v1/students/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(`/api/v1/students/${id}`, {
+        method: "DELETE",
+      }),
   },
   teacherAssignments: {
     listSubjects: (filters: { teacherId?: string; subjectId?: string } = {}) =>
