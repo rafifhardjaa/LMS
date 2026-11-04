@@ -6,6 +6,11 @@ import { usersRoute } from "./routes/users-route";
 import { authRoute } from "./routes/auth-route";
 import { adminUsersRoute } from "./routes/admin-users-route";
 import { subjectsRoute } from "./routes/subjects-route";
+import { majorsRoute } from "./routes/majors-route";
+import { gradeLevelsRoute } from "./routes/grade-levels-route";
+import { classesRoute } from "./routes/classes-route";
+import { teacherAssignmentsRoute } from "./routes/teacher-assignments-route";
+import { teachersRoute } from "./routes/teachers-route";
 import { modulesRoute } from "./routes/modules-route";
 import { discussionsRoute } from "./routes/discussions-route";
 import { lessonsRoute } from "./routes/lessons-route";
@@ -65,6 +70,14 @@ Akun guru dibuat oleh admin melalui \`POST /api/v1/admin/users\`.
     { name: "Auth", description: "Registrasi, login, profil, dan logout" },
     { name: "Admin", description: "Manajemen akun guru & siswa (admin)" },
     { name: "Subjects", description: "Manajemen mata pelajaran" },
+    { name: "Majors", description: "Manajemen jurusan" },
+    { name: "Grade Levels", description: "Manajemen tingkatan kelas" },
+    { name: "Classes", description: "Manajemen kelas" },
+    {
+      name: "Teacher Assignments",
+      description: "Penugasan guru ke mata pelajaran dan kelas",
+    },
+    { name: "Teachers", description: "Daftar guru dan beban mengajar" },
     { name: "Modules", description: "Manajemen modul dalam mata pelajaran" },
     { name: "Lessons", description: "Manajemen lesson dalam modul" },
     { name: "Enrollments", description: "Pendaftaran siswa ke mata pelajaran" },
@@ -106,6 +119,11 @@ const app = new Elysia()
   .use(authRoute)
   .use(adminUsersRoute)
   .use(subjectsRoute)
+  .use(majorsRoute)
+  .use(gradeLevelsRoute)
+  .use(classesRoute)
+  .use(teacherAssignmentsRoute)
+  .use(teachersRoute)
   .use(modulesRoute)
   .use(discussionsRoute)
   .use(lessonsRoute)
