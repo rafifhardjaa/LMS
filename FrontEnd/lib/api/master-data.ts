@@ -1,0 +1,271 @@
+import { apiFetch } from "./client";
+import type { ApiSuccess } from "./types";
+
+export interface Major {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+  classCount: number;
+  subjectCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GradeLevel {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+  classCount: number;
+  subjectCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SchoolClass {
+  id: string;
+  name: string;
+  section: string;
+  majorId: string;
+  majorCode: string | null;
+  majorName: string | null;
+  gradeLevelId: string;
+  gradeCode: string | null;
+  gradeName: string | null;
+  capacity: number;
+  isActive: boolean;
+  studentCount: number;
+  teacherCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  majorId: string | null;
+  majorCode: string | null;
+  majorName: string | null;
+  gradeLevelId: string;
+  gradeCode: string | null;
+  gradeName: string | null;
+  semester: string;
+  academicYear: string;
+  isActive: boolean;
+  createdBy: string | null;
+  createdByName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeacherSubjectAssignment {
+  id: string;
+  teacherId: string;
+  teacherName: string | null;
+  teacherNip: string | null;
+  subjectId: string;
+  subjectName: string | null;
+  subjectCode: string | null;
+  assignedAt: string;
+}
+
+export interface TeacherClassroomAssignment {
+  id: string;
+  teacherId: string;
+  teacherName: string | null;
+  teacherNip: string | null;
+  classId: string;
+  className: string | null;
+  section: string | null;
+  majorCode: string | null;
+  gradeCode: string | null;
+  assignedAt: string;
+}
+
+export interface TeacherSummary {
+  id: string;
+  fullName: string;
+  nomorInduk: string | null;
+  email: string | null;
+  isActive: boolean;
+  subjectCount: number;
+  classCount: number;
+}
+
+export interface MajorInput {
+  code: string;
+  name: string;
+  isActive?: boolean;
+}
+
+export interface GradeLevelInput {
+  code: string;
+  name: string;
+  isActive?: boolean;
+}
+
+export interface ClassInput {
+  name: string;
+  section: string;
+  majorId: string;
+  gradeLevelId: string;
+  capacity?: number;
+  isActive?: boolean;
+}
+
+export interface SubjectInput {
+  name: string;
+  code: string;
+  description?: string | null;
+  majorId?: string | null;
+  gradeLevelId: string;
+  semester?: string;
+  academicYear?: string;
+  isActive?: boolean;
+}
+
+export interface SubjectFilters {
+  majorId?: string;
+  gradeLevelId?: string;
+  semester?: string;
+  academicYear?: string;
+  q?: string;
+  includeInactive?: boolean;
+}
+
+function queryString(params: object) {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === "") continue;
+    search.set(key, String(value));
+  }
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export const masterDataApi = {
+  majors: {
+    list: (includeInactive = false) =>
+      apiFetch<ApiSuccess<Major[]>>(
+        `/api/v1/majors${queryString({ includeInactive })}`
+      ),
+    create: (body: MajorInput) =>
+      apiFetch<ApiSuccess<Major>>("/api/v1/majors", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: string, body: Partial<MajorInput>) =>
+      apiFetch<ApiSuccess<Major>>(`/api/v1/majors/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(`/api/v1/majors/${id}`, {
+        method: "DELETE",
+      }),
+  },
+  gradeLevels: {
+    list: (includeInactive = false) =>
+      apiFetch<ApiSuccess<GradeLevel[]>>(
+        `/api/v1/grade-levels${queryString({ includeInactive })}`
+      ),
+    create: (body: GradeLevelInput) =>
+      apiFetch<ApiSuccess<GradeLevel>>("/api/v1/grade-levels", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: string, body: Partial<GradeLevelInput>) =>
+      apiFetch<ApiSuccess<GradeLevel>>(`/api/v1/grade-levels/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(`/api/v1/grade-levels/${id}`, {
+        method: "DELETE",
+      }),
+  },
+  classes: {
+    list: (filters: {
+      majorId?: string;
+      gradeLevelId?: string;
+      q?: string;
+      includeInactive?: boolean;
+    } = {}) =>
+      apiFetch<ApiSuccess<SchoolClass[]>>(
+        `/api/v1/classes${queryString(filters)}`
+      ),
+    create: (body: ClassInput) =>
+      apiFetch<ApiSuccess<SchoolClass>>("/api/v1/classes", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: string, body: Partial<ClassInput>) =>
+      apiFetch<ApiSuccess<SchoolClass>>(`/api/v1/classes/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(`/api/v1/classes/${id}`, {
+        method: "DELETE",
+      }),
+  },
+  subjects: {
+    list: (filters: SubjectFilters = {}) =>
+      apiFetch<ApiSuccess<Subject[]>>(
+        `/api/v1/subjects${queryString(filters)}`
+      ),
+    create: (body: SubjectInput) =>
+      apiFetch<ApiSuccess<Subject>>("/api/v1/subjects", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: string, body: Partial<SubjectInput>) =>
+      apiFetch<ApiSuccess<Subject>>(`/api/v1/subjects/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(`/api/v1/subjects/${id}`, {
+        method: "DELETE",
+      }),
+  },
+  teachers: {
+    list: (q?: string) =>
+      apiFetch<ApiSuccess<TeacherSummary[]>>(
+        `/api/v1/teachers${queryString({ q })}`
+      ),
+  },
+  teacherAssignments: {
+    listSubjects: (filters: { teacherId?: string; subjectId?: string } = {}) =>
+      apiFetch<ApiSuccess<TeacherSubjectAssignment[]>>(
+        `/api/v1/teacher-assignments/subjects${queryString(filters)}`
+      ),
+    assignSubject: (body: { teacherId: string; subjectId: string }) =>
+      apiFetch<ApiSuccess<{ id: string }>>(
+        "/api/v1/teacher-assignments/subjects",
+        { method: "POST", body: JSON.stringify(body) }
+      ),
+    removeSubject: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(
+        `/api/v1/teacher-assignments/subjects/${id}`,
+        { method: "DELETE" }
+      ),
+    listClasses: (filters: { teacherId?: string; classId?: string } = {}) =>
+      apiFetch<ApiSuccess<TeacherClassroomAssignment[]>>(
+        `/api/v1/teacher-assignments/classes${queryString(filters)}`
+      ),
+    assignClass: (body: { teacherId: string; classId: string }) =>
+      apiFetch<ApiSuccess<{ id: string }>>(
+        "/api/v1/teacher-assignments/classes",
+        { method: "POST", body: JSON.stringify(body) }
+      ),
+    removeClass: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(
+        `/api/v1/teacher-assignments/classes/${id}`,
+        { method: "DELETE" }
+      ),
+  },
+} as const;

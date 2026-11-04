@@ -7,6 +7,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -26,6 +27,9 @@ export const users = pgTable("users", {
   nomorInduk: varchar("nomor_induk", { length: 50 }).unique(),
   tanggalLahir: date("tanggal_lahir", { mode: "string" }),
   kelas: varchar("kelas", { length: 50 }),
+  classId: uuid("class_id").references(() => classes.id, {
+    onDelete: "set null",
+  }),
   phone: varchar("phone", { length: 50 }),
   avatarUrl: text("avatar_url"),
   isActive: boolean("is_active").default(true).notNull(),
@@ -78,16 +82,49 @@ export const userRoles = pgTable("user_roles", {
   assignedAt: timestamp("assigned_at").defaultNow().notNull(),
 });
 
-export const subjects = pgTable("subjects", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  code: varchar("code", { length: 100 }).notNull().unique(),
-  description: text("description"),
-  createdBy: uuid("created_by").references(() => users.id, {
-    onDelete: "set null",
-  }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const subjects = pgTable(
+  "subjects",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    code: varchar("code", { length: 100 }).notNull(),
+    description: text("description"),
+    // Mata pelajaran kejuruan wajib memiliki jurusan; mapel umum harus null.
+    majorId: uuid("major_id").references(() => majors.id, {
+      onDelete: "set null",
+    }),
+    gradeLevelId: uuid("grade_level_id").references(() => gradeLevels.id, {
+      onDelete: "set null",
+    }),
+    semester: varchar("semester", { length: 20 }).default("Ganjil").notNull(),
+    academicYear: varchar("academic_year", { length: 20 })
+      .default("2026/2027")
+      .notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    codeIdx: index("subjects_code_idx").on(
+      table.code,
+      table.gradeLevelId,
+      table.semester,
+      table.academicYear
+    ),
+    codeUnique: uniqueIndex("subjects_code_unique_idx")
+      .on(
+        table.code,
+        table.gradeLevelId,
+        table.semester,
+        table.academicYear
+      ),
+    majorIdx: index("subjects_major_idx").on(table.majorId),
+    gradeLevelIdx: index("subjects_grade_level_idx").on(table.gradeLevelId),
+  })
+);
 
 export const modules = pgTable("modules", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -219,15 +256,121 @@ export const moduleDiscussionReplies = pgTable(
   })
 );
 
+// ── Master Data SMK (Jurusan, Tingkatan, Kelas, Pengampu) ────────────────
+
+export const majors = pgTable(
+  "majors",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: varchar("code", { length: 20 }).notNull().unique(),
+    name: varchar("name", { length: 100 }).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    codeIdx: index("majors_code_idx").on(table.code),
+  })
+);
+
+export const gradeLevels = pgTable(
+  "grade_levels",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: varchar("code", { length: 10 }).notNull().unique(),
+    name: varchar("name", { length: 50 }).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    codeIdx: index("grade_levels_code_idx").on(table.code),
+  })
+);
+
+export const classes = pgTable(
+  "classes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 50 }).notNull(),
+    section: varchar("section", { length: 5 }).notNull(),
+    majorId: uuid("major_id")
+      .notNull()
+      .references(() => majors.id, { onDelete: "cascade" }),
+    gradeLevelId: uuid("grade_level_id")
+      .notNull()
+      .references(() => gradeLevels.id, { onDelete: "cascade" }),
+    capacity: integer("capacity").default(10).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    majorIdx: index("classes_major_idx").on(table.majorId),
+    gradeLevelIdx: index("classes_grade_level_idx").on(table.gradeLevelId),
+    nameIdx: index("classes_name_idx").on(
+      table.name,
+      table.majorId,
+      table.gradeLevelId
+    ),
+  })
+);
+
+export const teacherSubjects = pgTable(
+  "teacher_subjects",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teacherId: uuid("teacher_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    teacherIdx: index("teacher_subjects_teacher_idx").on(table.teacherId),
+    subjectIdx: index("teacher_subjects_subject_idx").on(table.subjectId),
+    uniquePair: uniqueIndex("teacher_subjects_unique_idx")
+      .on(table.teacherId, table.subjectId),
+  })
+);
+
+export const teacherClassrooms = pgTable(
+  "teacher_classrooms",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teacherId: uuid("teacher_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    teacherIdx: index("teacher_classrooms_teacher_idx").on(table.teacherId),
+    classIdx: index("teacher_classrooms_class_idx").on(table.classId),
+    uniquePair: uniqueIndex("teacher_classrooms_unique_idx")
+      .on(table.teacherId, table.classId),
+  })
+);
+
 // ── Relasi (WAJIB: users ↔ roles via user_roles) ───────────────────────
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   userRoles: many(userRoles),
   subjectsCreated: many(subjects),
   modulesTaught: many(modules),
   authTokens: many(authTokens),
   moduleDiscussions: many(moduleDiscussions),
   moduleDiscussionReplies: many(moduleDiscussionReplies),
+  class: one(classes, {
+    fields: [users.classId],
+    references: [classes.id],
+  }),
+  teacherSubjects: many(teacherSubjects),
+  teacherClassrooms: many(teacherClassrooms),
 }));
 
 export const authTokensRelations = relations(authTokens, ({ one }) => ({
@@ -257,7 +400,16 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
     fields: [subjects.createdBy],
     references: [users.id],
   }),
+  major: one(majors, {
+    fields: [subjects.majorId],
+    references: [majors.id],
+  }),
+  gradeLevel: one(gradeLevels, {
+    fields: [subjects.gradeLevelId],
+    references: [gradeLevels.id],
+  }),
   modules: many(modules),
+  teacherSubjects: many(teacherSubjects),
 }));
 
 export const modulesRelations = relations(modules, ({ one, many }) => ({
@@ -350,3 +502,48 @@ export const moduleDiscussionRepliesRelations = relations(
     }),
   })
 );
+
+export const majorsRelations = relations(majors, ({ many }) => ({
+  classes: many(classes),
+  subjects: many(subjects),
+}));
+
+export const gradeLevelsRelations = relations(gradeLevels, ({ many }) => ({
+  classes: many(classes),
+  subjects: many(subjects),
+}));
+
+export const classesRelations = relations(classes, ({ one, many }) => ({
+  major: one(majors, {
+    fields: [classes.majorId],
+    references: [majors.id],
+  }),
+  gradeLevel: one(gradeLevels, {
+    fields: [classes.gradeLevelId],
+    references: [gradeLevels.id],
+  }),
+  students: many(users),
+  teachers: many(teacherClassrooms),
+}));
+
+export const teacherSubjectsRelations = relations(teacherSubjects, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherSubjects.teacherId],
+    references: [users.id],
+  }),
+  subject: one(subjects, {
+    fields: [teacherSubjects.subjectId],
+    references: [subjects.id],
+  }),
+}));
+
+export const teacherClassroomsRelations = relations(teacherClassrooms, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherClassrooms.teacherId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [teacherClassrooms.classId],
+    references: [classes.id],
+  }),
+}));
