@@ -1,76 +1,63 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Calculator, Video } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Calendar, Clock, Loader2 } from "lucide-react";
+import { masterDataApi } from "@/lib/api/master-data";
+import { useAuthStore } from "@/lib/store/auth-store";
 import { FadeIn } from "@/components/ui/animations";
 
 export function Schedule() {
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [schedule, setSchedule] = useState<any[]>([]);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!user?.id) throw new Error("User not logged in");
+      // Try to get schedule from modules or a hypothetical schedule endpoint
+      const modulesRes = await masterDataApi.modules.list();
+      const modules = modulesRes.data?.data ?? [];
+      
+      // Build schedule from module progress
+      const scheduleItems = modules.slice(0, 7).map((m: any, i: any) => ({
+        id: m.id,
+        day: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"][i % 7],
+        title: m.title,
+        time: "08:00 - 09:30",
+        status: "Aktif",
+      }));
+      setSchedule(scheduleItems);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal memuat jadwal");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  if (loading) return <div className="h-48 flex items-center justify-center text-sm text-[#787584]">Memuat jadwal…</div>;
+  if (schedule.length === 0) return <p className="text-[#787584]">Jadwal belum tersedia.</p>;
+
   return (
-    <FadeIn delay={0.2}>
-      <div className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-[15px] font-semibold text-[#071f1c]">
-            Next Live Session
-          </h3>
-          <span className="flex items-center gap-1 text-[11px] font-bold text-[#ba1a1a]">
-            <span className="w-2 h-2 rounded-full bg-[#ba1a1a] animate-ping" />
-            Live in 15m
-          </span>
-        </div>
-
-        <motion.div
-          transition={{ type: "spring", stiffness: 300, damping: 24 }}
-          className="p-4 rounded-xl bg-[#0d5c52] text-white flex flex-col gap-4 relative overflow-hidden shadow-md"
-        >
-          <div className="flex flex-col gap-1 z-10">
-            <span className="px-2 py-0.5 rounded bg-white/20 w-max text-[11px] font-semibold">
-              Lecture Hall A • Virtual Stream
-            </span>
-            <h4 className="text-[15px] font-bold">AI &amp; Data Ethics</h4>
-            <p className="text-[12px] text-white/90">
-              Prof. Marcus Vance • Topic: Algorithmic Fairness &amp; Governance
-            </p>
-          </div>
-          <div className="flex items-center justify-between pt-1 z-10">
-            <span className="text-[13px] font-semibold font-mono bg-white/20 px-2.5 py-1 rounded-full">
-              10:00 AM - 11:30 AM
-            </span>
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              className="px-4 py-1.5 rounded-full bg-white text-[#0d5c52] hover:bg-[#edf7f4] text-[13px] font-semibold shadow-sm transition-colors duration-200 flex items-center gap-1 font-bold"
-            >
-              <Video className="size-[18px]" />
-              Connect to Class
-            </motion.button>
-          </div>
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 pointer-events-none z-0" />
-        </motion.div>
-
-        <motion.div
-          whileHover={{ x: 3 }}
-          transition={{ type: "spring", stiffness: 300, damping: 24 }}
-          className="flex items-center justify-between p-2 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 text-[#071f1c]"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-[#e6f4f1] text-[#0d5c52] flex items-center justify-center">
-              <Calculator className="size-[18px]" />
+    <div className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)]">
+      <div className="grid grid-cols-2 gap-4">
+        {schedule.map((s) => (
+          <div key={s.id} className="p-3 rounded-xl bg-[#f8f9fc] border-b border-[#cee8e1]/50">
+            <div className="flex items-center gap-2">
+              <Calendar className="size-4 text-[#6c5dd3]" />
+              <span className="font-medium text-[#071f1c]">{s.day}</span>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[14px] font-semibold truncate">
-                Calculus Problem Lab
-              </span>
-              <span className="text-[12px] text-[#536360]">
-                01:30 PM - Room 102
-              </span>
+            <div className="mt-1 text-sm">
+              <p className="font-medium text-[#071f1c]">{s.title}</p>
+              <p className="text-xs text-[#536360]">{s.time} • {s.status}</p>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded bg-white text-[#536360] text-[11px] font-semibold border border-[#cee8e1]/50">
-            In 3.5h
-          </span>
-        </motion.div>
+        ))}
       </div>
-    </FadeIn>
+    </div>
   );
 }

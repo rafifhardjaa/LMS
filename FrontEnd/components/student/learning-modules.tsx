@@ -1,118 +1,93 @@
 "use client";
 
-import { useState } from "react";
-import { Download, FileText } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Download, FileText, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  FadeIn,
-  StaggerChildren,
-  StaggerItem,
-} from "@/components/ui/animations";
+import { masterDataApi } from "@/lib/api/master-data";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { FadeIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
-const filters = ["All", "Mathematics", "Physics", "Informatics"];
-
-const modules = [
-  {
-    title: "Advanced Graph Algorithms & Big O Notation.pdf",
-    chip: "Informatics",
-    chipClassName: "bg-[#e0f2f1] text-[#00796b]",
-    size: "3.4 MB",
-    updated: "Updated 2 days ago",
-  },
-  {
-    title: "Quantum Mechanics & Wave Functions Fundamentals.pdf",
-    chip: "Physics",
-    chipClassName: "bg-[#ccfbf1] text-[#0f766e]",
-    size: "5.1 MB",
-    updated: "Updated yesterday",
-  },
-  {
-    title: "Linear Algebra for Machine Learning & Neural Tensors.pdf",
-    chip: "Mathematics",
-    chipClassName: "bg-[#e6f4f1] text-[#0d5c52]",
-    size: "4.8 MB",
-    updated: "Updated 4 days ago",
-  },
-];
+const PAGE_SIZE = 10;
 
 export function LearningModules() {
-  const [active, setActive] = useState("All");
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [modules, setModules] = useState<any[]>([]);
+  const [currentModule, setCurrentModule] = useState<any>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await masterDataApi.modules.list();
+      if (res.error) throw new Error((res.error as { message?: string }).message ?? "Gagal memuat modul");
+      setModules(res.data?.data ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal memuat modul");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const moduleOptions = useMemo(() => modules.map((m) => ({
+    value: m.id,
+    label: m.title,
+  })), [modules]);
+
+  const moduleTabOptions = useMemo(() => ["All", ...new Set(modules.map((m) => m.title.split(" ")[0] || "All"))], [modules]);
+
+  if (loading) return <div className="h-64 flex items-center justify-center text-sm text-[#787584]">Memuat modul…</div>;
+  if (modules.length === 0) return <p className="text-[#787584]">Belum ada modul.</p>;
 
   return (
-    <FadeIn>
-      <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h2 className="text-[18px] font-semibold text-[#071f1c]">
-              Learning Modules
-            </h2>
-            <p className="text-[12px] text-[#536360]">
-              Official syllabus handouts, reading chapters &amp; lecture slide
-              decks
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 bg-[#edf7f4] p-1 rounded-full self-start sm:self-auto">
-            {filters.map((f) => (
-              <motion.button
-                key={f}
-                type="button"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setActive(f)}
-                className={`px-4 py-1 rounded-full text-[11px] font-semibold transition-colors ${
-                  active === f
-                    ? "bg-[#0d5c52] text-white shadow-sm"
-                    : "text-[#536360] hover:text-[#0d5c52]"
-                }`}
-              >
-                {f}
-              </motion.button>
+    <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h2 className="text-[18px] font-semibold text-[#071f1c]">Modul</h2>
+        <div className="flex items-center gap-2">
+          <select
+            onChange={(e) => setCurrentModule(e.target.value ? { id: e.target.value } : null)}
+            className="h-10 rounded-full bg-[#f1f4f9] px-3 text-sm text-[#181c20] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30"
+          >
+            <option value="">Semua modul</option>
+            {moduleOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
+      </div>
 
-        <StaggerChildren staggerDelay={0.08} className="flex flex-col gap-2">
-          {modules.map((m) => (
-            <StaggerItem key={m.title}>
-              <motion.div
-                transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                className="flex items-center justify-between p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 hover:bg-[#edf7f4] transition-colors group"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-[#ffdad6]/70 text-[#ba1a1a] flex items-center justify-center flex-shrink-0">
-                    <FileText className="size-[26px]" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[14px] font-semibold text-[#071f1c] group-hover:text-[#0d5c52] transition-colors truncate">
-                      {m.title}
-                    </span>
-                    <div className="flex items-center gap-2 text-[#536360] text-[12px]">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[11px] font-semibold ${m.chipClassName}`}
-                      >
-                        {m.chip}
-                      </span>
-                      <span>•</span>
-                      <span>{m.size}</span>
-                      <span>•</span>
-                      <span>{m.updated}</span>
-                    </div>
-                  </div>
-                </div>
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex-shrink-0 ml-2 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white hover:bg-[#0d5c52] hover:text-white text-[#0d5c52] text-[13px] font-semibold border border-[#cee8e1] transition-colors duration-200 shadow-sm"
-                >
-                  <Download className="size-[18px]" />
-                  <span className="hidden sm:inline">Download</span>
-                </motion.button>
-              </motion.div>
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
-      </section>
-    </FadeIn>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {modules.map((m) => (
+          <motion.div
+            key={m.id}
+            whileHover={{ y: -4, boxShadow: "0 8px 20px -4px rgba(0,0,0,0.08)" }}
+            transition={{ type: "spring", stiffness: 280, damping: 22 }}
+            className="group rounded-xl bg-[#f8f9fc] p-4 hover:border-[#cee8e1] cursor-pointer"
+            onClick={() => setCurrentModule(m)}
+          >
+            <div className="flex items-start gap-3">
+              <Download className="size-4 text-[#6c5dd3] flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-[#071f1c]">{m.title}</h3>
+                <p className="text-xs text-[#536360]">{m.description ?? "Tanpa deskripsi"}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {currentModule && (
+        <div className="mt-6 p-4 rounded-xl bg-[#f0edff] border border-[#6c5dd3]">
+          <h3 className="font-semibold text-[#071f1c]">{currentModule.title}</h3>
+          <p className="text-xs text-[#536360]">{currentModule.description ?? "Tanpa deskripsi"}</p>
+          <p className="mt-2 text-sm">Status: <span className="font-medium">Belum diakses</span></p>
+        </div>
+      )}
+    </section>
   );
 }
