@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   BadgeCheck,
@@ -23,6 +23,8 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { masterDataApi } from "@/lib/api/master-data";
+import type { GradeLevel, Subject } from "@/lib/api/master-data";
 
 interface AddTeacherDialogProps {
   open: boolean;
@@ -62,30 +64,6 @@ const GRADE_LEVELS = [
   "Fase E - Kelas X",
   "Fase F - Kelas XI",
   "Fase F - Kelas XII",
-];
-
-const SUBJECTS = [
-  // Kelas X
-  "Dasar Desain Grafis (DDG)",
-  "Informatika (INF)",
-  "Komputer dan Jaringan Dasar (KJD)",
-  "Pemrograman Dasar (PD)",
-  "Simulasi dan Komunikasi Digital (SKD)",
-  "Sistem Komputer (SKOM)",
-  // Kelas XI
-  "Administrasi Infrastruktur Jaringan (AIJ)",
-  "Administrasi Sistem Jaringan (ASJ)",
-  "Produk Kreatif dan Kewirausahaan (PKK)",
-  "Teknologi Layanan Jaringan (TLJ)",
-  "Teknologi Jaringan Berbasis Luas (WAN)",
-  // Kelas XII
-  "Administrasi Infrastruktur Jaringan Lanjutan (AIJ-L)",
-  "Administrasi Sistem Jaringan Lanjutan (ASJ-L)",
-  "Produk Kreatif dan Kewirausahaan Lanjutan (PKK-L)",
-  "PKL / Praktik Kerja Lapangan (PKL)",
-  "Teknologi Layanan Jaringan Lanjutan (TLJ-L)",
-  "Persiapan UKK (Uji Kompetensi Keahlian)",
-  "Teknologi Jaringan Berbasis Luas Lanjutan (WAN-L)",
 ];
 
 function normalizeNomorInduk(value: string) {
@@ -160,6 +138,58 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
 
   const defaultPassword = buildDefaultPassword(form.tanggalLahir, form.nomorInduk);
 
+  // Subjects fetched dynamically from database
+  const [subjects, setSubjects] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [gradeLevelForSubjects, setGradeLevelForSubjects] = useState("");
+
+  // Fetch subjects when grade level changes
+  useEffect(() => {
+    if (!gradeLevelForSubjects) {
+      setSubjects([]);
+      return;
+    }
+
+    const fetchSubjects = async () => {
+      setLoadingSubjects(true);
+      try {
+        const gradeRes = await masterDataApi.gradeLevels.list();
+        const gradeData = gradeRes.data as GradeLevel[] | null;
+        if (gradeRes.error) throw new Error("Gagal memuat tingkat kelas");
+
+        const currentGrade = gradeData?.find((g) => {
+          if (gradeLevelForSubjects === "Fase E - Kelas X") return g.code === "X";
+          if (gradeLevelForSubjects === "Fase F - Kelas XI") return g.code === "XI";
+          if (gradeLevelForSubjects === "Fase F - Kelas XII") return g.code === "XII";
+          return false;
+        });
+
+        if (!currentGrade) {
+          setSubjects([]);
+          return;
+        }
+
+        const subjectsRes = await masterDataApi.subjects.list({ gradeLevelId: currentGrade.id });
+        const subjectsData = subjectsRes.data as Subject[] | null;
+        if (subjectsRes.error) throw new Error("Gagal memuat mata pelajaran");
+
+        const mappedSubjects = subjectsData?.map((subject) => ({
+          id: subject.id,
+          name: subject.code + (subject.majorCode ? ` - ${subject.majorName || subject.majorCode}` : "") + ` (${subject.name})`,
+        })) || [];
+
+        setSubjects(mappedSubjects);
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+        setSubjects([]);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+
+    fetchSubjects();
+  }, [gradeLevelForSubjects]);
+
   const validate = (): Record<string, string> => {
     const next: Record<string, string> = {};
     const digits = normalizeNomorInduk(form.nomorInduk);
@@ -228,6 +258,12 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     if (submitting) return;
     resetState();
     onOpenChange(false);
+  };
+
+  // When grade level changes, trigger subject fetch
+  const handleGradeLevelChange = (value: string) => {
+    setField("gradeLevel", value);
+    setGradeLevelForSubjects(value);
   };
 
   const inputClass =
@@ -395,7 +431,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 <FieldLabel required>Tingkat / Fase</FieldLabel>
                 <SelectInput
                   value={form.gradeLevel}
-                  onChange={(value) => setField("gradeLevel", value)}
+                  onChange={(value) => handleGradeLevelChange(value)}
                   options={GRADE_LEVELS}
                   placeholder="Pilih tingkat"
                 />
@@ -406,8 +442,8 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 <SelectInput
                   value={form.subject}
                   onChange={(value) => setField("subject", value)}
-                  options={SUBJECTS}
-                  placeholder="Pilih mapel"
+                  options={subjects.map((s) => s.name)}
+                  placeholder={loadingSubjects ? "Memuat..." : "Pilih mapel"}
                 />
                 <FieldError message={errors.subject} />
               </div>
