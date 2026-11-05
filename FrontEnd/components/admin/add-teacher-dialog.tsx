@@ -162,7 +162,6 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
         });
 
         if (!currentGrade) {
-          setSubjects([]);
           return;
         }
 
@@ -261,6 +260,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
   const handleGradeLevelChange = (value: string) => {
     setField("gradeLevel", value);
     setGradeLevelForSubjects(value);
+    setField("subject", ""); // Reset subject when grade level changes
   };
 
   const inputClass =
