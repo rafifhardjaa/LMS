@@ -1,168 +1,106 @@
 "use client";
 
-import {
-  ChevronRight,
-  ClipboardList,
-  FileQuestion,
-  FlaskConical,
-  RotateCcw,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, FileText, CheckCircle, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  FadeIn,
-  StaggerChildren,
-  StaggerItem,
-} from "@/components/ui/animations";
+import { masterDataApi } from "@/lib/api/master-data";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { FadeIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
+
+const PAGE_SIZE = 10;
 
 export function TasksQuizzes() {
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [currentTask, setCurrentTask] = useState<any>(null);
+
+const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await masterDataApi.modules.list();
+      if (res.error) throw new Error("Gagal memuat modul");
+      const moduleIds = res.data?.data?.map((m: any) => m.id) ?? [];
+      
+      // Load progress for each module
+      const progressPromises = moduleIds.map((mid: any) =>
+        masterDataApi.progress.byModule(mid)
+      );
+      const progressResults = await Promise.allSettled(progressPromises);
+      
+      const tasksData = moduleIds.map((mid: any, idx: any) => ({
+        id: mid,
+        title: `Modul ${mid}`,
+        progress: progressResults[idx]?.status === "fulfilled"
+          ? ((progressResults[idx] as any).value as any)?.percentage ?? 0
+          : 0,
+        completed: progressResults[idx]?.status === "fulfilled"
+          ? ((progressResults[idx] as any).value as any)?.completed ?? 0
+          : 0,
+        total: progressResults[idx]?.status === "fulfilled"
+          ? ((progressResults[idx] as any).value as any)?.total ?? 0
+          : 0,
+      }));
+      setTasks(tasksData);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal memuat tugas/kuis");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const statusText = (p: number) => {
+    if (p >= 100) return "Selesai";
+    if (p >= 75) return "Lanjut";
+    if (p >= 50) return "Progress";
+    return "Belum mulai";
+  };
+
+  if (loading) return <div className="h-64 flex items-center justify-center text-sm text-[#787584]">Memuat tugas/kuis…</div>;
+  if (tasks.length === 0) return <p className="text-[#787584]">Belum ada tugas/kuis.</p>;
+
   return (
-    <FadeIn>
-      <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[18px] font-semibold text-[#071f1c]">
-              Tasks &amp; Quizzes
-            </h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#0d5c52] text-white text-[11px] font-semibold">
-              3 Active Tasks
-            </span>
-          </div>
-          <a
-            href="#"
-            className="text-[13px] font-semibold text-[#0d5c52] hover:underline flex items-center gap-0.5"
+    <section className="bg-white rounded-xl p-6 border border-[#cee8e1]/60 shadow-[0_4px_20px_-2px_rgba(7,31,28,0.03)] flex flex-col gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+        <h2 className="text-[18px] font-semibold text-[#071f1c]">Tugas & Kuis</h2>
+        <span className="text-xs text-[#536360]">{tasks.length} item</span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {tasks.map((t) => (
+          <motion.div
+            key={t.id}
+            whileHover={{ y: -4, boxShadow: "0 4px 12px -4px rgba(0,0,0,0.05)" }}
+            transition={{ type: "spring", stiffness: 260, damping: 18 }}
+            className="rounded-xl bg-[#f8f9fc] p-3 cursor-pointer hover:border-[#cee8e1]"
+            onClick={() => setCurrentTask(t)}
           >
-            View Gradebook <ChevronRight className="size-[18px]" />
-          </a>
+            <div className="flex items-start gap-2">
+              <CheckCircle className="size-4 text-[#10b981]" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[#071f1c]">{t.title}</p>
+                <p className="text-xs text-[#536360]">
+                  {statusText(t.progress)} {t.progress}% ({t.completed}/{t.total})
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {currentTask && (
+        <div className="mt-4 p-4 rounded-xl bg-[#e0f2f1] border border-[#10b981]">
+          <h3 className="font-medium text-[#071f1c]">{currentTask.title}</h3>
+          <p className="text-xs text-[#536360]">
+            Progress: {currentTask.progress}% ({currentTask.completed}/{currentTask.total})
+          </p>
+          <p className="mt-2 text-sm">Status: <span className="font-medium">{statusText(currentTask.progress)}</span></p>
         </div>
-
-        <StaggerChildren staggerDelay={0.1} className="flex flex-col gap-2">
-          {/* Assignment 1: Urgent deadline */}
-          <StaggerItem>
-            <motion.div
-              // whileHover={{ y: -3 }}
-              transition={{ type: "spring", stiffness: 300, damping: 24 }}
-              className="p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              <div className="flex items-start gap-4 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#e6f4f1] text-[#0d5c52] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <ClipboardList className="size-[22px]" />
-                </div>
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="px-2 py-0.5 rounded bg-[#e6f4f1] text-[#0d5c52] text-[11px] font-semibold">
-                      Mathematics
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#ba1a1a] text-white text-[11px] font-semibold flex items-center gap-1 animate-pulse">
-                      ⏱️ Ends in 2h 30m
-                    </span>
-                    <span className="text-[11px] font-bold text-[#ba1a1a]">
-                      Due Today, 11:59 PM
-                    </span>
-                  </div>
-                  <h4 className="text-[14px] font-semibold text-[#071f1c] truncate">
-                    Calculus Mid-Term Project - Optimization Problems
-                  </h4>
-                  <p className="text-[12px] text-[#536360]">
-                    Comprehensive submission including LaTeX source &amp; graphical
-                    proofs
-                  </p>
-                </div>
-              </div>
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex-shrink-0 px-6 py-2 rounded-full bg-[#0d5c52] text-white hover:bg-[#00433b] text-[13px] font-semibold shadow-[0_4px_16px_rgba(13,92,82,0.25)] transition-colors duration-200 text-center"
-              >
-                Submit Assignment
-              </motion.button>
-            </motion.div>
-          </StaggerItem>
-
-          {/* Assignment 2: Remedial active */}
-          <StaggerItem>
-            <motion.div
-              // whileHover={{ y: -3 }}
-              transition={{ type: "spring", stiffness: 300, damping: 24 }}
-              className="p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              <div className="flex items-start gap-4 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#ccfbf1] text-[#0f766e] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FlaskConical className="size-[22px]" />
-                </div>
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="px-2 py-0.5 rounded bg-[#ccfbf1] text-[#0f766e] text-[11px] font-semibold">
-                      Physics
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#d4eee7] text-[#0d5c52] text-[11px] font-semibold flex items-center gap-1">
-                      <RotateCcw className="size-[14px]" />
-                      <span className="font-bold">Remedial Available</span>
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full bg-[#e2f2ee] text-[#536360] text-[11px] font-semibold">
-                      ⏱️ Ends in 1d 4h
-                    </span>
-                  </div>
-                  <h4 className="text-[14px] font-semibold text-[#071f1c] truncate">
-                    Physics Lab Report: Rotational Dynamics &amp; Inertia
-                  </h4>
-                  <p className="text-[12px] text-[#536360]">
-                    Current Score: 68/100. Retake allowed to reach distinction tier
-                    (Target: &gt;85).
-                  </p>
-                </div>
-              </div>
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex-shrink-0 px-6 py-2 rounded-full bg-white hover:bg-[#e2f2ee] text-[#0d5c52] text-[13px] font-semibold border border-[#cee8e1] shadow-sm transition-colors duration-200 text-center"
-              >
-                Start Remedial Attempt
-              </motion.button>
-            </motion.div>
-          </StaggerItem>
-
-          {/* Assignment 3: Quiz */}
-          <StaggerItem>
-            <motion.div
-              // whileHover={{ y: -3 }}
-              transition={{ type: "spring", stiffness: 300, damping: 24 }}
-              className="p-4 rounded-xl bg-[#edf7f4]/70 border border-[#cee8e1]/50 flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              <div className="flex items-start gap-4 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#e0f2f1] text-[#00796b] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FileQuestion className="size-[22px]" />
-                </div>
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="px-2 py-0.5 rounded bg-[#e0f2f1] text-[#00796b] text-[11px] font-semibold">
-                      Computer Science
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#e2f2ee] text-[#536360] text-[11px] font-semibold">
-                      ⏱️ Ends in 3d 12h
-                    </span>
-                  </div>
-                  <h4 className="text-[14px] font-semibold text-[#071f1c] truncate">
-                    Database Systems &amp; SQL Optimization Quiz
-                  </h4>
-                  <p className="text-[12px] text-[#536360]">
-                    Partially answered: Question 14 of 30 saved in draft state
-                  </p>
-                </div>
-              </div>
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex-shrink-0 px-6 py-2 rounded-full bg-white hover:bg-[#e2f2ee] text-[#071f1c] text-[13px] font-semibold border border-[#cee8e1] shadow-sm transition-colors duration-200 text-center"
-              >
-                Resume Quiz
-              </motion.button>
-            </motion.div>
-          </StaggerItem>
-        </StaggerChildren>
-      </section>
-    </FadeIn>
+      )}
+    </section>
   );
 }

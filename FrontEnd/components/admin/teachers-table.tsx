@@ -18,7 +18,7 @@ const statusStyle: Record<string, string> = {
   Cuti: "bg-[#fff7ed] text-[#b45309]",
 };
 
-export function TeachersTable({ isAdmin }: { isAdmin: boolean }) {
+export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; onTeacherAdded?: () => void }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua Status");
   const [fieldFilter, setFieldFilter] = useState("Semua Bidang");

@@ -58,6 +58,8 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
 
   useEffect(() => { load(); }, [query, jurusan, tingkat, sso]);
 
+  const [selected, setSelected] = useState<string[]>([]);
+
   const rows = useMemo(() => students, [students]);
 
   const allSelected = rows.length > 0 && rows.every((r) => selected.includes(r.nomorInduk));
@@ -68,8 +70,6 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
   const jurusanOptions = ["Semua Jurusan", ...new Set(students.map((s: any) => s.majorName).filter(Boolean))];
   const tingkatOptions = ["Semua Tingkat", "Kelas X", "Kelas XI", "Kelas XII"];
   const ssoOptions = ["Semua Status SSO", "Aktif", "Butuh Aktivasi"];
-
-  const [selected, setSelected] = useState<string[]>([]);
 
   if (loading && students.length === 0) {
     return <div className="flex items-center justify-center py-16 text-sm text-[#787584]">Memuat siswa…</div>;
