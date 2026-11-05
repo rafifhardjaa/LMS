@@ -17,16 +17,17 @@ export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
       try {
         const data = await listSubjects(
           {
-    majorId: query.majorId || query.major_id,
-      gradeLevelId: query.gradeLevelId || query.grade_level_id,
-      semester: query.semester,
-      q: query.q,
-      includeInactive: query.includeInactive === "true",
+            majorId: query.majorId || query.major_id,
+            gradeLevelId: query.gradeLevelId || query.grade_level_id,
+            semester: query.semester,
+            q: query.q,
+            includeInactive: query.includeInactive === "true",
           },
           user
         );
         return status(200, { success: true, message: "Subjects retrieved", data });
       } catch (error) {
+        console.error("[subjects GET /] error:", error);
         const err = handleError(error);
         return status(err.status, { success: false, message: err.message });
       }

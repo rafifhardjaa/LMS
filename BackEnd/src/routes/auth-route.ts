@@ -42,7 +42,7 @@ export const authRoute = new Elysia({ prefix: "/api/v1/auth" })
           return status(201, {
             success: true,
             message:
-              "Guru baru dibuat dan siap diaktifkan. Cek email untuk kata sandi awal.",
+              "Guru baru dibuat dan aktif. Kata sandi awal: DDMMYYYY + 3 digit terakhir nomor induk (wajib diganti saat login pertama).",
           });
         } else {
           await registerStudent({
