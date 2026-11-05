@@ -513,15 +513,48 @@ export async function createTeacher(input: {
   nomorInduk: string;
   tanggalLahir: string;
   email?: string | null;
-  major?: string | null;
+  majorId?: string | null;
   gradeLevelId?: string | null;
-  semester?: string;
+  subjectId?: string | null;
 }) {
+  const fullName = input.fullName?.trim();
+  if (!fullName) {
+    throw new BadRequestError("Nama lengkap wajib diisi");
+  }
+
   const nomorInduk = normalizeNomorInduk(input.nomorInduk);
   const tanggalLahir = normalizeTanggalLahir(input.tanggalLahir);
 
   if (!nomorInduk) {
     throw new BadRequestError("Nomor induk wajib diisi");
+  }
+
+  if (input.majorId) assertUuid(input.majorId);
+  if (input.gradeLevelId) assertUuid(input.gradeLevelId);
+  if (!input.subjectId) {
+    throw new BadRequestError("Mata pelajaran wajib dipilih");
+  }
+  assertUuid(input.subjectId);
+
+  const subjectRows = await db
+    .select({
+      id: subjects.id,
+      majorId: subjects.majorId,
+      gradeLevelId: subjects.gradeLevelId,
+    })
+    .from(subjects)
+    .where(and(eq(subjects.id, input.subjectId), eq(subjects.isActive, true)))
+    .limit(1);
+
+  const subject = subjectRows[0];
+  if (!subject) {
+    throw new NotFoundError("Mata pelajaran tidak ditemukan");
+  }
+  if (input.gradeLevelId && subject.gradeLevelId !== input.gradeLevelId) {
+    throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan");
+  }
+  if (input.majorId && subject.majorId && subject.majorId !== input.majorId) {
+    throw new BadRequestError("Mata pelajaran tidak sesuai jurusan");
   }
 
   const existing = await db
@@ -547,44 +580,55 @@ export async function createTeacher(input: {
 
   const email = input.email?.toLowerCase() || null;
 
-  const created = await db
-    .insert(users)
-    .values({
-      id: crypto.randomUUID(),
-      fullName: input.fullName.trim(),
-      nomorInduk,
-      tanggalLahir,
-      email,
-      passwordHash: null,
-      isActive: true,
-      createdBy: "admin",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning({ id: users.id, fullName: users.fullName, nomorInduk: users.nomorInduk, email: users.email });
+  const created = await db.transaction(async (tx) => {
+    const rows = await tx
+      .insert(users)
+      .values({
+        fullName,
+        nomorInduk,
+        tanggalLahir,
+        email,
+        passwordHash: null,
+        isActive: true,
+      })
+      .returning({
+        id: users.id,
+        fullName: users.fullName,
+        nomorInduk: users.nomorInduk,
+        email: users.email,
+      });
 
-  const roleId = await db
-    .select({ id: roles.id })
-    .from(roles)
-    .where(eq(roles.name, "guru"))
-    .limit(1)
-    .then((rows) => rows[0]?.id);
+    const teacher = rows[0];
+    if (!teacher) {
+      throw new BadRequestError("Gagal membuat guru");
+    }
 
-  if (roleId) {
-    await db.insert(userRoles).values({
-      userId: created[0].id,
+    const roleId = await tx
+      .select({ id: roles.id })
+      .from(roles)
+      .where(eq(roles.name, "guru"))
+      .limit(1)
+      .then((roleRows) => roleRows[0]?.id);
+
+    if (!roleId) {
+      throw new BadRequestError("Peran guru tidak ditemukan");
+    }
+
+    await tx.insert(userRoles).values({
+      userId: teacher.id,
       roleId,
-      assignedBy: "admin",
       assignedAt: new Date(),
     });
-  }
 
-  return {
-    id: created[0].id,
-    fullName: created[0].fullName,
-    nomorInduk: created[0].nomorInduk,
-    email: created[0].email,
-  };
+    await tx.insert(teacherSubjects).values({
+      teacherId: teacher.id,
+      subjectId: input.subjectId!,
+    });
+
+    return teacher;
+  });
+
+  return created;
 }
 
 // ── Penugasan Guru (mapel & kelas) ───────────────────────────────────
