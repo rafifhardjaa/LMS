@@ -1,13 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { Download, RefreshCw, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { StudentStats } from "@/components/admin/student-stats";
 import { StudentsSidePanels } from "@/components/admin/students-side-panels";
 import { StudentsTable } from "@/components/admin/students-table";
+import { AddStudentDialog } from "@/components/admin/add-student-dialog";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function StudentsPage() {
+  const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   return (
     <div className="flex w-full flex-col gap-7 pt-4">
       <FadeIn>
@@ -48,7 +53,7 @@ export default function StudentsPage() {
             <StaggerItem>
               <motion.button
                 type="button"
-                onClick={() => window.alert("Tambah Siswa Baru")}
+                onClick={() => setAddStudentOpen(true)}
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -61,8 +66,14 @@ export default function StudentsPage() {
       </FadeIn>
       <StudentStats />
       <FadeIn>
-        <StudentsTable aside={<StudentsSidePanels />} />
+        <StudentsTable key={refreshKey} aside={<StudentsSidePanels />} />
       </FadeIn>
+
+      <AddStudentDialog
+        open={addStudentOpen}
+        onOpenChange={setAddStudentOpen}
+        onSuccess={() => setRefreshKey((key) => key + 1)}
+      />
     </div>
   );
 }
