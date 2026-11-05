@@ -65,3 +65,10 @@ BackEnd/backups/
 
 # local scratch / design exports
 code.html
+
+# reference files (not part of codebase)
+classes.csv
+"jurusan&mapel.docx"
+pr-body-phase2.md
+server.log
+teacher_schedules.csv

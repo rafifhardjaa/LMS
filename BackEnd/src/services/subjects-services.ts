@@ -45,7 +45,6 @@ export type SubjectFilters = {
   majorId?: string;
   gradeLevelId?: string;
   semester?: string;
-  academicYear?: string;
   q?: string;
   includeInactive?: boolean;
 };
@@ -57,7 +56,6 @@ export type SubjectInput = {
   majorId?: string | null;
   gradeLevelId: string;
   semester?: string;
-  academicYear?: string;
   isActive?: boolean;
 };
 
@@ -73,7 +71,6 @@ const subjectColumns = {
   gradeCode: gradeLevels.code,
   gradeName: gradeLevels.name,
   semester: subjects.semester,
-  academicYear: subjects.academicYear,
   isActive: subjects.isActive,
   createdBy: subjects.createdBy,
   createdByName: users.fullName,
@@ -97,7 +94,6 @@ function normalize(input: SubjectInput) {
     majorId: input.majorId ?? null,
     gradeLevelId: input.gradeLevelId,
     semester: input.semester?.trim() || "Ganjil",
-    academicYear: input.academicYear?.trim() || "2026/2027",
     isActive: input.isActive ?? true,
   };
 }
@@ -119,9 +115,6 @@ export async function listSubjects(
   }
   if (filters.semester) {
     conditions.push(eq(subjects.semester, filters.semester));
-  }
-  if (filters.academicYear) {
-    conditions.push(eq(subjects.academicYear, filters.academicYear));
   }
   if (filters.q?.trim()) {
     const pattern = `%${filters.q.trim()}%`;
@@ -232,9 +225,6 @@ export async function updateSubject(
   }
   if (patch.semester !== undefined) {
     values.semester = patch.semester.trim() || "Ganjil";
-  }
-  if (patch.academicYear !== undefined) {
-    values.academicYear = patch.academicYear.trim() || "2026/2027";
   }
   if (patch.isActive !== undefined) {
     values.isActive = patch.isActive;

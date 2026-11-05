@@ -30,19 +30,13 @@ export function SubjectsPanel({
   isAdmin: boolean;
   onChanged: () => Promise<void> | void;
 }) {
-  const [query, setQuery] = useState("");
+const [query, setQuery] = useState("");
   const [majorId, setMajorId] = useState("");
   const [gradeLevelId, setGradeLevelId] = useState("");
   const [semester, setSemester] = useState("");
-  const [academicYear, setAcademicYear] = useState("");
   const [form, setForm] = useState<FormState>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-
-  const years = useMemo(
-    () => Array.from(new Set(subjects.map((s) => s.academicYear))).sort(),
-    [subjects]
-  );
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -57,10 +51,9 @@ export function SubjectsPanel({
       if (majorId && item.majorId !== majorId) return false;
       if (gradeLevelId && item.gradeLevelId !== gradeLevelId) return false;
       if (semester && item.semester !== semester) return false;
-      if (academicYear && item.academicYear !== academicYear) return false;
       return true;
     });
-  }, [subjects, query, majorId, gradeLevelId, semester, academicYear]);
+  }, [subjects, query, majorId, gradeLevelId, semester]);
 
   const fields: FieldDef[] = [
     { key: "name", label: "Nama Mapel", required: true, colSpan: 2 },
@@ -92,12 +85,6 @@ export function SubjectsPanel({
         { value: "Genap", label: "Genap" },
       ],
     },
-    {
-      key: "academicYear",
-      label: "Tahun Ajaran",
-      required: true,
-      placeholder: "2026/2027",
-    },
     { key: "description", label: "Deskripsi", type: "textarea", colSpan: 2 },
     { key: "isActive", label: "Aktif", type: "checkbox" },
   ];
@@ -107,7 +94,6 @@ export function SubjectsPanel({
     setMajorId("");
     setGradeLevelId("");
     setSemester("");
-    setAcademicYear("");
   };
 
   const close = () => {
@@ -125,7 +111,6 @@ export function SubjectsPanel({
       majorId: values.majorId ? String(values.majorId) : null,
       gradeLevelId: String(values.gradeLevelId),
       semester: String(values.semester),
-      academicYear: String(values.academicYear),
       isActive: Boolean(values.isActive),
     };
     const result =
@@ -219,27 +204,6 @@ export function SubjectsPanel({
           <option value="Ganjil">Ganjil</option>
           <option value="Genap">Genap</option>
         </select>
-        <select
-          value={academicYear}
-          onChange={(e) => setAcademicYear(e.target.value)}
-          aria-label="Filter tahun ajaran"
-          className="h-10 rounded-full bg-[#f1f4f9] px-3 text-xs text-[#181c20] outline-none"
-        >
-          <option value="">Semua T.A.</option>
-          {years.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          aria-label="Reset filter"
-          onClick={resetFilters}
-          className="flex h-10 items-center justify-center rounded-full bg-[#f1f4f9] px-3 text-[#4e566c] hover:bg-[#e5deff]"
-        >
-          <FilterX className="size-4" />
-        </button>
       </div>
 
       <PanelCard>
@@ -302,7 +266,7 @@ export function SubjectsPanel({
                   <td className={tdClass}>{subject.gradeCode ?? "—"}</td>
                   <td className={tdClass}>
                     <p>
-                      {subject.semester} · {subject.academicYear}
+                      {subject.semester}
                     </p>
                   </td>
                   <td className={tdClass}>
@@ -338,23 +302,21 @@ export function SubjectsPanel({
           }
         description="Mapel umum dikosongkan jurusannya; mapel kejuruan wajib memilih jurusan."
         fields={fields}
-        initial={
-          form?.mode === "edit"
-            ? {
-                name: form.subject.name,
-                code: form.subject.code,
-                description: form.subject.description ?? "",
-                majorId: form.subject.majorId ?? "",
-                gradeLevelId: form.subject.gradeLevelId,
-                semester: form.subject.semester,
-                academicYear: form.subject.academicYear,
-                isActive: form.subject.isActive,
-              }
-            : {
-                semester: "Ganjil",
-                academicYear: "2026/2027",
-                isActive: true,
-              }
+initial={
+              form?.mode === "edit"
+                ? {
+                    name: form.subject.name,
+                    code: form.subject.code,
+                    description: form.subject.description ?? "",
+                    majorId: form.subject.majorId ?? "",
+                    gradeLevelId: form.subject.gradeLevelId,
+                    semester: form.subject.semester,
+                    isActive: form.subject.isActive,
+                  }
+                : {
+                    semester: "Ganjil",
+                    isActive: true,
+                  }
         }
         submitting={submitting}
         error={formError}

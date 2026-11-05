@@ -1,3 +1,10 @@
+//  One-off: reset subjects to TKJ major only (18 courses)
+// Deletes all existing subjects (and their dependent rows), then inserts
+// the 18 TKJ courses for grades X, XI, XII.
+//
+// Run:  bun run scripts/reset-tkj-subjects.ts
+// Idempotent: safe to re-run.
+
 import { and, eq, or } from "drizzle-orm";
 import { db } from "../src/db/index";
 import {
@@ -33,7 +40,7 @@ const TKJ_SUBJECTS = [
 ];
 
 async function main() {
-  console.log("🌱 Resetting subjects to TKJ major only...\n");
+  console.log("Resetting subjects to TKJ major only...\n");
 
   const tkj = await db
     .select({ id: majors.id, code: majors.code })
@@ -42,7 +49,7 @@ async function main() {
     .limit(1);
   if (!tkj[0]) throw new Error("TKJ major not found");
   const majorId = tkj[0].id;
-  console.log(`  ✓ TKJ major id = ${majorId}`);
+  console.log(`  TKJ major id = ${majorId}`);
 
   const grades = await db
     .select({ id: gradeLevels.id, code: gradeLevels.code })
@@ -56,7 +63,7 @@ async function main() {
   for (const code of ["X", "XI", "XII"]) {
     if (!gradeByCode.has(code)) throw new Error(`Grade level "${code}" not found`);
   }
-  console.log(`  ✓ Grade levels: X=${gradeByCode.get("X")} XI=${gradeByCode.get("XI")} XII=${gradeByCode.get("XII")}`);
+  console.log(`  Grade levels: X=${gradeByCode.get("X")} XI=${gradeByCode.get("XI")} XII=${gradeByCode.get("XII")}`);
 
   const admin = await db
     .select({ id: users.id })
@@ -65,12 +72,12 @@ async function main() {
     .limit(1);
   if (!admin[0]) throw new Error("Admin user not found");
   const createdBy = admin[0].id;
-  console.log(`  ✓ Admin user id = ${createdBy}`);
+  console.log(`  Admin user id = ${createdBy}`);
 
   const existingCount = await db.$count(subjects);
-  console.log(`  ℹ Existing subjects: ${existingCount}`);
+  console.log(`  Existing subjects: ${existingCount}`);
 
-  console.log("  🗑 Deleting dependent rows + subjects...");
+  console.log("  Deleting dependent rows + subjects...");
   await db.transaction(async (tx) => {
     await tx.delete(teacherSubjects);
     await tx.delete(modules);
@@ -79,7 +86,7 @@ async function main() {
     await tx.delete(subjects);
   });
 
-  console.log(`  📝 Inserting ${TKJ_SUBJECTS.length} TKJ subjects...`);
+  console.log(`  Inserting ${TKJ_SUBJECTS.length} TKJ subjects...`);
   await db.insert(subjects).values(
     TKJ_SUBJECTS.map((s) => ({
       name: s.name,
@@ -87,7 +94,6 @@ async function main() {
       majorId,
       gradeLevelId: gradeByCode.get(s.grade)!,
       semester: "Ganjil",
-      academicYear: "2026/2027",
       isActive: true,
       createdBy,
     }))
@@ -105,7 +111,7 @@ async function main() {
     .where(eq(subjects.majorId, majorId))
     .orderBy(gradeLevels.code, subjects.code);
 
-  console.log(`\n✅ Done. ${inserted.length} TKJ subjects inserted.\n`);
+  console.log(`\nDone. ${inserted.length} TKJ subjects inserted.\n`);
   for (const s of inserted) {
     console.log(`   ${s.gradeCode} | ${s.code.padEnd(8)} | ${s.name}`);
   }
@@ -113,7 +119,7 @@ async function main() {
 
 main()
   .catch((err) => {
-    console.error("\n❌ Reset failed:", err);
+    console.error("\nReset failed:", err);
     process.exit(1);
   })
   .finally(() => process.exit(0));
