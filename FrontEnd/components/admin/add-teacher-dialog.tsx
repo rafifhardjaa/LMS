@@ -183,6 +183,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
       try {
         const subjectsRes = await masterDataApi.subjects.list({
           gradeLevelId: form.gradeLevelId,
+          includeInactive: true,
         });
         if (!active) return;
         if (subjectsRes.error) {
