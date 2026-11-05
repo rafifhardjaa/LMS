@@ -47,7 +47,7 @@ export const teachersRoute = new Elysia({ prefix: "/api/v1/teachers" })
     "/",
     async ({ query, status }: any) => {
       try {
-        const data = await listTeachers(query.q);
+        const data = await listTeachers(query.q, query.statusFilter);
         return status(200, { success: true, message: "Teachers retrieved", data });
       } catch (error) {
         const err = handleError(error);

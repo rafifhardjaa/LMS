@@ -470,12 +470,23 @@ export async function deleteClass(id: string) {
 
 // ── Daftar guru ──────────────────────────────────────────────────────
 
-export async function listTeachers(q?: string) {
+export async function listTeachers(
+  q?: string,
+  isActive?: string
+) {
   const conditions: SQL[] = [eq(roles.name, "guru")];
+
+  // Filter berdasarkan query pencarian
   if (q?.trim()) {
     const pattern = `%${q.trim()}%`;
     const search = sql`(${users.fullName} ilike ${pattern} or ${users.nomorInduk} ilike ${pattern})`;
     conditions.push(search);
+  }
+
+  // Filter berdasarkan status aktif
+  if (isActive && isActive !== "Semua Status") {
+    const activeVal = isActive === "Aktif" ? true : false;
+    conditions.push(eq(users.isActive, activeVal));
   }
 
   return db
