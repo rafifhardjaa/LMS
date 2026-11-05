@@ -116,6 +116,10 @@ const app = new Elysia()
       secret: process.env.JWT_SECRET!,
     })
   )
+  .onError(({ error, request }) => {
+    // Log semua error yang tidak ditangani oleh route/middleware
+    console.error(`[onError] ${request.method} ${new URL(request.url).pathname}`, error);
+  })
   .get("/", () => ({ status: "ok" }))
   .use(usersRoute)
   .use(authRoute)

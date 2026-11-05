@@ -18,6 +18,7 @@ export const authMiddleware = (app: Elysia) =>
   // `jwt` didekorasikan oleh plugin @elysiajs/jwt di src/index.ts;
   // diketik `any` karena instance route didefinisikan standalone.
   app.derive(async ({ headers, status, jwt, request }: any) => {
+    console.log("[authMiddleware] incoming:", request?.method, request?.url, "jwt:", !!jwt, "status:", typeof status);
     const authorization: unknown = headers["authorization"];
     if (typeof authorization !== "string" || !authorization.startsWith("Bearer ")) {
       throw status(401, { error: "Unauthorized" });
@@ -65,6 +66,8 @@ export const authMiddleware = (app: Elysia) =>
       if (err instanceof Error && err.message === "Unauthorized") {
         throw status(401, { error: "Unauthorized" });
       }
+      // Log error yang tidak terduga (mis. database down / tabel belum ada)
+      console.error("[authMiddleware] unexpected error:", err);
       throw err;
     }
   });
