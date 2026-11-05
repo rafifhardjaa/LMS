@@ -132,7 +132,7 @@ export async function loginWithIdentifier(input: {
   };
 }
 
-// ── Registrasi siswa (harus cocok dengan roster admin) ────────────────
+// ── Registrasi guru (dibuat oleh admin) ────────────────────────────────
 
 export async function registerStudent(input: {
   email: string;
@@ -208,6 +208,64 @@ export async function registerStudent(input: {
       link: buildAppLink("/auth/activate", token),
     })
   );
+}
+
+// ── Registrasi guru (dibuat oleh admin) ────────────────────────────────
+
+export async function registerTeacher(input: {
+  fullName: string;
+  nomorInduk: string;
+  tanggalLahir: string;
+  email?: string | null;
+  major?: string | null;
+  gradeLevel?: string | null;
+  subject?: string | null;
+  role: string;
+}): Promise<void> {
+  const nomorInduk = normalizeNomorInduk(input.nomorInduk);
+  const tanggalLahir = normalizeTanggalLahir(input.tanggalLahir);
+
+  if (!nomorInduk) {
+    throw new BadRequestError("Nomor induk wajib diisi");
+  }
+
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.nomorInduk, nomorInduk))
+    .limit(1);
+
+  if (rows[0]) {
+    throw new BadRequestError(
+      "Nomor induk sudah terdaftar di sekolah."
+    );
+  }
+
+  const emailTaken = input.email
+    ? await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, input.email!.toLowerCase()))
+        .limit(1)
+    : null;
+
+  if (emailTaken?.[0]) {
+    throw new BadRequestError("Email sudah terdaftar");
+  }
+
+  await db.insert(users).values({
+    id: crypto.randomUUID(),
+    fullName: input.fullName.trim(),
+    nomorInduk,
+    tanggalLahir,
+    email: input.email?.trim().toLowerCase() || null,
+    passwordHash: null,
+    isActive: true,
+    role: input.role,
+    createdBy: "admin",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
 }
 
 // ── Aktivasi akun baru ────────────────────────────────────────────────
