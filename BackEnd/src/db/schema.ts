@@ -97,9 +97,6 @@ export const subjects = pgTable(
       onDelete: "set null",
     }),
     semester: varchar("semester", { length: 20 }).default("Ganjil").notNull(),
-    academicYear: varchar("academic_year", { length: 20 })
-      .default("2026/2027")
-      .notNull(),
     isActive: boolean("is_active").default(true).notNull(),
     createdBy: uuid("created_by").references(() => users.id, {
       onDelete: "set null",
@@ -111,15 +108,13 @@ export const subjects = pgTable(
     codeIdx: index("subjects_code_idx").on(
       table.code,
       table.gradeLevelId,
-      table.semester,
-      table.academicYear
+      table.semester
     ),
     codeUnique: uniqueIndex("subjects_code_unique_idx")
       .on(
         table.code,
         table.gradeLevelId,
-        table.semester,
-        table.academicYear
+        table.semester
       ),
     majorIdx: index("subjects_major_idx").on(table.majorId),
     gradeLevelIdx: index("subjects_grade_level_idx").on(table.gradeLevelId),

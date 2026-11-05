@@ -268,7 +268,6 @@ async function seed() {
           majorId: s.majorCode ? (majorByCode.get(s.majorCode) ?? null) : null,
           gradeLevelId: gradeByCode.get(s.gradeCode)!,
           semester: s.semester,
-          academicYear: s.academicYear,
           createdBy: adminUser.id,
         }))
       )
@@ -322,7 +321,6 @@ async function seed() {
             "Algoritma, struktur data, dan penerapan komputasi untuk kelas XII.",
           gradeLevelId: gradeByCode.get("XII")!,
           semester: "Ganjil",
-          academicYear: "2026/2027",
           createdBy: adminUser.id,
         },
         {
@@ -331,7 +329,6 @@ async function seed() {
           description: "Pelajaran matematika dasar untuk pemula",
           gradeLevelId: gradeByCode.get("X")!,
           semester: "Ganjil",
-          academicYear: "2026/2027",
           createdBy: adminUser.id,
         },
       ])

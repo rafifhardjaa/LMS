@@ -36,6 +36,13 @@
       "when": 1793821008493,
       "tag": "0004_fearless_kulan_gath",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793879400878,
+      "tag": "0005_shiny_moira_mactaggert",
+      "breakpoints": true
     }
   ]
 }
