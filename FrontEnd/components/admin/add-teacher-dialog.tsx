@@ -65,11 +65,27 @@ const GRADE_LEVELS = [
 ];
 
 const SUBJECTS = [
-  "Informatika & Sains Komputasi",
-  "Pemrograman Web & Mobile",
-  "Jaringan Komputer & Cloud Infrastructure",
-  "Matematika Tingkat Lanjut",
-  "Fisika Terapan & Robotika",
+  // Kelas X
+  "Dasar Desain Grafis (DDG)",
+  "Informatika (INF)",
+  "Komputer dan Jaringan Dasar (KJD)",
+  "Pemrograman Dasar (PD)",
+  "Simulasi dan Komunikasi Digital (SKD)",
+  "Sistem Komputer (SKOM)",
+  // Kelas XI
+  "Administrasi Infrastruktur Jaringan (AIJ)",
+  "Administrasi Sistem Jaringan (ASJ)",
+  "Produk Kreatif dan Kewirausahaan (PKK)",
+  "Teknologi Layanan Jaringan (TLJ)",
+  "Teknologi Jaringan Berbasis Luas (WAN)",
+  // Kelas XII
+  "Administrasi Infrastruktur Jaringan Lanjutan (AIJ-L)",
+  "Administrasi Sistem Jaringan Lanjutan (ASJ-L)",
+  "Produk Kreatif dan Kewirausahaan Lanjutan (PKK-L)",
+  "PKL / Praktik Kerja Lapangan (PKL)",
+  "Teknologi Layanan Jaringan Lanjutan (TLJ-L)",
+  "Persiapan UKK (Uji Kompetensi Keahlian)",
+  "Teknologi Jaringan Berbasis Luas Lanjutan (WAN-L)",
 ];
 
 function normalizeNomorInduk(value: string) {
