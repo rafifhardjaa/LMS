@@ -37,7 +37,6 @@ interface FormState {
   email: string;
   major: string;
   gradeLevel: string;
-  academicYear: string;
   subject: string;
 }
 
@@ -48,7 +47,6 @@ const EMPTY_FORM: FormState = {
   email: "",
   major: "",
   gradeLevel: "",
-  academicYear: "",
   subject: "",
 };
 
@@ -64,12 +62,6 @@ const GRADE_LEVELS = [
   "Fase E - Kelas X",
   "Fase F - Kelas XI",
   "Fase F - Kelas XII",
-];
-
-const ACADEMIC_YEARS = [
-  "2024/2025 - Ganjil",
-  "2024/2025 - Genap",
-  "2025/2026 - Ganjil",
 ];
 
 const SUBJECTS = [
@@ -165,7 +157,6 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     if (!form.tanggalLahir) next.tanggalLahir = "Tanggal lahir wajib diisi";
     if (!form.major) next.major = "Konsentrasi keahlian wajib dipilih";
     if (!form.gradeLevel) next.gradeLevel = "Tingkat / fase wajib dipilih";
-    if (!form.academicYear) next.academicYear = "Tahun ajaran wajib dipilih";
     if (!form.subject) next.subject = "Mata pelajaran wajib dipilih";
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       next.email = "Format surel tidak valid";
@@ -367,16 +358,6 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                   placeholder="Pilih tingkat"
                 />
                 <FieldError message={errors.gradeLevel} />
-              </div>
-              <div>
-                <FieldLabel required>Tahun Ajaran</FieldLabel>
-                <SelectInput
-                  value={form.academicYear}
-                  onChange={(value) => setField("academicYear", value)}
-                  options={ACADEMIC_YEARS}
-                  placeholder="Pilih tahun ajaran"
-                />
-                <FieldError message={errors.academicYear} />
               </div>
               <div>
                 <FieldLabel required>Mata Pelajaran</FieldLabel>

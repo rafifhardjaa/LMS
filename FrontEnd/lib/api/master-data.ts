@@ -53,7 +53,6 @@ export interface Subject {
   gradeCode: string | null;
   gradeName: string | null;
   semester: string;
-  academicYear: string;
   isActive: boolean;
   createdBy: string | null;
   createdByName: string | null;
@@ -137,7 +136,6 @@ export interface SubjectInput {
   majorId?: string | null;
   gradeLevelId: string;
   semester?: string;
-  academicYear?: string;
   isActive?: boolean;
 }
 
@@ -145,7 +143,6 @@ export interface SubjectFilters {
   majorId?: string;
   gradeLevelId?: string;
   semester?: string;
-  academicYear?: string;
   q?: string;
   includeInactive?: boolean;
 }
