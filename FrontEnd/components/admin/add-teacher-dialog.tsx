@@ -145,10 +145,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
 
   // Fetch subjects when grade level changes
   useEffect(() => {
-    if (!gradeLevelForSubjects) {
-      setSubjects([]);
-      return;
-    }
+    if (!gradeLevelForSubjects) return;
 
     const fetchSubjects = async () => {
       setLoadingSubjects(true);
