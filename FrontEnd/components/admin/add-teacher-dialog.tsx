@@ -24,7 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { masterDataApi } from "@/lib/api/master-data";
-import type { GradeLevel, Subject } from "@/lib/api/master-data";
+import type { GradeLevel, Major, Subject } from "@/lib/api/master-data";
 
 interface AddTeacherDialogProps {
   open: boolean;
@@ -51,33 +51,6 @@ const EMPTY_FORM: FormState = {
   gradeLevel: "",
   subject: "",
 };
-
-// Will be fetched from API dynamically
-const [majors, setMajors] = useState<Array<{ id: string; name: string }>>([]);
-const [gradeLevels, setGradeLevels] = useState<Array<{ id: string; name: string }>>([]);
-
-// Fetch majors and grade levels when component mounts
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      // Fetch majors
-      const majorsRes = await masterDataApi.majors.list();
-      if (majorsRes.error) throw new Error("Gagal memuat jurusan");
-      setMajors(majorsRes.data as Array<{ id: string; name: string }>);
-
-      // Fetch grade levels
-      const gradeRes = await masterDataApi.gradeLevels.list();
-      if (gradeRes.error) throw new Error("Gagal memuat tingkat kelas");
-      setGradeLevels(gradeRes.data as Array<{ id: string; name: string }>);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setMajors([]);
-      setGradeLevels([]);
-    }
-  };
-
-  fetchData();
-}, []);
 
 function normalizeNomorInduk(value: string) {
   return value.replace(/\D/g, "");
@@ -144,12 +117,49 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     setForm(EMPTY_FORM);
     setErrors({});
     setSubmitting(false);
+    setSubjects([]);
+    setGradeLevelForSubjects("");
   };
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const defaultPassword = buildDefaultPassword(form.tanggalLahir, form.nomorInduk);
+
+  // Majors and grade levels fetched dynamically from database
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
+
+  // Fetch majors and grade levels when dialog opens
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    const fetchData = async () => {
+      try {
+        const [majorsRes, gradeRes] = await Promise.all([
+          masterDataApi.majors.list(),
+          masterDataApi.gradeLevels.list(),
+        ]);
+        if (!active) return;
+        if (majorsRes.error) throw new Error("Gagal memuat jurusan");
+        if (gradeRes.error) throw new Error("Gagal memuat tingkat kelas");
+        setMajors(Array.isArray(majorsRes.data?.data) ? majorsRes.data.data : []);
+        setGradeLevels(Array.isArray(gradeRes.data?.data) ? gradeRes.data.data : []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        if (!active) return;
+        setMajors([]);
+        setGradeLevels([]);
+        toast.error("Gagal memuat data penempatan", {
+          description: error instanceof Error ? error.message : "Kesalahan tidak diketahui",
+        });
+      }
+    };
+    fetchData();
+    return () => {
+      active = false;
+    };
+  }, [open]);
 
   // Subjects fetched dynamically from database
   const [subjects, setSubjects] = useState<Array<{ id: string; name: string }>>([]);
@@ -158,46 +168,66 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
 
   // Fetch subjects when grade level changes
   useEffect(() => {
-    if (!gradeLevelForSubjects) return;
+    if (!gradeLevelForSubjects) {
+      setSubjects([]);
+      return;
+    }
 
+    let active = true;
     const fetchSubjects = async () => {
       setLoadingSubjects(true);
       try {
-        const gradeRes = await masterDataApi.gradeLevels.list();
-        const gradeData = gradeRes.data as GradeLevel[] | null;
-        if (gradeRes.error) throw new Error("Gagal memuat tingkat kelas");
-
-        const currentGrade = gradeData?.find((g) => {
-          if (gradeLevelForSubjects === "Fase E - Kelas X") return g.code === "X";
-          if (gradeLevelForSubjects === "Fase F - Kelas XI") return g.code === "XI";
-          if (gradeLevelForSubjects === "Fase F - Kelas XII") return g.code === "XII";
-          return false;
-        });
-
+        const currentGrade = gradeLevels.find(
+          (g) => g.name === gradeLevelForSubjects || g.code === gradeLevelForSubjects || g.id === gradeLevelForSubjects
+        );
         if (!currentGrade) {
+          if (active) setSubjects([]);
           return;
         }
 
-        const subjectsRes = await masterDataApi.subjects.list({ gradeLevelId: currentGrade.id });
-        const subjectsData = subjectsRes.data as Subject[] | null;
-        if (subjectsRes.error) throw new Error("Gagal memuat mata pelajaran");
+        const subjectsRes = await masterDataApi.subjects.list({
+          gradeLevelId: currentGrade.id,
+          includeInactive: true,
+        });
+        if (!active) return;
+        if (subjectsRes.error) {
+          const msg =
+            subjectsRes.error.message ||
+            subjectsRes.error.error ||
+            `HTTP ${subjectsRes.status}`;
+          console.error("fetchSubjects error:", msg, subjectsRes);
+          setSubjects([]);
+          toast.error("Gagal memuat mata pelajaran", { description: msg });
+          return;
+        }
+        const subjectsData = Array.isArray(subjectsRes.data?.data) ? subjectsRes.data.data : [];
 
-        const mappedSubjects = subjectsData?.map((subject) => ({
-          id: subject.id,
-          name: subject.code + (subject.majorCode ? ` - ${subject.majorName || subject.majorCode}` : "") + ` (${subject.name})`,
-        })) || [];
-
-        setSubjects(mappedSubjects);
+        setSubjects(
+          subjectsData.map((subject) => ({
+            id: subject.id,
+            name:
+              subject.code +
+              (subject.majorCode ? ` - ${subject.majorName || subject.majorCode}` : "") +
+              ` (${subject.name})`,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching subjects:", error);
+        if (!active) return;
         setSubjects([]);
+        toast.error("Gagal memuat mata pelajaran", {
+          description: error instanceof Error ? error.message : "Kesalahan tidak diketahui",
+        });
       } finally {
-        setLoadingSubjects(false);
+        if (active) setLoadingSubjects(false);
       }
     };
 
     fetchSubjects();
-  }, [gradeLevelForSubjects]);
+    return () => {
+      active = false;
+    };
+  }, [gradeLevelForSubjects, gradeLevels]);
 
   const validate = (): Record<string, string> => {
     const next: Record<string, string> = {};
@@ -274,6 +304,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     setField("gradeLevel", value);
     setGradeLevelForSubjects(value);
     setField("subject", ""); // Reset subject when grade level changes
+    setSubjects([]);
   };
 
   const inputClass =
@@ -432,7 +463,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 <SelectInput
                   value={form.major}
                   onChange={(value) => setField("major", value)}
-                  options={majors.map((m) => m.name)}
+                  options={(Array.isArray(majors) ? majors : []).map((m) => m.name)}
                   placeholder="Pilih jurusan"
                 />
                 <FieldError message={errors.major} />
@@ -442,7 +473,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 <SelectInput
                   value={form.gradeLevel}
                   onChange={(value) => handleGradeLevelChange(value)}
-                  options={gradeLevels.map((g) => g.name)}
+                  options={(Array.isArray(gradeLevels) ? gradeLevels : []).map((g) => g.name)}
                   placeholder="Pilih tingkat"
                 />
                 <FieldError message={errors.gradeLevel} />
@@ -452,7 +483,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 <SelectInput
                   value={form.subject}
                   onChange={(value) => setField("subject", value)}
-                  options={subjects.map((s) => s.name)}
+                  options={(Array.isArray(subjects) ? subjects : []).map((s) => s.name)}
                   placeholder={loadingSubjects ? "Memuat..." : "Pilih mapel"}
                 />
                 <FieldError message={errors.subject} />

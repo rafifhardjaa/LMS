@@ -24,15 +24,26 @@ async function proxy(
   if (accept) headers.set("accept", accept);
   if (token) headers.set("authorization", `Bearer ${token}`);
 
-  const upstream = await fetch(target, {
-    method: req.method,
-    headers,
-    body: BODYLESS_METHODS.has(req.method)
-      ? undefined
-      : await req.arrayBuffer(),
-    cache: "no-store",
-    redirect: "manual",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(target, {
+      method: req.method,
+      headers,
+      body: BODYLESS_METHODS.has(req.method)
+        ? undefined
+        : await req.arrayBuffer(),
+      cache: "no-store",
+      redirect: "manual",
+    });
+  } catch (err) {
+    console.error(`[proxy] fetch failed → ${target}`, err);
+    return NextResponse.json(
+      { success: false, message: `Backend tidak dapat dijangkau: ${BACKEND_URL}` },
+      { status: 502 }
+    );
+  }
+
+  console.log(`[proxy] ${req.method} ${target} → ${upstream.status}`);
 
   const responseHeaders = new Headers();
   const upstreamType = upstream.headers.get("content-type");
