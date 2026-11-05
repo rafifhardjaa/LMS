@@ -17,12 +17,11 @@ export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
       try {
         const data = await listSubjects(
           {
-            majorId: query.majorId || query.major_id,
-            gradeLevelId: query.gradeLevelId || query.grade_level_id,
-            semester: query.semester,
-            academicYear: query.academicYear || query.academic_year,
-            q: query.q,
-            includeInactive: query.includeInactive === "true",
+    majorId: query.majorId || query.major_id,
+      gradeLevelId: query.gradeLevelId || query.grade_level_id,
+      semester: query.semester,
+      q: query.q,
+      includeInactive: query.includeInactive === "true",
           },
           user
         );
@@ -73,7 +72,6 @@ export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
           majorId: body.majorId ?? body.major_id ?? null,
           gradeLevelId: body.gradeLevelId ?? body.grade_level_id,
           semester: body.semester,
-          academicYear: body.academicYear ?? body.academic_year,
           isActive: body.isActive ?? body.is_active,
           createdBy: user.id,
         });
@@ -99,8 +97,6 @@ export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
         gradeLevelId: t.Optional(t.String()),
         grade_level_id: t.Optional(t.String()),
         semester: t.Optional(t.String()),
-        academicYear: t.Optional(t.String()),
-        academic_year: t.Optional(t.String()),
         isActive: t.Optional(t.Boolean()),
         is_active: t.Optional(t.Boolean()),
       }),
@@ -117,7 +113,6 @@ export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
           majorId: body.majorId ?? body.major_id,
           gradeLevelId: body.gradeLevelId ?? body.grade_level_id,
           semester: body.semester,
-          academicYear: body.academicYear ?? body.academic_year,
           isActive: body.isActive ?? body.is_active,
         });
         return status(200, { success: true, message: "Subject updated", data: updated });
@@ -143,8 +138,6 @@ export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
         gradeLevelId: t.Optional(t.String()),
         grade_level_id: t.Optional(t.String()),
         semester: t.Optional(t.String()),
-        academicYear: t.Optional(t.String()),
-        academic_year: t.Optional(t.String()),
         isActive: t.Optional(t.Boolean()),
         is_active: t.Optional(t.Boolean()),
       }),

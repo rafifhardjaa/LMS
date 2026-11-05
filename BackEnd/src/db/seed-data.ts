@@ -5,7 +5,7 @@ export type SeedMajor = { code: string; name: string };
 export type SeedGradeLevel = { code: string; name: string };
 export type SeedClass = { name: string; majorCode: string; gradeCode: string; section: string };
 export type SeedTeacher = { fullName: string; email: string; nomorInduk: string; majors: string[]; classNames: string[] };
-export type SeedSubject = { name: string; code: string; majorCode: string | null; gradeCode: string; semester: string; academicYear: string; vocational: boolean };
+export type SeedSubject = { name: string; code: string; majorCode: string | null; gradeCode: string; semester: string; vocational: boolean };
 
 export const majorsData: SeedMajor[] = [
   {
@@ -2846,7 +2846,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "AKL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2855,7 +2855,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "AKL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2864,7 +2864,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "AKL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2873,7 +2873,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "AKL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2882,7 +2882,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "AKL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2891,7 +2891,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "AKL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2900,7 +2900,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "BDG",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2909,7 +2909,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "BDG",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2918,7 +2918,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "BDG",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2927,7 +2927,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "BDG",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2936,7 +2936,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "BDG",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2945,7 +2945,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "BDG",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2954,7 +2954,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "DKV",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2963,7 +2963,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "DKV",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2972,7 +2972,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "DKV",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2981,7 +2981,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "DKV",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2990,7 +2990,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "DKV",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -2999,7 +2999,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "DKV",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3008,7 +3008,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "HTL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3017,7 +3017,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "HTL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3026,7 +3026,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "HTL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3035,7 +3035,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "HTL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3044,7 +3044,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "HTL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3053,7 +3053,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "HTL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3062,7 +3062,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "KUL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3071,7 +3071,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "KUL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3080,7 +3080,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "KUL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3089,7 +3089,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "KUL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3098,7 +3098,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "KUL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3107,7 +3107,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "KUL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3116,7 +3116,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "RPL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3125,7 +3125,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "RPL",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3134,7 +3134,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "RPL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3143,7 +3143,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "RPL",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3152,7 +3152,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "RPL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3161,7 +3161,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "RPL",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3170,7 +3170,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKJ",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3179,7 +3179,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKJ",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3188,7 +3188,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKJ",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3197,7 +3197,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKJ",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3206,7 +3206,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKJ",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3215,7 +3215,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKJ",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3224,7 +3224,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKR",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3233,7 +3233,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKR",
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3242,7 +3242,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKR",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3251,7 +3251,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKR",
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3260,7 +3260,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKR",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3269,7 +3269,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": "TKR",
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": true
   },
   {
@@ -3278,7 +3278,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3287,7 +3287,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3296,7 +3296,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3305,7 +3305,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3314,7 +3314,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3323,7 +3323,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3332,7 +3332,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3341,7 +3341,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3350,7 +3350,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3359,7 +3359,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3368,7 +3368,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3377,7 +3377,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3386,7 +3386,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3395,7 +3395,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3404,7 +3404,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3413,7 +3413,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3422,7 +3422,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3431,7 +3431,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3440,7 +3440,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3449,7 +3449,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3458,7 +3458,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3467,7 +3467,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3476,7 +3476,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3485,7 +3485,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3494,7 +3494,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3503,7 +3503,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3512,7 +3512,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3521,7 +3521,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3530,7 +3530,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3539,7 +3539,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3548,7 +3548,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "X",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3557,7 +3557,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XI",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   },
   {
@@ -3566,7 +3566,7 @@ export const subjectsData: SeedSubject[] = [
     "majorCode": null,
     "gradeCode": "XII",
     "semester": "Ganjil",
-    "academicYear": "2026/2027",
+    
     "vocational": false
   }
 ];
