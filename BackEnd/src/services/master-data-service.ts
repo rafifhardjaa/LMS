@@ -12,7 +12,12 @@ import {
   users,
 } from "../db/schema";
 import { BadRequestError, NotFoundError } from "../utils/response";
-import { normalizeNomorInduk, normalizeTanggalLahir } from "../lib/password";
+import {
+  buildDefaultPassword,
+  hashPassword,
+  normalizeNomorInduk,
+  normalizeTanggalLahir,
+} from "../lib/password";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -579,6 +584,8 @@ export async function createTeacher(input: {
   }
 
   const email = input.email?.toLowerCase() || null;
+  const defaultPassword = buildDefaultPassword(tanggalLahir, nomorInduk);
+  const passwordHash = await hashPassword(defaultPassword);
 
   const created = await db.transaction(async (tx) => {
     const rows = await tx
@@ -588,7 +595,8 @@ export async function createTeacher(input: {
         nomorInduk,
         tanggalLahir,
         email,
-        passwordHash: null,
+        passwordHash,
+        passwordChangedAt: null,
         isActive: true,
       })
       .returning({

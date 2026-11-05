@@ -9,6 +9,7 @@
     "db:generate:storage": "drizzle-kit generate --config=drizzle.storage.config.ts",
     "db:migrate": "bun run src/db/migrate.ts",
     "db:setup": "bun run db:migrate && bun run seed",
+    "db:backfill-passwords": "bun run scripts/fill-default-passwords.ts",
     "db:backup": "bash scripts/db-backup.sh",
     "db:push": "drizzle-kit push",
     "seed": "bun run src/db/seed.ts"

@@ -4,7 +4,7 @@
 
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { db } from "../db";
-import { users } from "../db/schema";
+import { roles, userRoles, users } from "../db/schema";
 import {
   consumeAuthToken,
   issueAuthToken,
@@ -17,6 +17,7 @@ import {
 import { buildAppLink, sendEmail } from "../lib/mailer";
 import {
   assertPasswordStrength,
+  buildDefaultPassword,
   hashPassword,
   normalizeNomorInduk,
   normalizeTanggalLahir,
@@ -27,7 +28,7 @@ import {
   ForbiddenError,
   UnauthorizedError,
 } from "../utils/response";
-import { DEFAULT_ROLE, getUserRoleName } from "./role-service";
+import { DEFAULT_ROLE, ensureRole, getUserRoleName } from "./role-service";
 import { getCurrentUserById } from "./users-services";
 
 /** Masa berlaku JWT: 7 hari. */
@@ -224,47 +225,68 @@ export async function registerTeacher(input: {
 }): Promise<void> {
   const nomorInduk = normalizeNomorInduk(input.nomorInduk);
   const tanggalLahir = normalizeTanggalLahir(input.tanggalLahir);
+  const fullName = input.fullName.trim();
+  const email = input.email?.trim().toLowerCase() || null;
 
+  if (!fullName) {
+    throw new BadRequestError("Nama wajib diisi");
+  }
   if (!nomorInduk) {
     throw new BadRequestError("Nomor induk wajib diisi");
   }
 
   const rows = await db
-    .select()
+    .select({ id: users.id })
     .from(users)
     .where(eq(users.nomorInduk, nomorInduk))
     .limit(1);
 
   if (rows[0]) {
-    throw new BadRequestError(
-      "Nomor induk sudah terdaftar di sekolah."
-    );
+    throw new BadRequestError("Nomor induk sudah terdaftar di sekolah.");
   }
 
-  const emailTaken = input.email
-    ? await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.email, input.email!.toLowerCase()))
-        .limit(1)
-    : null;
+  if (email) {
+    const emailTaken = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
 
-  if (emailTaken?.[0]) {
-    throw new BadRequestError("Email sudah terdaftar");
+    if (emailTaken[0]) {
+      throw new BadRequestError("Email sudah terdaftar");
+    }
   }
 
-  await db.insert(users).values({
-    id: crypto.randomUUID(),
-    fullName: input.fullName.trim(),
-    nomorInduk,
-    tanggalLahir,
-    email: input.email?.trim().toLowerCase() || null,
-    passwordHash: null,
-    isActive: true,
-    role: input.role,
-    createdBy: "admin",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+  const defaultPassword = buildDefaultPassword(tanggalLahir, nomorInduk);
+  const passwordHash = await hashPassword(defaultPassword);
+  const canonical = (input.role || "guru").toLowerCase();
+  const roleName = canonical === "admin" ? "admin" : canonical === "siswa" ? "siswa" : "guru";
+  const roleRow = await ensureRole(roleName);
+
+  await db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(users)
+      .values({
+        fullName,
+        nomorInduk,
+        tanggalLahir,
+        email,
+        passwordHash,
+        // null => user must change default password on first login
+        passwordChangedAt: null,
+        isActive: true,
+      })
+      .returning({ id: users.id });
+
+    const user = inserted[0];
+    if (!user) {
+      throw new BadRequestError("Gagal membuat guru");
+    }
+
+    await tx.insert(userRoles).values({
+      userId: user.id,
+      roleId: roleRow.id,
+    });
   });
 }
 
