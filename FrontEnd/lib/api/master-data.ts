@@ -322,4 +322,20 @@ export const masterDataApi = {
         { method: "DELETE" }
       ),
   },
+  modules: {
+    list: () =>
+      apiFetch<ApiSuccess<{ id: string; title: string; description?: string }[]>>(
+        `/api/v1/modules`
+      ),
+    byModule: (moduleId: string) =>
+      apiFetch<ApiSuccess<{ id: string; title: string; description?: string; progress: number }>>(
+        `/api/v1/modules/${moduleId}`
+      ),
+  },
+  progress: {
+    byModule: (moduleId: string) =>
+      apiFetch<ApiSuccess<{ percentage: number; completed: number; total: number }>>(
+        `/api/v1/progress/module/${moduleId}`
+      ),
+  },
 } as const;
