@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   BadgeCheck,
@@ -301,13 +301,23 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     label: grade.name,
   }));
 
-  const subjectOptions: SelectOption[] = subjects.map((subject) => ({
-    value: subject.id,
-    label:
-      subject.code +
-      (subject.majorCode ? ` - ${subject.majorName || subject.majorCode}` : "") +
-      ` (${subject.name})`,
-  }));
+  const subjectOptions: SelectOption[] = useMemo(() => {
+    // Keep the list scoped to the chosen major. General subjects (no major)
+    // apply to every major, so they stay available.
+    const relevant = form.majorId
+      ? subjects.filter(
+          (subject) => !subject.majorId || subject.majorId === form.majorId
+        )
+      : subjects;
+
+    return relevant.map((subject) => ({
+      value: subject.id,
+      label:
+        subject.code +
+        (subject.majorCode ? ` - ${subject.majorName || subject.majorCode}` : "") +
+        ` (${subject.name})`,
+    }));
+  }, [subjects, form.majorId]);
 
   const inputClass =
     "h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/20";
@@ -487,13 +497,15 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                   onChange={(value) => setField("subjectId", value)}
                   options={subjectOptions}
                   placeholder={
-                    !form.gradeLevelId
-                      ? "Pilih tingkat dulu"
-                      : loadingSubjects
-                        ? "Memuat..."
-                        : "Pilih mapel"
+                    !form.majorId
+                      ? "Pilih jurusan dulu"
+                      : !form.gradeLevelId
+                        ? "Pilih tingkat dulu"
+                        : loadingSubjects
+                          ? "Memuat..."
+                          : "Pilih mapel"
                   }
-                  disabled={!form.gradeLevelId || loadingSubjects}
+                  disabled={!form.majorId || !form.gradeLevelId || loadingSubjects}
                 />
                 <FieldError message={errors.subjectId} />
               </div>
