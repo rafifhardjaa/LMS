@@ -1,16 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { Download, Database, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { TeacherStats } from "@/components/admin/teacher-stats";
 import { TeachersSidePanels } from "@/components/admin/teachers-side-panels";
 import { TeachersTable } from "@/components/admin/teachers-table";
+import { AddTeacherDialog } from "@/components/admin/add-teacher-dialog";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import { useAuthStore } from "@/lib/store/auth-store";
 
 export default function TeachersPage() {
   const role = useAuthStore((state) => state.user?.role ?? "admin");
   const isAdmin = role === "admin";
+  const [addTeacherOpen, setAddTeacherOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   return (
     <div className="flex w-full flex-col gap-7 pt-4">
       <FadeIn>
@@ -21,7 +26,7 @@ export default function TeachersPage() {
                 <span className="rounded-full bg-[#e5deff] px-3 py-1 text-[#4331a8]">SMK MATARAM • KURIKULUM MERDEKA</span>
                 <span>T.A. 2026/2027 Ganjil</span>
               </div>
-              <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Tenaga Pendidik &amp; Guru</h1>
+              <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Tenaga Pendidik & Guru</h1>
               <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data guru pengampu, distribusi mata pelajaran, status beban mengajar (Jam Pelajaran), dan akun Dapodik SMK Mataram.</p>
             </div>
           </SlideIn>
@@ -51,7 +56,7 @@ export default function TeachersPage() {
             <StaggerItem>
               <motion.button
                 type="button"
-                onClick={() => window.alert("Tambah Guru Baru")}
+                onClick={() => setAddTeacherOpen(true)}
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -62,13 +67,17 @@ export default function TeachersPage() {
           </StaggerChildren>
         </div>
       </FadeIn>
-          <TeacherStats />
-          <FadeIn>
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-              <TeachersTable isAdmin={isAdmin} />
-              <TeachersSidePanels />
-            </div>
-          </FadeIn>
+
+      <TeacherStats />
+
+      <FadeIn>
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <TeachersTable key={refreshKey} isAdmin={isAdmin} onTeacherAdded={() => setRefreshKey(k => k + 1)} />
+          <TeachersSidePanels />
         </div>
-      );
-    }
+      </FadeIn>
+
+      <AddTeacherDialog open={addTeacherOpen} onOpenChange={setAddTeacherOpen} onSuccess={() => setRefreshKey(k => k + 1)} />
+    </div>
+  );
+}
