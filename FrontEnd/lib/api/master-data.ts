@@ -244,9 +244,9 @@ export const masterDataApi = {
       }),
   },
   teachers: {
-    list: (q?: string) =>
+    list: (q?: string, statusFilter?: string) =>
       apiFetch<ApiSuccess<TeacherSummary[]>>(
-        `/api/v1/teachers${queryString({ q })}`
+        `/api/v1/teachers${queryString({ q, statusFilter })}`
       ),
   },
   students: {
