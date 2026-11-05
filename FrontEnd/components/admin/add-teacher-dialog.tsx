@@ -52,33 +52,6 @@ const EMPTY_FORM: FormState = {
   subject: "",
 };
 
-// Will be fetched from API dynamically
-const [majors, setMajors] = useState<Array<{ id: string; name: string }>>([]);
-const [gradeLevels, setGradeLevels] = useState<Array<{ id: string; name: string }>>([]);
-
-// Fetch majors and grade levels when component mounts
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      // Fetch majors
-      const majorsRes = await masterDataApi.majors.list();
-      if (majorsRes.error) throw new Error("Gagal memuat jurusan");
-      setMajors(majorsRes.data as Array<{ id: string; name: string }>);
-
-      // Fetch grade levels
-      const gradeRes = await masterDataApi.gradeLevels.list();
-      if (gradeRes.error) throw new Error("Gagal memuat tingkat kelas");
-      setGradeLevels(gradeRes.data as Array<{ id: string; name: string }>);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setMajors([]);
-      setGradeLevels([]);
-    }
-  };
-
-  fetchData();
-}, []);
-
 function normalizeNomorInduk(value: string) {
   return value.replace(/\D/g, "");
 }
@@ -150,6 +123,30 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const defaultPassword = buildDefaultPassword(form.tanggalLahir, form.nomorInduk);
+
+  // Majors and grade levels fetched dynamically from database
+  const [majors, setMajors] = useState<Array<{ id: string; name: string }>>([]);
+  const [gradeLevels, setGradeLevels] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Fetch majors and grade levels when component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const majorsRes = await masterDataApi.majors.list();
+        if (majorsRes.error) throw new Error("Gagal memuat jurusan");
+        setMajors((majorsRes.data as unknown as Array<{ id: string; name: string }>) || []);
+
+        const gradeRes = await masterDataApi.gradeLevels.list();
+        if (gradeRes.error) throw new Error("Gagal memuat tingkat kelas");
+        setGradeLevels((gradeRes.data as unknown as Array<{ id: string; name: string }>) || []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setMajors([]);
+        setGradeLevels([]);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Subjects fetched dynamically from database
   const [subjects, setSubjects] = useState<Array<{ id: string; name: string }>>([]);
