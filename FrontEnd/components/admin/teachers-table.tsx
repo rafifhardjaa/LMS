@@ -31,7 +31,7 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
     setLoading(true);
     setError(null);
     try {
-      const res = await masterDataApi.teachers.list(query || undefined);
+      const res = await masterDataApi.teachers.list(query || undefined, statusFilter !== "Semua Status" ? statusFilter : undefined);
       if (res.error) throw new Error((res.error as { message?: string }).message ?? "Gagal memuat guru");
       setTeachers(res.data?.data ?? []);
     } catch (e) {
