@@ -165,21 +165,47 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     return next;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next = validate();
     setErrors(next);
     if (Object.keys(next).length) return;
 
     setSubmitting(true);
-    window.setTimeout(() => {
+    try {
+      const res = await fetch("/api/v1/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "guru",
+          fullName: form.fullName,
+          nomor_induk: form.nomorInduk,
+          tanggal_lahir: form.tanggalLahir,
+          email: form.email || null,
+          major: form.major || null,
+          gradeLevel: form.gradeLevel || null,
+          subject: form.subject || null,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Gagal menyimpan guru");
+      }
+
       toast.success("Guru baru siap diaktifkan", {
         description: `${form.fullName.trim()} (${normalizeNomorInduk(form.nomorInduk)}) dibuat dengan kata sandi awal ${defaultPassword}.`,
       });
       onSuccess?.();
       resetState();
       onOpenChange(false);
-    }, 450);
+    } catch (err) {
+      toast.error("Gagal menyimpan guru", {
+        description: err instanceof Error ? err.message : "Kesalahan tidak diketahui",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {

@@ -6,6 +6,7 @@ import {
   changePassword,
   loginWithIdentifier,
   registerStudent,
+  registerTeacher,
   requestPasswordReset,
   resetPassword,
 } from "../services/auth-service";
@@ -19,23 +20,42 @@ const EMAIL_WINDOW = 15 * 60 * 1000;
 export const authRoute = new Elysia({ prefix: "/api/v1/auth" })
   .post(
     "/register",
-    async ({ body, request, server, status }) => {
+    async ({ body, request, server, status }: any) => {
       try {
         enforceRateLimit(
           `register:${getClientIp(request, server)}`,
           30,
           REGISTER_WINDOW
         );
-        await registerStudent({
-          email: body.email,
-          nomorInduk: body.nomor_induk,
-          tanggalLahir: body.tanggal_lahir,
-        });
-        return status(201, {
-          success: true,
-          message:
-            "Registrasi berhasil. Cek email untuk tautan aktivasi akun.",
-        });
+
+        if (body.role === "guru") {
+          await registerTeacher({
+            fullName: body.fullName,
+            nomorInduk: body.nomor_induk,
+            tanggalLahir: body.tanggal_lahir,
+            email: body.email ?? null,
+            major: body.major ?? null,
+            gradeLevel: body.gradeLevel ?? null,
+            subject: body.subject ?? null,
+            role: "guru",
+          });
+          return status(201, {
+            success: true,
+            message:
+              "Guru baru dibuat dan siap diaktifkan. Cek email untuk kata sandi awal.",
+          });
+        } else {
+          await registerStudent({
+            email: body.email,
+            nomorInduk: body.nomor_induk,
+            tanggalLahir: body.tanggal_lahir,
+          });
+          return status(201, {
+            success: true,
+            message:
+              "Registrasi berhasil. Cek email untuk tautan aktivasi akun.",
+          });
+        }
       } catch (error) {
         const err = handleError(error);
         return status(err.status, { success: false, message: err.message });
@@ -44,15 +64,28 @@ export const authRoute = new Elysia({ prefix: "/api/v1/auth" })
     {
       detail: {
         tags: ["Auth"],
-        summary: "Registrasi siswa (self-service)",
+        summary: "Registrasi (siswa atau guru)",
         description:
-          "Hanya untuk siswa dan hanya bila nomor induk + tanggal lahir cocok dengan roster yang diimpor admin. Link aktivasi dikirim ke email.",
+          "Siswa: hanya bila nomor induk + tanggal lahir cocok dengan roster yang diimpor admin.\nGuru: dibuat oleh admin sekolah, dilengkapi dengan data guru dan kelas/mata pelajaran.",
       },
-      body: t.Object({
-        email: t.String(),
-        nomor_induk: t.String(),
-        tanggal_lahir: t.String(),
-      }),
+      body: t.Union([
+        t.Object({
+          email: t.String(),
+          nomor_induk: t.String(),
+          tanggal_lahir: t.String(),
+          role: t.Literal("siswa"),
+        }),
+        t.Object({
+          fullName: t.String(),
+          nomor_induk: t.String(),
+          tanggal_lahir: t.String(),
+          email: t.Optional(t.Union([t.String(), t.Null()])),
+          major: t.Optional(t.Union([t.String(), t.Null()])),
+          gradeLevel: t.Optional(t.Union([t.String(), t.Null()])),
+          subject: t.Optional(t.Union([t.String(), t.Null()])),
+          role: t.Literal("guru"),
+        }),
+      ]),
     }
   )
   .post(

@@ -12,6 +12,7 @@ import {
   users,
 } from "../db/schema";
 import { BadRequestError, NotFoundError } from "../utils/response";
+import { normalizeNomorInduk, normalizeTanggalLahir } from "../lib/password";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -492,6 +493,87 @@ export async function listTeachers(q?: string) {
     .innerJoin(roles, eq(roles.id, userRoles.roleId))
     .where(and(...conditions))
     .orderBy(users.fullName);
+}
+
+// ── Buat guru baru ───────────────────────────────────────────────────
+
+export async function createTeacher(input: {
+  fullName: string;
+  nomorInduk: string;
+  tanggalLahir: string;
+  email?: string | null;
+  major?: string | null;
+  gradeLevelId?: string | null;
+  semester?: string;
+}) {
+  const nomorInduk = normalizeNomorInduk(input.nomorInduk);
+  const tanggalLahir = normalizeTanggalLahir(input.tanggalLahir);
+
+  if (!nomorInduk) {
+    throw new BadRequestError("Nomor induk wajib diisi");
+  }
+
+  const existing = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.nomorInduk, nomorInduk))
+    .limit(1);
+
+  if (existing[0]) {
+    throw new BadRequestError("Nomor induk sudah terdaftar di sekolah.");
+  }
+
+  if (input.email) {
+    const emailTaken = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, input.email.toLowerCase()))
+      .limit(1);
+    if (emailTaken[0]) {
+      throw new BadRequestError("Email sudah terdaftar");
+    }
+  }
+
+  const email = input.email?.toLowerCase() || null;
+
+  const created = await db
+    .insert(users)
+    .values({
+      id: crypto.randomUUID(),
+      fullName: input.fullName.trim(),
+      nomorInduk,
+      tanggalLahir,
+      email,
+      passwordHash: null,
+      isActive: true,
+      createdBy: "admin",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning({ id: users.id, fullName: users.fullName, nomorInduk: users.nomorInduk, email: users.email });
+
+  const roleId = await db
+    .select({ id: roles.id })
+    .from(roles)
+    .where(eq(roles.name, "guru"))
+    .limit(1)
+    .then((rows) => rows[0]?.id);
+
+  if (roleId) {
+    await db.insert(userRoles).values({
+      userId: created[0].id,
+      roleId,
+      assignedBy: "admin",
+      assignedAt: new Date(),
+    });
+  }
+
+  return {
+    id: created[0].id,
+    fullName: created[0].fullName,
+    nomorInduk: created[0].nomorInduk,
+    email: created[0].email,
+  };
 }
 
 // ── Penugasan Guru (mapel & kelas) ───────────────────────────────────
