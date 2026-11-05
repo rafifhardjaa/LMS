@@ -429,7 +429,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 <SelectInput
                   value={form.major}
                   onChange={(value) => setField("major", value)}
-                  options={majors.map((m) => m.name)}
+                  options={majors.map((m: { id: string; name: string }) => m.name)}
                   placeholder="Pilih jurusan"
                 />
                 <FieldError message={errors.major} />
@@ -439,7 +439,7 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 <SelectInput
                   value={form.gradeLevel}
                   onChange={(value) => handleGradeLevelChange(value)}
-                  options={gradeLevels.map((g) => g.name)}
+                  options={gradeLevels.map((g: { id: string; name: string }) => g.name)}
                   placeholder="Pilih tingkat"
                 />
                 <FieldError message={errors.gradeLevel} />
