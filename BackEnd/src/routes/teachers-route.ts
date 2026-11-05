@@ -14,9 +14,9 @@ export const teachersRoute = new Elysia({ prefix: "/api/v1/teachers" })
           nomorInduk: body.nomorInduk,
           tanggalLahir: body.tanggalLahir,
           email: body.email ?? null,
-          major: body.major ?? body.majorId ?? null,
+          majorId: body.majorId ?? body.major_id ?? null,
           gradeLevelId: body.gradeLevelId ?? body.grade_level_id ?? null,
-          semester: body.semester,
+          subjectId: body.subjectId ?? body.subject_id ?? null,
         });
         return status(201, { success: true, message: "Guru berhasil dibuat", data: created });
       } catch (error) {
@@ -36,10 +36,12 @@ export const teachersRoute = new Elysia({ prefix: "/api/v1/teachers" })
         nomorInduk: t.String(),
         tanggalLahir: t.String(),
         email: t.Optional(t.Union([t.String(), t.Null()])),
-        major: t.Optional(t.Union([t.String(), t.Null()])),
+        majorId: t.Optional(t.Union([t.String(), t.Null()])),
+        major_id: t.Optional(t.Union([t.String(), t.Null()])),
         gradeLevelId: t.Optional(t.String()),
         grade_level_id: t.Optional(t.String()),
-        semester: t.Optional(t.String()),
+        subjectId: t.Optional(t.String()),
+        subject_id: t.Optional(t.String()),
       }),
     }
   )

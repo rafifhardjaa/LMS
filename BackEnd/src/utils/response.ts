@@ -83,6 +83,11 @@ export function handleError(error: unknown): {
     if (msg.includes("Akses ditolak")) {
       return { status: 403, message: msg };
     }
+
+    // Selalu expose pesan error asli untuk memudahkan debugging.
+    if (msg) {
+      return { status: 500, message: msg };
+    }
   }
 
   return { status: 500, message: "Internal Server Error" };

@@ -108,9 +108,11 @@ export async function listSubjects(
     conditions.push(eq(subjects.isActive, true));
   }
   if (filters.majorId) {
+    assertUuid(filters.majorId);
     conditions.push(eq(subjects.majorId, filters.majorId));
   }
   if (filters.gradeLevelId) {
+    assertUuid(filters.gradeLevelId);
     conditions.push(eq(subjects.gradeLevelId, filters.gradeLevelId));
   }
   if (filters.semester) {
