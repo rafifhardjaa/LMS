@@ -111,6 +111,39 @@ export interface StudentSummary {
   gradeName: string | null;
 }
 
+export interface JadwalPelajaran {
+  id: string;
+  classId: string;
+  className: string;
+  classSection: string;
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  gradeLevelId: string;
+  gradeCode: string;
+  majorId: string;
+  majorCode: string;
+  majorName: string;
+  hari: string;
+  sesi: number;
+  waktuMulai: string;
+  waktuSelesai: string;
+  durasi: number;
+  bentrokKelas: number | null;
+  durasiLebihDari90: number | null;
+  diLuarJamKerja: number | null;
+  jatuhDiIstirahat: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JadwalPelajaranFilters {
+  classId?: string;
+  gradeLevelId?: string;
+  majorId?: string;
+  hari?: string;
+}
+
 export interface MajorInput {
   code: string;
   name: string;
@@ -291,6 +324,12 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<unknown>>(`/api/v1/students/${id}`, {
         method: "DELETE",
       }),
+  },
+  jadwalPelajaran: {
+    list: (filters: JadwalPelajaranFilters = {}) =>
+      apiFetch<ApiSuccess<JadwalPelajaran[]>>(
+        `/api/v1/jadwal-pelajaran${queryString(filters)}`
+      ),
   },
   teacherAssignments: {
     listSubjects: (filters: { teacherId?: string; subjectId?: string } = {}) =>
