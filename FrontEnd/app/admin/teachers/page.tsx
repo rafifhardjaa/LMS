@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Database, UserPlus } from "lucide-react";
+import { Download, UserPlus, UserRoundCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { TeacherStats } from "@/components/admin/teacher-stats";
 import { TeachersSidePanels } from "@/components/admin/teachers-side-panels";
 import { TeachersTable } from "@/components/admin/teachers-table";
 import { AddTeacherDialog } from "@/components/admin/add-teacher-dialog";
+import { AddPlacementDialog } from "@/components/admin/add-placement-dialog";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import { useAuthStore } from "@/lib/store/auth-store";
 
@@ -14,6 +15,7 @@ export default function TeachersPage() {
   const role = useAuthStore((state) => state.user?.role ?? "admin");
   const isAdmin = role === "admin";
   const [addTeacherOpen, setAddTeacherOpen] = useState(false);
+  const [placementOpen, setPlacementOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
@@ -45,12 +47,12 @@ export default function TeachersPage() {
             <StaggerItem>
               <motion.button
                 type="button"
-                onClick={() => window.alert("Impor Data Dapodik")}
+                onClick={() => setPlacementOpen(true)}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
               >
-                <Database className="size-4 text-[#6c5dd3]" /> Impor Data Dapodik
+                <UserRoundCheck className="size-4 text-[#6c5dd3]" /> Penempatan
               </motion.button>
             </StaggerItem>
             <StaggerItem>
@@ -78,6 +80,7 @@ export default function TeachersPage() {
       </FadeIn>
 
       <AddTeacherDialog open={addTeacherOpen} onOpenChange={setAddTeacherOpen} onSuccess={() => setRefreshKey(k => k + 1)} />
+      <AddPlacementDialog open={placementOpen} onOpenChange={setPlacementOpen} onSuccess={() => setRefreshKey(k => k + 1)} />
     </div>
   );
 }
