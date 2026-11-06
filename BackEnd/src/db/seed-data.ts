@@ -29,12 +29,16 @@ export const majorsData: SeedMajor[] = [
     "name": "Kuliner"
   },
   {
-    "code": "RPL",
-    "name": "Rekayasa Perangkat Lunak"
+    "code": "PPLG",
+    "name": "Pengembangan Perangkat Lunak dan Gim"
   },
   {
-    "code": "TKJ",
-    "name": "Teknik Komputer dan Jaringan"
+    "code": "TJKT",
+    "name": "Teknik Jaringan Komputer dan Telekomunikasi"
+  },
+  {
+    "code": "TKI",
+    "name": "Teknik Kimia Industri"
   },
   {
     "code": "TKR",
@@ -60,145 +64,217 @@ export const gradeLevelsData: SeedGradeLevel[] = [
 export const classesData: SeedClass[] = [
   {
     "name": "X RPL A",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "X",
     "section": "A"
   },
   {
     "name": "X RPL B",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "X",
     "section": "B"
   },
   {
     "name": "X RPL C",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "X",
     "section": "C"
   },
   {
     "name": "X RPL D",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "X",
     "section": "D"
   },
   {
     "name": "XI RPL A",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XI",
     "section": "A"
   },
   {
     "name": "XI RPL B",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XI",
     "section": "B"
   },
   {
     "name": "XI RPL C",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XI",
     "section": "C"
   },
   {
     "name": "XI RPL D",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XI",
     "section": "D"
   },
   {
     "name": "XII RPL A",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XII",
     "section": "A"
   },
   {
     "name": "XII RPL B",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XII",
     "section": "B"
   },
   {
     "name": "XII RPL C",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XII",
     "section": "C"
   },
   {
     "name": "XII RPL D",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XII",
     "section": "D"
   },
   {
     "name": "X TKJ A",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "X",
     "section": "A"
   },
   {
     "name": "X TKJ B",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "X",
     "section": "B"
   },
   {
     "name": "X TKJ C",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "X",
     "section": "C"
   },
   {
     "name": "X TKJ D",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "X",
     "section": "D"
   },
   {
     "name": "XI TKJ A",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XI",
     "section": "A"
   },
   {
     "name": "XI TKJ B",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XI",
     "section": "B"
   },
   {
     "name": "XI TKJ C",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XI",
     "section": "C"
   },
   {
     "name": "XI TKJ D",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XI",
     "section": "D"
   },
   {
     "name": "XII TKJ A",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XII",
     "section": "A"
   },
   {
     "name": "XII TKJ B",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XII",
     "section": "B"
   },
   {
     "name": "XII TKJ C",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XII",
     "section": "C"
   },
   {
     "name": "XII TKJ D",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
+    "gradeCode": "XII",
+    "section": "D"
+  },
+  {
+    "name": "X TKI A",
+    "majorCode": "TKI",
+    "gradeCode": "X",
+    "section": "A"
+  },
+  {
+    "name": "X TKI B",
+    "majorCode": "TKI",
+    "gradeCode": "X",
+    "section": "B"
+  },
+  {
+    "name": "X TKI C",
+    "majorCode": "TKI",
+    "gradeCode": "X",
+    "section": "C"
+  },
+  {
+    "name": "X TKI D",
+    "majorCode": "TKI",
+    "gradeCode": "X",
+    "section": "D"
+  },
+  {
+    "name": "XI TKI A",
+    "majorCode": "TKI",
+    "gradeCode": "XI",
+    "section": "A"
+  },
+  {
+    "name": "XI TKI B",
+    "majorCode": "TKI",
+    "gradeCode": "XI",
+    "section": "B"
+  },
+  {
+    "name": "XI TKI C",
+    "majorCode": "TKI",
+    "gradeCode": "XI",
+    "section": "C"
+  },
+  {
+    "name": "XI TKI D",
+    "majorCode": "TKI",
+    "gradeCode": "XI",
+    "section": "D"
+  },
+  {
+    "name": "XII TKI A",
+    "majorCode": "TKI",
+    "gradeCode": "XII",
+    "section": "A"
+  },
+  {
+    "name": "XII TKI B",
+    "majorCode": "TKI",
+    "gradeCode": "XII",
+    "section": "B"
+  },
+  {
+    "name": "XII TKI C",
+    "majorCode": "TKI",
+    "gradeCode": "XII",
+    "section": "C"
+  },
+  {
+    "name": "XII TKI D",
+    "majorCode": "TKI",
     "gradeCode": "XII",
     "section": "D"
   },
@@ -3113,7 +3189,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Algoritma dan Pemrograman",
     "code": "RPL-X-1",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "X",
     "semester": "Ganjil",
     
@@ -3122,7 +3198,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Basis Data Dasar",
     "code": "RPL-X-2",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "X",
     "semester": "Ganjil",
     
@@ -3131,7 +3207,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Pemrograman Web",
     "code": "RPL-XI-1",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XI",
     "semester": "Ganjil",
     
@@ -3140,7 +3216,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Pemrograman Berorientasi Objek",
     "code": "RPL-XI-2",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XI",
     "semester": "Ganjil",
     
@@ -3149,7 +3225,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Pemrograman Mobile",
     "code": "RPL-XII-1",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XII",
     "semester": "Ganjil",
     
@@ -3158,7 +3234,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Proyek Kreatif dan Kewirausahaan",
     "code": "RPL-XII-2",
-    "majorCode": "RPL",
+    "majorCode": "PPLG",
     "gradeCode": "XII",
     "semester": "Ganjil",
     
@@ -3167,7 +3243,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Jaringan Komputer",
     "code": "TKJ-X-1",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "X",
     "semester": "Ganjil",
     
@@ -3176,7 +3252,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Pemrograman Dasar",
     "code": "TKJ-X-2",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "X",
     "semester": "Ganjil",
     
@@ -3185,7 +3261,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Administrasi Sistem Jaringan",
     "code": "TKJ-XI-1",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XI",
     "semester": "Ganjil",
     
@@ -3194,7 +3270,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Keamanan Jaringan",
     "code": "TKJ-XI-2",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XI",
     "semester": "Ganjil",
     
@@ -3203,7 +3279,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Cloud Computing",
     "code": "TKJ-XII-1",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XII",
     "semester": "Ganjil",
     
@@ -3212,7 +3288,7 @@ export const subjectsData: SeedSubject[] = [
   {
     "name": "Server dan Virtualisasi",
     "code": "TKJ-XII-2",
-    "majorCode": "TKJ",
+    "majorCode": "TJKT",
     "gradeCode": "XII",
     "semester": "Ganjil",
     
