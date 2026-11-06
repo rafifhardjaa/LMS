@@ -12,6 +12,7 @@ import { classesRoute } from "./routes/classes-route";
 import { teacherAssignmentsRoute } from "./routes/teacher-assignments-route";
 import { teachersRoute } from "./routes/teachers-route";
 import { studentsRoute } from "./routes/students-route";
+import { jadwalPelajaranRoute } from "./routes/jadwal-pelajaran-route";
 import { modulesRoute } from "./routes/modules-route";
 import { discussionsRoute } from "./routes/discussions-route";
 import { lessonsRoute } from "./routes/lessons-route";
@@ -130,6 +131,7 @@ const app = new Elysia()
   .use(classesRoute)
   .use(teacherAssignmentsRoute)
   .use(teachersRoute)
+  .use(jadwalPelajaranRoute)
   .use(studentsRoute)
   .use(modulesRoute)
   .use(discussionsRoute)
