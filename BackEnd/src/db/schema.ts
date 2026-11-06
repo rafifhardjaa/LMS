@@ -6,6 +6,7 @@ import {
   pgTable,
   serial,
   text,
+  time,
   timestamp,
   uniqueIndex,
   uuid,
@@ -348,6 +349,45 @@ export const teacherClassrooms = pgTable(
     classIdx: index("teacher_classrooms_class_idx").on(table.classId),
     uniquePair: uniqueIndex("teacher_classrooms_unique_idx")
       .on(table.teacherId, table.classId),
+  })
+);
+
+export const jadwalPelajaran = pgTable(
+  "jadwal_pelajaran",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    gradeLevelId: uuid("grade_level_id")
+      .notNull()
+      .references(() => gradeLevels.id, { onDelete: "cascade" }),
+    majorId: uuid("major_id")
+      .notNull()
+      .references(() => majors.id, { onDelete: "cascade" }),
+    hari: varchar("hari", { length: 10 }).notNull(),
+    sesi: integer("sesi").notNull(),
+    mulai: time("mulai").notNull(),
+    selesai: time("selesai").notNull(),
+    durasi: integer("durasi").notNull(),
+    bentrokKelas: integer("bentrok_kelas").default(0),
+    durasiLebihDari90: integer("durasi_lebih_dari_90").default(0),
+    diLuarJamKerja: integer("di_luar_jam_kerja").default(0),
+    jatuhDiIstirahat: integer("jatuh_di_istirahat").default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    classHariSesiIdx: index("jadwal_pelajaran_class_hari_sesi_idx").on(
+      table.classId,
+      table.hari,
+      table.sesi
+    ),
+    subjectIdx: index("jadwal_pelajaran_subject_idx").on(table.subjectId),
+    majorIdx: index("jadwal_pelajaran_major_idx").on(table.majorId),
   })
 );
 
