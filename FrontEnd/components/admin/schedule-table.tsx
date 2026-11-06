@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -9,81 +9,122 @@ import {
   Eye,
   Filter,
   LayoutGrid,
+  Loader2,
   PencilLine,
   Printer,
   RefreshCw,
   Rows3,
   Search,
+  TriangleAlert,
   Timer,
 } from "lucide-react";
+import { masterDataApi, type JadwalPelajaran } from "@/lib/api/master-data";
 
-type Session = {
-  id: string;
-  sesi: number;
-  mulai: string;
-  selesai: string;
-  waktu: string;
-  kelas: string;
-  tingkat: "X" | "XI" | "XII";
-  rombel: string;
-  mapel: string;
-  kategori: string;
-  fase: string;
-  durasi: number;
-  status: "Bebas Bentrok";
-};
+const HARI_LIST = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"] as const;
+const PAGE_SIZE = 10;
 
-const sessions: Session[] = [
-  { id: "s1", sesi: 1, mulai: "07:00", selesai: "08:00", waktu: "Pagi Utama", kelas: "X TJKT", tingkat: "X", rombel: "Ruang Teori 1", mapel: "Dasar-dasar TJKT", kategori: "Kejuruan", fase: "Fase E", durasi: 60, status: "Bebas Bentrok" },
-  { id: "s2", sesi: 2, mulai: "08:00", selesai: "09:00", waktu: "Pagi", kelas: "X TJKT", tingkat: "X", rombel: "Lab Komputer 1", mapel: "Informatika", kategori: "Umum", fase: "Fase E", durasi: 60, status: "Bebas Bentrok" },
-  { id: "s3", sesi: 3, mulai: "09:15", selesai: "10:45", waktu: "Menengah", kelas: "X TJKT", tingkat: "X", rombel: "Ruang Teori 1", mapel: "Pendidikan Agama dan Budi Pekerti", kategori: "Normatif", fase: "Fase E", durasi: 90, status: "Bebas Bentrok" },
-  { id: "s4", sesi: 4, mulai: "10:45", selesai: "12:00", waktu: "Menengah", kelas: "X TJKT", tingkat: "X", rombel: "Ruang Teori 1", mapel: "Matematika", kategori: "Umum", fase: "Fase E", durasi: 75, status: "Bebas Bentrok" },
-  { id: "s5", sesi: 5, mulai: "12:15", selesai: "13:45", waktu: "Siang", kelas: "X TJKT", tingkat: "X", rombel: "Ruang Teori 1", mapel: "Bahasa Indonesia", kategori: "Umum", fase: "Fase E", durasi: 90, status: "Bebas Bentrok" },
-  { id: "s6", sesi: 6, mulai: "13:45", selesai: "15:00", waktu: "Sore", kelas: "X TJKT", tingkat: "X", rombel: "Studio Kewirausahaan", mapel: "Projek Kreatif dan Kewirausahaan (PKK)", kategori: "Kejuruan", fase: "Fase E", durasi: 75, status: "Bebas Bentrok" },
-  { id: "s7", sesi: 3, mulai: "09:15", selesai: "10:45", waktu: "Menengah", kelas: "XI PPLG", tingkat: "XI", rombel: "Ruang Teori 3", mapel: "Sejarah", kategori: "Umum", fase: "Fase F", durasi: 90, status: "Bebas Bentrok" },
-  { id: "s8", sesi: 4, mulai: "10:45", selesai: "12:00", waktu: "Menengah", kelas: "XI PPLG", tingkat: "XI", rombel: "Lab RPL 2", mapel: "Pemrograman Berorientasi Objek", kategori: "Kejuruan", fase: "Fase F", durasi: 75, status: "Bebas Bentrok" },
-  { id: "s9", sesi: 5, mulai: "12:15", selesai: "13:45", waktu: "Siang", kelas: "XI PPLG", tingkat: "XI", rombel: "Lab RPL 2", mapel: "Pemrograman Web & Bergerak", kategori: "Kejuruan", fase: "Fase F", durasi: 90, status: "Bebas Bentrok" },
-  { id: "s10", sesi: 3, mulai: "09:15", selesai: "10:45", waktu: "Menengah", kelas: "XII DKV", tingkat: "XII", rombel: "Studio Animasi", mapel: "Animasi 2D dan 3D", kategori: "Kejuruan", fase: "Fase F Lanjutan", durasi: 90, status: "Bebas Bentrok" },
-];
+function hhmm(value: string) {
+  return (value ?? "").slice(0, 5);
+}
 
-const days = [
-  { label: "Semua Hari (810)", value: "Semua" },
-  { label: "Senin (162)", value: "Senin" },
-  { label: "Selasa (162)", value: "Selasa" },
-  { label: "Rabu (162)", value: "Rabu" },
-  { label: "Kamis (162)", value: "Kamis" },
-  { label: "Jumat (162)", value: "Jumat" },
-];
-
-const PAGE_COUNT = 81;
+function statusPelajaran(row: JadwalPelajaran): { label: string; className: string } {
+  if ((row.bentrokKelas ?? 0) > 0) {
+    return { label: "Bentrok Kelas", className: "bg-[#fef2f2] text-[#dc2626]" };
+  }
+  if ((row.diLuarJamKerja ?? 0) > 0) {
+    return { label: "Di Luar Jam Kerja", className: "bg-[#fffbeb] text-[#d97706]" };
+  }
+  if ((row.jatuhDiIstirahat ?? 0) > 0) {
+    return { label: "Jatuh di Istirahat", className: "bg-[#fffbeb] text-[#d97706]" };
+  }
+  if ((row.durasiLebihDari90 ?? 0) > 0) {
+    return { label: "Durasi > 90 Menit", className: "bg-[#fffbeb] text-[#d97706]" };
+  }
+  return { label: "Bebas Bentrok", className: "bg-[#ecfdf5] text-[#059669]" };
+}
 
 export function ScheduleTable({ aside }: { aside: ReactNode }) {
   const [query, setQuery] = useState("");
   const [tingkat, setTingkat] = useState("Semua Tingkat");
-  const [jurusan, setJurusan] = useState("Semua Jurusan (810 Sesi)");
+  const [jurusan, setJurusan] = useState("Semua Jurusan");
   const [sesi, setSesi] = useState("Semua Sesi (1-6)");
   const [day, setDay] = useState("Semua");
   const [view, setView] = useState<"Tabel" | "Grid">("Tabel");
   const [page, setPage] = useState(1);
+  const [data, setData] = useState<JadwalPelajaran[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await masterDataApi.jadwalPelajaran.list();
+        if (cancelled) return;
+        if (res.error) {
+          throw new Error(
+            (res.error as { message?: string }).message ?? "Gagal memuat jadwal pelajaran"
+          );
+        }
+        setData(res.data?.data ?? []);
+      } catch (e) {
+        if (!cancelled) {
+          setData([]);
+          setError(e instanceof Error ? e.message : "Gagal memuat jadwal pelajaran");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+
+  const reload = () => {
+    setLoading(true);
+    setError(null);
+    setRefreshKey((k) => k + 1);
+  };
+
+  const dayTabs = useMemo(
+    () => [
+      { value: "Semua", label: `Semua Hari (${data.length})` },
+      ...HARI_LIST.map((hari) => ({
+        value: hari,
+        label: `${hari} (${data.filter((d) => d.hari === hari).length})`,
+      })),
+    ],
+    [data]
+  );
 
   const rows = useMemo(
     () =>
-      sessions.filter((s) => {
+      data.filter((s) => {
         const q = query.trim().toLowerCase();
         return (
-          (!q || [s.kelas, s.mapel, s.rombel, s.kategori].some((v) => v.toLowerCase().includes(q))) &&
-          (tingkat === "Semua Tingkat" || s.tingkat === tingkat) &&
-          (jurusan.startsWith("Semua") || s.kelas.includes(jurusan.split(" ")[0])) &&
+          (!q || [s.className, s.subjectName, s.majorName, s.hari].some((v) => (v ?? "").toLowerCase().includes(q))) &&
+          (day === "Semua" || s.hari === day) &&
+          (tingkat === "Semua Tingkat" || s.gradeCode === tingkat) &&
+          (jurusan === "Semua Jurusan" || s.majorCode === jurusan) &&
           (sesi.startsWith("Semua") || s.sesi === Number(sesi.match(/\d/)?.[0]))
         );
       }),
-    [query, tingkat, jurusan, sesi]
+    [data, query, tingkat, jurusan, sesi, day]
   );
+
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const paged = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const reset = () => {
     setQuery("");
     setTingkat("Semua Tingkat");
-    setJurusan("Semua Jurusan (810 Sesi)");
+    setJurusan("Semua Jurusan");
     setSesi("Semua Sesi (1-6)");
     setDay("Semua");
   };
@@ -93,7 +134,7 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
       <section className="flex flex-col gap-4 rounded-2xl border border-[#eef0f5] bg-white p-4 shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div role="tablist" aria-label="Filter hari jadwal" className="flex flex-wrap items-center gap-1.5">
-            {days.map((item) => (
+            {dayTabs.map((item) => (
               <button
                 key={item.value}
                 type="button"
@@ -162,7 +203,7 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
                 onChange={(e) => setJurusan(e.target.value)}
                 className="h-11 w-full appearance-none rounded-full bg-[#f1f4f9] px-4 pr-9 text-sm text-[#181c20] outline-none"
               >
-                <option>Semua Jurusan (810 Sesi)</option>
+                <option>Semua Jurusan</option>
                 <option>TJKT</option>
                 <option>PPLG</option>
                 <option>DKV</option>
@@ -206,10 +247,11 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
           <div className="flex flex-col justify-between gap-3 px-5 py-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
               <h2 className="max-w-[300px] text-base font-bold leading-5 text-[#181c20]">Daftar Sesi Pembelajaran Alokasi Jam</h2>
+              <span className="rounded-full bg-[#e5deff] px-2 py-1 text-[10px] font-semibold text-[#4331a8]">{rows.length} Sesi Ditampilkan</span>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" aria-label="Muat ulang jadwal" onClick={() => window.alert("Muat ulang jadwal")} className="flex size-9 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff]">
-                <RefreshCw className="size-4" />
+              <button type="button" aria-label="Muat ulang jadwal" onClick={() => reload()} disabled={loading} className="flex size-9 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] disabled:opacity-50">
+                <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
               </button>
               <button type="button" aria-label="Cetak jadwal" onClick={() => window.alert("Cetak jadwal")} className="flex size-9 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff]">
                 <Printer className="size-4" />
@@ -229,7 +271,9 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eceef3]">
-                {rows.map((s) => (
+                {paged.map((s) => {
+                  const status = statusPelajaran(s);
+                  return (
                   <tr key={s.id} className="hover:bg-[#fbfcfd]">
                     <td className="px-3 py-5 pl-5">
                       <div className="flex items-center gap-2.5">
@@ -245,24 +289,24 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
                           Sesi {s.sesi}
                         </span>
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-[#181c20]">{s.mulai} - {s.selesai}</span>
-                          <span className="text-[10px] text-[#787584]">{s.waktu}</span>
+                          <span className="text-xs font-bold text-[#181c20]">{hhmm(s.waktuMulai)} - {hhmm(s.waktuSelesai)}</span>
+                          <span className="text-[10px] text-[#787584]">{s.hari}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-5">
                       <div className="flex items-center gap-2">
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#e5deff] text-[10px] font-bold text-[#4331a8]">{s.tingkat}</span>
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#e5deff] text-[10px] font-bold text-[#4331a8]">{s.gradeCode}</span>
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-[#181c20]">{s.kelas}</span>
-                          <span className="text-[10px] text-[#787584]">{s.rombel}</span>
+                          <span className="text-xs font-bold text-[#181c20]">{s.className}</span>
+                          <span className="text-[10px] text-[#787584]">{s.majorName ?? s.majorCode}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-5">
                       <div className="flex flex-col">
-                        <span className="text-[11px] font-semibold text-[#6c5dd3]">{s.mapel}</span>
-                        <span className="text-[10px] text-[#4e566c]">{s.kategori} • {s.fase}</span>
+                        <span className="text-[11px] font-semibold text-[#6c5dd3]">{s.subjectName}</span>
+                        <span className="text-[10px] text-[#4e566c]">{s.majorCode} • {s.gradeCode}</span>
                       </div>
                     </td>
                     <td className="px-3 py-5">
@@ -271,23 +315,39 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
                       </span>
                     </td>
                     <td className="px-3 py-5">
-                      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[10px] font-bold text-[#059669]">
-                        <CheckCircle2 className="size-3.5" /> {s.status}
+                      <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-bold ${status.className}`}>
+                        <CheckCircle2 className="size-3.5" /> {status.label}
                       </span>
                     </td>
                     <td className="px-3 py-5 text-center">
                       <div className="inline-flex items-center gap-1">
-                        <button type="button" aria-label="Detail sesi" onClick={() => window.alert(`Detail sesi ${s.sesi} ${s.kelas}`)} className="rounded-full p-1.5 text-[#6c5dd3] hover:bg-[#6c5dd3]/10">
+                        <button type="button" aria-label="Detail sesi" onClick={() => window.alert(`Detail sesi ${s.sesi} ${s.className}`)} className="rounded-full p-1.5 text-[#6c5dd3] hover:bg-[#6c5dd3]/10">
                           <Eye className="size-[18px]" />
                         </button>
-                        <button type="button" aria-label="Edit sesi" onClick={() => window.alert(`Edit sesi ${s.sesi} ${s.kelas}`)} className="rounded-full p-1.5 text-[#4e566c] hover:bg-[#eceef3]">
+                        <button type="button" aria-label="Edit sesi" onClick={() => window.alert(`Edit sesi ${s.sesi} ${s.className}`)} className="rounded-full p-1.5 text-[#4e566c] hover:bg-[#eceef3]">
                           <PencilLine className="size-[18px]" />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))}
-                {!rows.length && (
+                  );
+                })}
+                {loading && paged.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#787584]">
+                      <span className="inline-flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> Memuat data jadwal pelajaran…</span>
+                    </td>
+                  </tr>
+                )}
+                {!loading && error && paged.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#b91c1c]">
+                      <span className="inline-flex items-center gap-2"><TriangleAlert className="size-4" /> {error}</span>
+                      <button type="button" onClick={() => reload()} className="ml-2 font-semibold underline">Coba lagi</button>
+                    </td>
+                  </tr>
+                )}
+                {!loading && !error && paged.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#787584]">
                       Tidak ada sesi yang cocok dengan filter.
@@ -299,27 +359,29 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
           </div>
           <div className="flex flex-col gap-3 bg-[#f8f9fc] px-5 py-3 text-[11px] text-[#4e566c] sm:flex-row sm:items-center sm:justify-between">
             <span>
-              Menampilkan <b className="text-[#181c20]">1 – {rows.length}</b> dari <b className="text-[#181c20]">810</b>
-              <br />Total Sesi Terjadwal
+              Menampilkan <b className="text-[#181c20]">{paged.length ? (safePage - 1) * PAGE_SIZE + 1 : 0} – {(safePage - 1) * PAGE_SIZE + paged.length}</b> dari <b className="text-[#181c20]">{rows.length}</b>
+              <br />Sesi Terjadwal
             </span>
             <nav aria-label="Paginasi jadwal" className="flex items-center gap-1">
-              <button type="button" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage(page - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] disabled:opacity-40">
+              <button type="button" aria-label="Halaman sebelumnya" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] disabled:opacity-40">
                 <ChevronLeft className="size-4" />
               </button>
-              {[1, 2, 3].map((n) => (
+              {Array.from({ length: Math.min(pageCount, 3) }, (_, i) => i + 1).map((n) => (
                 <button
                   key={n}
                   type="button"
-                  aria-current={page === n ? "page" : undefined}
+                  aria-current={safePage === n ? "page" : undefined}
                   onClick={() => setPage(n)}
-                  className={`size-8 rounded-full font-semibold ${page === n ? "bg-[#5343b9] text-white" : "text-[#181c20] hover:bg-[#eceef3]"}`}
+                  className={`size-8 rounded-full font-semibold ${safePage === n ? "bg-[#5343b9] text-white" : "text-[#181c20] hover:bg-[#eceef3]"}`}
                 >
                   {n}
                 </button>
               ))}
-              <span className="px-1">…</span>
-              <button type="button" onClick={() => setPage(PAGE_COUNT)} className="size-8 rounded-full text-[#181c20]">{PAGE_COUNT}</button>
-              <button type="button" aria-label="Halaman berikutnya" disabled={page >= PAGE_COUNT} onClick={() => setPage(page + 1)} className="flex size-8 items-center justify-center rounded-full text-[#181c20] disabled:opacity-40">
+              {pageCount > 3 && <span className="px-1">…</span>}
+              {pageCount > 3 && (
+                <button type="button" onClick={() => setPage(pageCount)} className="size-8 rounded-full text-[#181c20]">{pageCount}</button>
+              )}
+              <button type="button" aria-label="Halaman berikutnya" disabled={safePage >= pageCount} onClick={() => setPage(safePage + 1)} className="flex size-8 items-center justify-center rounded-full text-[#181c20] disabled:opacity-40">
                 <ChevronRight className="size-4" />
               </button>
             </nav>
