@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   BookOpen,
   CheckCircle2,
   ChevronDown,
+  GraduationCap,
   Info,
   UserRoundCheck,
   X,
@@ -68,15 +69,41 @@ export function AddPlacementDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState(EMPTY_STATE);
+  const [teacherSearch, setTeacherSearch] = useState("");
+  const [teacherMenuOpen, setTeacherMenuOpen] = useState(false);
+  const teacherMenuRef = useRef<HTMLDivElement>(null);
 
   const selectedTeacher = teachers.find((teacher) => teacher.id === form.teacherId);
   const selectedSubject = subjects.find((subject) => subject.id === form.subjectId);
+
+  const filteredTeachers = useMemo(() => {
+    const q = teacherSearch.trim().toLowerCase();
+    if (!q) return teachers;
+    return teachers.filter((teacher) =>
+      [teacher.fullName, teacher.nomorInduk, teacher.email].some((value) =>
+        (value ?? "").toLowerCase().includes(q)
+      )
+    );
+  }, [teachers, teacherSearch]);
+
+  useEffect(() => {
+    if (!teacherMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!teacherMenuRef.current?.contains(event.target as Node)) {
+        setTeacherMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [teacherMenuOpen]);
 
   const resetState = () => {
     setForm(EMPTY_STATE);
     setSubjects([]);
     setLoadingSubjects(false);
     setSubmitting(false);
+    setTeacherSearch("");
+    setTeacherMenuOpen(false);
   };
 
   useEffect(() => {
@@ -276,34 +303,87 @@ export function AddPlacementDialog({
                 </div>
                 <p className="mt-0.5 text-[11px] text-slate-500">
                   {selectedTeacher
-                    ? `NIP: ${selectedTeacher.nomorInduk ?? "—"}${
+                    ? `NIP: ${selectedTeacher.nomorInduk ?? "-"}${
                         selectedTeacher.email ? ` • ${selectedTeacher.email}` : ""
                       }`
                     : "Pilih guru dari daftar untuk mulai menempatkan."}
                 </p>
               </div>
             </div>
-            <div className="relative min-w-[240px]">
-              <UserRoundCheck className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-slate-400" />
-              <select
-                value={form.teacherId}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, teacherId: event.target.value }))
-                }
+            <div ref={teacherMenuRef} className="relative min-w-[260px]">
+              <button
+                type="button"
+                onClick={() => setTeacherMenuOpen((prev) => !prev)}
                 disabled={!teachers.length}
-                className="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs font-semibold text-slate-700 shadow-sm outline-none transition-all hover:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                aria-haspopup="listbox"
+                aria-expanded={teacherMenuOpen}
+                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-left text-xs font-semibold text-slate-700 shadow-sm outline-none transition-all hover:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
               >
-                <option value="">
-                  {teachers.length ? "Pilih guru" : "Belum ada data guru"}
-                </option>
-                {teachers.map((teacher) => (
-                  <option key={teacher.id} value={teacher.id}>
-                    {teacher.fullName}
-                    {teacher.nomorInduk ? ` (${teacher.nomorInduk})` : ""}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-[18px] -translate-y-1/2 text-slate-400" />
+                <UserRoundCheck className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-slate-400" />
+                <span className={`truncate ${selectedTeacher ? "" : "text-slate-400"}`}>
+                  {selectedTeacher
+                    ? `${selectedTeacher.fullName} (${selectedTeacher.nomorInduk ?? "-"})`
+                    : teachers.length
+                      ? "Cari dan pilih guru"
+                      : "Belum ada data guru"}
+                </span>
+                <ChevronDown
+                  className={`pointer-events-none absolute right-2.5 top-1/2 size-[18px] -translate-y-1/2 text-slate-400 transition-transform ${
+                    teacherMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {teacherMenuOpen ? (
+                <div className="absolute right-0 z-30 mt-1 w-full min-w-[280px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10">
+                  <div className="border-b border-slate-100 p-2">
+                    <input
+                      type="text"
+                      value={teacherSearch}
+                      onChange={(event) => setTeacherSearch(event.target.value)}
+                      placeholder="Cari nama, NIP, atau email..."
+                      autoFocus
+                      className="h-9 w-full rounded-lg bg-[#f1f4f9] px-3 text-xs font-medium text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#6c5dd3]/20"
+                    />
+                  </div>
+                  <ul role="listbox" className="max-h-64 overflow-y-auto p-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+                    {filteredTeachers.map((teacher) => (
+                      <li key={teacher.id} role="option" aria-selected={teacher.id === form.teacherId}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, teacherId: teacher.id }));
+                            setTeacherMenuOpen(false);
+                            setTeacherSearch("");
+                          }}
+                          className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-[#f5f3ff] ${
+                            teacher.id === form.teacherId ? "bg-[#f5f3ff]" : ""
+                          }`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate text-xs font-semibold text-slate-800">
+                              {teacher.fullName}
+                            </span>
+                            <span className="block truncate text-[10px] text-slate-400">
+                              {teacher.nomorInduk ?? "-"}
+                              {teacher.email ? ` • ${teacher.email}` : ""}
+                            </span>
+                          </span>
+                          {!teacher.isActive ? (
+                            <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-700">
+                              Nonaktif
+                            </span>
+                          ) : null}
+                        </button>
+                      </li>
+                    ))}
+                    {!filteredTeachers.length ? (
+                      <li className="px-3 py-6 text-center text-[11px] text-slate-400">
+                        Tidak ada guru yang cocok dengan pencarian.
+                      </li>
+                    ) : null}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -322,49 +402,30 @@ export function AddPlacementDialog({
                 Pilih kompetensi keahlian sasaran pengajaran kurikulum.
               </span>
             </div>
-            <div className="mt-2 grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
-              {majors.map((major) => {
-                const selected = form.majorId === major.id;
-                return (
-                  <button
-                    key={major.id}
-                    type="button"
-                    onClick={() =>
-                      setForm((prev) => ({ ...prev, majorId: major.id, subjectId: "" }))
-                    }
-                    className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                      selected
-                        ? "border-[#6c5dd3] bg-[#f5f3ff]/70 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-[#c9c4d5]"
-                    }`}
-                  >
-                    <span
-                      className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${
-                        selected ? "border-[#6c5dd3]" : "border-slate-300"
-                      }`}
-                    >
-                      {selected ? <span className="size-2 rounded-full bg-[#6c5dd3]" /> : null}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-bold text-slate-900">
-                        {major.code} — {major.name}
-                      </span>
-                      <span
-                        className={`mt-0.5 block text-[10px] font-medium ${
-                          selected ? "text-[#6c5dd3]" : "text-slate-400"
-                        }`}
-                      >
-                        {major.classCount} kelas • {major.subjectCount} mapel
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-              {!majors.length ? (
-                <p className="col-span-full rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-[11px] text-slate-400">
-                  Belum ada data konsentrasi keahlian.
-                </p>
-              ) : null}
+            <div className="relative mt-2">
+              <GraduationCap className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-slate-400" />
+              <select
+                value={form.majorId}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    majorId: event.target.value,
+                    subjectId: "",
+                  }))
+                }
+                disabled={!majors.length}
+                className="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-xs font-semibold text-slate-700 shadow-sm outline-none transition-all hover:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                <option value="">
+                  {majors.length ? "Pilih konsentrasi keahlian" : "Belum ada data konsentrasi keahlian"}
+                </option>
+                {majors.map((major) => (
+                  <option key={major.id} value={major.id}>
+                    {major.code} - {major.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-[18px] -translate-y-1/2 text-slate-400" />
             </div>
           </div>
 
