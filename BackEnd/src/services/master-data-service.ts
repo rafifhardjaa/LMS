@@ -536,30 +536,30 @@ export async function createTeacher(input: {
 
   if (input.majorId) assertUuid(input.majorId);
   if (input.gradeLevelId) assertUuid(input.gradeLevelId);
-  if (!input.subjectId) {
-    throw new BadRequestError("Mata pelajaran wajib dipilih");
-  }
-  assertUuid(input.subjectId);
 
-  const subjectRows = await db
-    .select({
-      id: subjects.id,
-      majorId: subjects.majorId,
-      gradeLevelId: subjects.gradeLevelId,
-    })
-    .from(subjects)
-    .where(and(eq(subjects.id, input.subjectId), eq(subjects.isActive, true)))
-    .limit(1);
+  if (input.subjectId) {
+    assertUuid(input.subjectId);
 
-  const subject = subjectRows[0];
-  if (!subject) {
-    throw new NotFoundError("Mata pelajaran tidak ditemukan");
-  }
-  if (input.gradeLevelId && subject.gradeLevelId !== input.gradeLevelId) {
-    throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan");
-  }
-  if (input.majorId && subject.majorId && subject.majorId !== input.majorId) {
-    throw new BadRequestError("Mata pelajaran tidak sesuai jurusan");
+    const subjectRows = await db
+      .select({
+        id: subjects.id,
+        majorId: subjects.majorId,
+        gradeLevelId: subjects.gradeLevelId,
+      })
+      .from(subjects)
+      .where(and(eq(subjects.id, input.subjectId), eq(subjects.isActive, true)))
+      .limit(1);
+
+    const subject = subjectRows[0];
+    if (!subject) {
+      throw new NotFoundError("Mata pelajaran tidak ditemukan");
+    }
+    if (input.gradeLevelId && subject.gradeLevelId !== input.gradeLevelId) {
+      throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan");
+    }
+    if (input.majorId && subject.majorId && subject.majorId !== input.majorId) {
+      throw new BadRequestError("Mata pelajaran tidak sesuai jurusan");
+    }
   }
 
   const existing = await db
@@ -628,10 +628,12 @@ export async function createTeacher(input: {
       assignedAt: new Date(),
     });
 
-    await tx.insert(teacherSubjects).values({
-      teacherId: teacher.id,
-      subjectId: input.subjectId!,
-    });
+    if (input.subjectId) {
+      await tx.insert(teacherSubjects).values({
+        teacherId: teacher.id,
+        subjectId: input.subjectId,
+      });
+    }
 
     return teacher;
   });
