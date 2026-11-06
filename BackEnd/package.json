@@ -18,7 +18,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/nodemailer": "^8.0.2",
-    "drizzle-kit": "^0.31.11"
+    "drizzle-kit": "^0.31.11",
+    "xlsx": "^0.18.5"
   },
   "peerDependencies": {
     "typescript": "^7"
