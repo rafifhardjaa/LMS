@@ -92,6 +92,9 @@ export interface TeacherSummary {
   isActive: boolean;
   subjectCount: number;
   classCount: number;
+  majorCode: string | null;
+  majorName: string | null;
+  subjects: string | null;
 }
 
 export interface StudentSummary {
