@@ -9,6 +9,7 @@ import {
   teacherClassrooms,
   teacherSubjects,
   userRoles,
+  jadwalPelajaran,
   users,
 } from "../db/schema";
 import { BadRequestError, NotFoundError } from "../utils/response";
@@ -503,12 +504,64 @@ export async function listTeachers(
       isActive: users.isActive,
       subjectCount: sql<number>`(select count(*)::int from teacher_subjects ts where ts.teacher_id = ${users.id})`,
       classCount: sql<number>`(select count(*)::int from teacher_classrooms tc where tc.teacher_id = ${users.id})`,
+      majorCode: sql<string>`(select m.code from teacher_classrooms tc join classes c on tc.class_id = c.id join majors m on m.id = c.major_id where tc.teacher_id = ${users.id} limit 1)`,
+      majorName: sql<string>`(select m.name from teacher_classrooms tc join classes c on tc.class_id = c.id join majors m on m.id = c.major_id where tc.teacher_id = ${users.id} limit 1)`,
+      subjects: sql<string>`(select string_agg(s.name, ', ' order by s.name) from teacher_subjects ts join subjects s on s.id = ts.subject_id where ts.teacher_id = ${users.id})`,
     })
     .from(users)
     .innerJoin(userRoles, eq(userRoles.userId, users.id))
     .innerJoin(roles, eq(roles.id, userRoles.roleId))
     .where(and(...conditions))
-    .orderBy(users.fullName);
+      .orderBy(users.fullName);
+}
+
+// ── Daftar jadwal pelajaran ────────────────────────────────────────────────
+export async function listJadwalPelajaran(filters: {
+  classId?: string;
+  gradeLevelId?: string;
+  majorId?: string;
+  hari?: string;
+}) {
+  const conditions: SQL[] = [];
+
+  if (filters.classId) conditions.push(eq(jadwalPelajaran.classId, filters.classId));
+  if (filters.gradeLevelId) conditions.push(eq(jadwalPelajaran.gradeLevelId, filters.gradeLevelId));
+  if (filters.majorId) conditions.push(eq(jadwalPelajaran.majorId, filters.majorId));
+  if (filters.hari) conditions.push(eq(jadwalPelajaran.hari, filters.hari));
+
+  return db
+    .select({
+      id: jadwalPelajaran.id,
+      classId: jadwalPelajaran.classId,
+      className: classes.name,
+      classSection: classes.section,
+      subjectId: jadwalPelajaran.subjectId,
+      subjectName: subjects.name,
+      subjectCode: subjects.code,
+      gradeLevelId: jadwalPelajaran.gradeLevelId,
+      gradeCode: gradeLevels.code,
+      majorId: jadwalPelajaran.majorId,
+      majorCode: majors.code,
+      majorName: majors.name,
+      hari: jadwalPelajaran.hari,
+      sesi: jadwalPelajaran.sesi,
+      waktuMulai: jadwalPelajaran.mulai,
+      waktuSelesai: jadwalPelajaran.selesai,
+      durasi: jadwalPelajaran.durasi,
+      bentrokKelas: jadwalPelajaran.bentrokKelas,
+      durasiLebihDari90: jadwalPelajaran.durasiLebihDari90,
+      diLuarJamKerja: jadwalPelajaran.diLuarJamKerja,
+      jatuhDiIstirahat: jadwalPelajaran.jatuhDiIstirahat,
+      createdAt: jadwalPelajaran.createdAt,
+      updatedAt: jadwalPelajaran.updatedAt,
+    })
+    .from(jadwalPelajaran)
+    .innerJoin(classes, eq(jadwalPelajaran.classId, classes.id))
+    .innerJoin(subjects, eq(jadwalPelajaran.subjectId, subjects.id))
+    .innerJoin(gradeLevels, eq(jadwalPelajaran.gradeLevelId, gradeLevels.id))
+    .innerJoin(majors, eq(jadwalPelajaran.majorId, majors.id))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(classes.name, jadwalPelajaran.hari, jadwalPelajaran.sesi);
 }
 
 // ── Buat guru baru ───────────────────────────────────────────────────
@@ -536,30 +589,30 @@ export async function createTeacher(input: {
 
   if (input.majorId) assertUuid(input.majorId);
   if (input.gradeLevelId) assertUuid(input.gradeLevelId);
-  if (!input.subjectId) {
-    throw new BadRequestError("Mata pelajaran wajib dipilih");
-  }
-  assertUuid(input.subjectId);
 
-  const subjectRows = await db
-    .select({
-      id: subjects.id,
-      majorId: subjects.majorId,
-      gradeLevelId: subjects.gradeLevelId,
-    })
-    .from(subjects)
-    .where(and(eq(subjects.id, input.subjectId), eq(subjects.isActive, true)))
-    .limit(1);
+  if (input.subjectId) {
+    assertUuid(input.subjectId);
 
-  const subject = subjectRows[0];
-  if (!subject) {
-    throw new NotFoundError("Mata pelajaran tidak ditemukan");
-  }
-  if (input.gradeLevelId && subject.gradeLevelId !== input.gradeLevelId) {
-    throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan");
-  }
-  if (input.majorId && subject.majorId && subject.majorId !== input.majorId) {
-    throw new BadRequestError("Mata pelajaran tidak sesuai jurusan");
+    const subjectRows = await db
+      .select({
+        id: subjects.id,
+        majorId: subjects.majorId,
+        gradeLevelId: subjects.gradeLevelId,
+      })
+      .from(subjects)
+      .where(and(eq(subjects.id, input.subjectId), eq(subjects.isActive, true)))
+      .limit(1);
+
+    const subject = subjectRows[0];
+    if (!subject) {
+      throw new NotFoundError("Mata pelajaran tidak ditemukan");
+    }
+    if (input.gradeLevelId && subject.gradeLevelId !== input.gradeLevelId) {
+      throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan");
+    }
+    if (input.majorId && subject.majorId && subject.majorId !== input.majorId) {
+      throw new BadRequestError("Mata pelajaran tidak sesuai jurusan");
+    }
   }
 
   const existing = await db
@@ -628,10 +681,12 @@ export async function createTeacher(input: {
       assignedAt: new Date(),
     });
 
-    await tx.insert(teacherSubjects).values({
-      teacherId: teacher.id,
-      subjectId: input.subjectId!,
-    });
+    if (input.subjectId) {
+      await tx.insert(teacherSubjects).values({
+        teacherId: teacher.id,
+        subjectId: input.subjectId,
+      });
+    }
 
     return teacher;
   });
