@@ -9,6 +9,7 @@ import {
   teacherClassrooms,
   teacherSubjects,
   userRoles,
+  jadwalPelajaran,
   users,
 } from "../db/schema";
 import { BadRequestError, NotFoundError } from "../utils/response";
@@ -511,7 +512,56 @@ export async function listTeachers(
     .innerJoin(userRoles, eq(userRoles.userId, users.id))
     .innerJoin(roles, eq(roles.id, userRoles.roleId))
     .where(and(...conditions))
-    .orderBy(users.fullName);
+      .orderBy(users.fullName);
+}
+
+// ── Daftar jadwal pelajaran ────────────────────────────────────────────────
+export async function listJadwalPelajaran(filters: {
+  classId?: string;
+  gradeLevelId?: string;
+  majorId?: string;
+  hari?: string;
+}) {
+  const conditions: SQL[] = [];
+
+  if (filters.classId) conditions.push(eq(jadwalPelajaran.classId, filters.classId));
+  if (filters.gradeLevelId) conditions.push(eq(jadwalPelajaran.gradeLevelId, filters.gradeLevelId));
+  if (filters.majorId) conditions.push(eq(jadwalPelajaran.majorId, filters.majorId));
+  if (filters.hari) conditions.push(eq(jadwalPelajaran.hari, filters.hari));
+
+  return db
+    .select({
+      id: jadwalPelajaran.id,
+      classId: jadwalPelajaran.classId,
+      className: classes.name,
+      classSection: classes.section,
+      subjectId: jadwalPelajaran.subjectId,
+      subjectName: subjects.name,
+      subjectCode: subjects.code,
+      gradeLevelId: jadwalPelajaran.gradeLevelId,
+      gradeCode: gradeLevels.code,
+      majorId: jadwalPelajaran.majorId,
+      majorCode: majors.code,
+      majorName: majors.name,
+      hari: jadwalPelajaran.hari,
+      sesi: jadwalPelajaran.sesi,
+      waktuMulai: jadwalPelajaran.mulai,
+      waktuSelesai: jadwalPelajaran.selesai,
+      durasi: jadwalPelajaran.durasi,
+      bentrokKelas: jadwalPelajaran.bentrokKelas,
+      durasiLebihDari90: jadwalPelajaran.durasiLebihDari90,
+      diLuarJamKerja: jadwalPelajaran.diLuarJamKerja,
+      jatuhDiIstirahat: jadwalPelajaran.jatuhDiIstirahat,
+      createdAt: jadwalPelajaran.createdAt,
+      updatedAt: jadwalPelajaran.updatedAt,
+    })
+    .from(jadwalPelajaran)
+    .innerJoin(classes, eq(jadwalPelajaran.classId, classes.id))
+    .innerJoin(subjects, eq(jadwalPelajaran.subjectId, subjects.id))
+    .innerJoin(gradeLevels, eq(jadwalPelajaran.gradeLevelId, gradeLevels.id))
+    .innerJoin(majors, eq(jadwalPelajaran.majorId, majors.id))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(classes.name, jadwalPelajaran.hari, jadwalPelajaran.sesi);
 }
 
 // ── Buat guru baru ───────────────────────────────────────────────────
