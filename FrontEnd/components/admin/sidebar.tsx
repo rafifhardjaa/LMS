@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Award,
   BookOpen,
+  CalendarDays,
   Folder,
   LayoutGrid,
   LifeBuoy,
@@ -23,7 +23,7 @@ const mainMenu = [
   { label: "Students (Siswa)", icon: Users, href: "/admin/students" },
   { label: "Course (Mapel)", icon: BookOpen, href: "/admin/course" },
   { label: "Resource (Modul)", icon: Folder, href: "/admin/resource" },
-  { label: "Certification (LSP)", icon: Award, href: "/admin/certification" },
+  { label: "Jadwal Pelajaran", icon: CalendarDays, href: "/admin/schedule" },
   { label: "Chat Konseling", icon: MessageCircle, href: "/admin/chatkonseling" },
   { label: "Transaction", icon: ReceiptText, href: "/admin/transaksi" },
 ];
@@ -123,31 +123,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               );
             })}
           </nav>
-        </div>
-
-        {/* Promo banner */}
-        <div className="relative p-4 rounded-2xl bg-[#f1f4f9] border border-[#e0e2e7]/30 flex flex-col gap-2 mt-auto overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div className="w-7 h-7 rounded-lg bg-[#e5deff] flex items-center justify-center text-[#6c5dd3]">
-              <School className="size-4" />
-            </div>
-          </div>
-          <div>
-            <span className="text-xs font-bold text-[#181c20] block">
-              New Dashboard UI
-            </span>
-            <p className="text-[11px] text-[#4e566c] leading-tight mt-0.5">
-              Check out the new dashboard view. Pages now load faster.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 pt-1">
-            <button type="button" className="text-[11px] font-semibold text-[#787584] hover:text-[#181c20]">
-              Dismiss
-            </button>
-            <button type="button" className="text-[11px] font-bold text-[#6c5dd3] hover:underline">
-              What&apos;s new?
-            </button>
-          </div>
         </div>
       </div>
 
