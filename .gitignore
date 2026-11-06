@@ -69,6 +69,10 @@ code.html
 # reference files (not part of codebase)
 classes.csv
 "jurusan&mapel.docx"
+Mapel_SMK_per_Jurusan.md
 pr-body-phase2.md
 server.log
 teacher_schedules.csv
+
+# Microsoft Office lock files
+~$*
