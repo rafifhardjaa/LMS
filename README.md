@@ -386,9 +386,12 @@ Folder `BackEnd/backups/` tidak ikut di-commit.
 | `bun run db:setup` | `db:migrate` lalu `seed` |
 | `bun run db:backup` | Backup `simanis` + `storage_simanis` ke `BackEnd/backups/` |
 | `bun run db:push` | Push schema langsung tanpa file migrasi (dev cepat) |
+| `bun run db:sync-curriculum` | Sinkronkan jurusan dan mapel dari referensi kurikulum (idempotent) |
 | `bun run seed` | Isi data awal ke database |
 
 > Jalankan semua perintah database dari folder `BackEnd`.
+
+`db:sync-curriculum` aman dijalankan berulang: hanya menambahkan jurusan/mapel yang belum ada tanpa menghapus data yang sudah terlanjur dibuat.
 
 ### FrontEnd
 
