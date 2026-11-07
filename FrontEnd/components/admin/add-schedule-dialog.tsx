@@ -487,8 +487,8 @@ export function AddScheduleDialog({
         </form>
         {mode === "edit" ? (
           <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:flex-none lg:border-l lg:border-t-0">
-            <div className="flex flex-col gap-2.5 pb-40">
-              <div className="sticky top-0 z-10 -mx-5 -mt-5 border-b border-slate-200/70 bg-[#f8f9fc] px-5 pb-3 pt-5">
+            <div className="flex flex-col gap-2 pb-40">
+              <div className="sticky top-0 z-10 border-b border-slate-200/70 bg-[#f8f9fc] px-5 pb-3 pt-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#787584]"><Search className="size-4 text-[#5343b9]" /> Langkah 1 · Pilih Jadwal</span>
                   <span className="text-[10px] font-semibold text-[#787584]">{loadingSchedules ? "Memuat..." : `${filteredSchedules.length} ditemukan`}</span>
