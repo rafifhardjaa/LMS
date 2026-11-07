@@ -40,7 +40,7 @@ function statusPelajaran(row: JadwalPelajaran): { label: string; className: stri
   return { label: "Bebas Bentrok", className: "bg-[#ecfdf5] text-[#059669]" };
 }
 
-export function ScheduleTable({ aside }: { aside: ReactNode }) {
+export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: ReactNode; refreshKey?: number; onDataLoaded?: (rows: JadwalPelajaran[]) => void }) {
   const [query, setQuery] = useState("");
   const [tingkat, setTingkat] = useState("Tingkat");
   const [subGrade, setSubGrade] = useState("Sub Grade");
@@ -52,7 +52,8 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [internalRefreshKey, setInternalRefreshKey] = useState(0);
+  const activeRefreshKey = refreshKey ?? internalRefreshKey;
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +68,7 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
           );
         }
         setData(res.data?.data ?? []);
+        onDataLoaded?.(res.data?.data ?? []);
       } catch (e) {
         if (!cancelled) {
           setData([]);
@@ -80,12 +82,12 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [refreshKey]);
+  }, [activeRefreshKey]);
 
   const reload = () => {
     setLoading(true);
     setError(null);
-    setRefreshKey((k) => k + 1);
+    setInternalRefreshKey((k) => k + 1);
   };
 
   const tingkatOptions: JurusanOption[] = [{ value: "Tingkat", label: "Tingkat" }, ...[...new Set(data.map((r) => r.gradeCode))].sort().map((code) => ({ value: code, label: code }))];

@@ -20,6 +20,7 @@ interface SearchableDropdownProps {
   onChange: (value: string) => void;
   options?: JurusanOption[];
   label?: string;
+  disabled?: boolean;
 }
 
 export function SearchableDropdown({
@@ -27,6 +28,7 @@ export function SearchableDropdown({
   onChange,
   options = JURUSAN_OPTIONS,
   label = "Jurusan",
+  disabled = false,
 }: SearchableDropdownProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -66,8 +68,9 @@ export function SearchableDropdown({
         id="dropdownTrigger"
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => toggle()}
-        className={`flex h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 ${
+        onClick={() => { if (!disabled) toggle(); }}
+        disabled={disabled}
+        className={`flex h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
           open ? "shadow-[0_2px_10px_-2px_rgba(32,44,90,0.12)]" : ""
         }`}
       >
