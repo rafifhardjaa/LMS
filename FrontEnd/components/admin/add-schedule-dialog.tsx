@@ -17,6 +17,7 @@ import {
   Sparkles,
   Timer,
   Trash2,
+  TriangleAlert,
   X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
@@ -76,8 +77,10 @@ export function AddScheduleDialog({
   const selectedSesi = SESI_LIST.find((s) => s.sesi === form.sesi) ?? SESI_LIST[0];
   const selectedClass = classes.find((c) => c.id === form.classId);
   const selectedSubject = subjects.find((s) => s.id === form.subjectId);
-
   const scheduleList = dbSchedules ?? schedules;
+  const scheduleConflict = mode !== "delete" && form.classId
+    ? scheduleList.find((s) => s.id !== editingId && s.classId === form.classId && s.hari === form.hari && s.sesi === form.sesi)
+    : undefined;
 
   const reset = () => {
     setForm(EMPTY);
@@ -220,6 +223,10 @@ export function AddScheduleDialog({
     }
     if (!form.gradeLevelId || !form.majorId || !form.classId || !form.subjectId) {
       toast.error("Form belum lengkap", { description: "Pilih tingkat, jurusan, rombel kelas, dan mata pelajaran." });
+      return;
+    }
+    if (scheduleConflict) {
+      toast.error("Jam bentrok", { description: `${selectedClass?.name ?? "Kelas"} sudah punya mapel pada ${form.hari} Sesi ${form.sesi}. Ubah hari atau sesi terlebih dahulu.` });
       return;
     }
     setSubmitting(true);
@@ -395,6 +402,12 @@ export function AddScheduleDialog({
             </div>
           </section>
           ) : null}
+          {scheduleConflict ? (
+            <section className="relative -mt-3 flex items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[11px] leading-5 text-[#7f1d1d]">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-[#dc2626]" />
+              <p><strong>Jam bentrok.</strong> {selectedClass?.name ?? "Rombel"} sudah punya {scheduleConflict.subjectName ?? "mata pelajaran"} pada {form.hari} Sesi {form.sesi} ({String(scheduleConflict.waktuMulai ?? "").slice(0, 5)}-{String(scheduleConflict.waktuSelesai ?? "").slice(0, 5)} WIB). Pilih hari atau sesi lain sebelum menyimpan.</p>
+            </section>
+          ) : null}
             </>
           )}
           </>
@@ -410,7 +423,7 @@ export function AddScheduleDialog({
                 <span>{submitting ? "Menghapus..." : "Hapus Sesi Jadwal"}</span>
               </button>
             ) : (
-              <button type="submit" form="add-schedule-form" disabled={submitting || (mode === "edit" && !editingId)} className="flex items-center gap-1.5 rounded-xl bg-[#6c5dd3] px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-[#6c5dd3]/30 transition-all hover:bg-[#5343b9] disabled:opacity-60">
+              <button type="submit" form="add-schedule-form" disabled={submitting || (mode === "edit" && !editingId) || Boolean(scheduleConflict)} className="flex items-center gap-1.5 rounded-xl bg-[#6c5dd3] px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-[#6c5dd3]/30 transition-all hover:bg-[#5343b9] disabled:opacity-60">
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
                 <span>{submitting ? "Menyimpan..." : mode === "edit" ? " Simpan Perubahan" : " Simpan Sesi Jadwal"}</span>
               </button>
