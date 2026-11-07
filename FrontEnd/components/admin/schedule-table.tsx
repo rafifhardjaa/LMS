@@ -5,10 +5,8 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Eye,
   Filter,
   Loader2,
-  PencilLine,
   RefreshCw,
   Search,
   TriangleAlert,
@@ -230,7 +228,7 @@ export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: Reac
                   <th className="px-3 py-3">Mata Pelajaran (Mapel)</th>
                   <th className="px-3 py-3">Durasi</th>
                   <th className="px-3 py-3">Status Validasi</th>
-                  <th className="px-3 py-3 text-center">Aksi Cepat</th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eceef3]">
@@ -282,13 +280,7 @@ export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: Reac
                         <CheckCircle2 className="size-3.5" /> {status.label}
                       </span>
                     </td>
-                    <td className="px-3 py-5 text-center">
-                      <div className="inline-flex items-center gap-1">
-                        <button type="button" aria-label="Detail sesi" onClick={() => window.alert(`Detail sesi ${s.sesi} ${s.className}`)} className="rounded-full p-1.5 text-[#6c5dd3] hover:bg-[#6c5dd3]/10">
-                          <Eye className="size-[18px]" />
-                        </button>
-                      </div>
-                    </td>
+
                   </tr>
                   );
                 })}
