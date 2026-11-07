@@ -51,27 +51,33 @@ export function AddScheduleDialog({
   onOpenChange,
   onSuccess,
   schedules = [],
+  initialSchedule = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   schedules?: JadwalPelajaran[];
+  initialSchedule?: JadwalPelajaran | null;
 }) {
   const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
   const [majors, setMajors] = useState<Major[]>([]);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [dbSchedules, setDbSchedules] = useState<JadwalPelajaran[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [mode, setMode] = useState<ScheduleMode>("add");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [mode, setMode] = useState<ScheduleMode>(initialSchedule ? "edit" : "add");
+  const [editingId, setEditingId] = useState<string | null>(initialSchedule?.id ?? null);
   const [deletingId, setDeletingId] = useState<string>("");
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState(initialSchedule ? { hari: initialSchedule.hari || "Senin", sesi: initialSchedule.sesi || 1, durasi: initialSchedule.durasi || 60, gradeLevelId: initialSchedule.gradeLevelId || "", majorId: initialSchedule.majorId || "", classId: initialSchedule.classId || "", subjectId: initialSchedule.subjectId || "" } : EMPTY);
 
   const selectedSesi = SESI_LIST.find((s) => s.sesi === form.sesi) ?? SESI_LIST[0];
   const selectedClass = classes.find((c) => c.id === form.classId);
   const selectedSubject = subjects.find((s) => s.id === form.subjectId);
+
+  const scheduleList = dbSchedules ?? schedules;
 
   const reset = () => {
     setForm(EMPTY);
@@ -96,16 +102,27 @@ export function AddScheduleDialog({
     let active = true;
     (async () => {
       setLoading(true);
+      setLoadingSchedules(true);
       try {
-        const [g, m] = await Promise.all([masterDataApi.gradeLevels.list(), masterDataApi.majors.list()]);
+        const [g, m, j] = await Promise.all([
+          masterDataApi.gradeLevels.list(),
+          masterDataApi.majors.list(),
+          masterDataApi.jadwalPelajaran.list(),
+        ]);
         if (!active) return;
         if (g.error || m.error) throw new Error("Gagal memuat data jadwal");
         setGradeLevels(g.data?.data ?? []);
         setMajors(m.data?.data ?? []);
+        if (j.error) {
+          toast.error("Gagal memuat daftar jadwal", { description: j.error.message || "Kesalahan tidak diketahui" });
+        } else {
+          setDbSchedules(j.data?.data ?? []);
+        }
       } catch (e) {
         if (active) toast.error("Gagal memuat data jadwal", { description: e instanceof Error ? e.message : "Kesalahan tidak diketahui" });
       } finally {
         if (active) setLoading(false);
+        if (active) setLoadingSchedules(false);
       }
     })();
     return () => { active = false; };
@@ -154,8 +171,8 @@ export function AddScheduleDialog({
   const classOptions: JurusanOption[] = classes.map((c) => ({ value: c.id, label: `${c.name} • ${c.majorCode} ${c.gradeCode}` }));
   const subjectOptions: JurusanOption[] = subjects.map((s) => ({ value: s.id, label: `${s.name}${s.code ? ` [${s.code}]` : ""}` }));
   const scheduleLabel = (s: JadwalPelajaran) => `Sesi ${s.sesi} • ${s.hari} ${String(s.waktuMulai ?? "").slice(0, 5)}-${String(s.waktuSelesai ?? "").slice(0, 5)} • ${s.className} • ${s.subjectName}`;
-  const editScheduleOptions: JurusanOption[] = schedules.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
-  const deleteScheduleOptions: JurusanOption[] = schedules.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
+  const editScheduleOptions: JurusanOption[] = scheduleList.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
+  const deleteScheduleOptions: JurusanOption[] = scheduleList.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
 
   const summary = useMemo(() => {
     if (!selectedClass || !selectedSubject) return "Alokasikan jam belajar mengajar, rombel kelas, dan mata pelajaran.";
@@ -174,7 +191,7 @@ export function AddScheduleDialog({
   };
 
   const handleDelete = async () => {
-    const target = schedules.find((s) => s.id === deletingId);
+    const target = scheduleList.find((s) => s.id === deletingId);
     if (!target) {
       toast.error("Jadwal belum dipilih", { description: "Pilih jadwal yang akan dihapus terlebih dahulu." });
       return;
@@ -266,12 +283,12 @@ export function AddScheduleDialog({
                   <SearchableDropdown
                     value={editingId ?? ""}
                     onChange={(v) => {
-                      const s = schedules.find((item) => item.id === v);
+                      const s = scheduleList.find((item) => item.id === v);
                       if (s) handleSelectEdit(s);
                     }}
                     options={editScheduleOptions}
-                    label={schedules.length ? "Pilih jadwal yang akan diperbarui" : "Belum ada data jadwal"}
-                    disabled={submitting || !schedules.length}
+                    label={loadingSchedules ? "Memuat data jadwal..." : scheduleList.length ? "Pilih jadwal yang akan diperbarui" : "Belum ada data jadwal"}
+                    disabled={submitting || loadingSchedules || !scheduleList.length}
                   />
                   <p className="text-[11px] text-[#787584]">Isi konten form di bawah akan mengikuti jadwal yang dipilih. Simpan untuk memperbarui.</p>
                 </div>
@@ -285,8 +302,8 @@ export function AddScheduleDialog({
                     value={deletingId}
                     onChange={setDeletingId}
                     options={deleteScheduleOptions}
-                    label={schedules.length ? "Pilih jadwal yang akan dihapus" : "Belum ada data jadwal"}
-                    disabled={submitting || !schedules.length}
+                    label={loadingSchedules ? "Memuat data jadwal..." : scheduleList.length ? "Pilih jadwal yang akan dihapus" : "Belum ada data jadwal"}
+                    disabled={submitting || loadingSchedules || !scheduleList.length}
                   />
                   <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#ba1a1a]"><Info className="size-3.5" /> Mode Aktif: menghapus sesi jadwal dari Timetable Master. Tindakan ini tidak bisa dibatalkan.</p>
                 </div>

@@ -13,6 +13,7 @@ export default function SchedulePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [schedules, setSchedules] = useState<JadwalPelajaran[]>([]);
+  const [editingSchedule, setEditingSchedule] = useState<JadwalPelajaran | null>(null);
 
   return (
     <div className="flex w-full flex-col gap-4 pt-2">
@@ -42,7 +43,7 @@ export default function SchedulePage() {
             <StaggerItem>
               <motion.button
                 type="button"
-                onClick={() => setDialogOpen(true)}
+                onClick={() => { setEditingSchedule(null); setDialogOpen(true); }}
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -54,9 +55,16 @@ export default function SchedulePage() {
         </section>
       </FadeIn>
       <FadeIn>
-        <ScheduleTable aside={<ScheduleSidePanels />} refreshKey={refreshKey} onDataLoaded={setSchedules} />
+        <ScheduleTable aside={<ScheduleSidePanels />} refreshKey={refreshKey} onDataLoaded={setSchedules} onEdit={(row) => { setEditingSchedule(row); setDialogOpen(true); }} />
       </FadeIn>
-      <AddScheduleDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={() => setRefreshKey((k) => k + 1)} schedules={schedules} />
+      <AddScheduleDialog
+        key={editingSchedule?.id ?? "add"}
+        open={dialogOpen}
+        onOpenChange={(next) => { setDialogOpen(next); if (!next) setEditingSchedule(null); }}
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+        schedules={schedules}
+        initialSchedule={editingSchedule}
+      />
     </div>
   );
 }
