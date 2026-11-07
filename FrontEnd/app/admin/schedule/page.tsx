@@ -3,7 +3,6 @@
 import { CalendarCheck2, CalendarPlus, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { ScheduleSidePanels } from "@/components/admin/schedule-side-panels";
-import { ScheduleStats } from "@/components/admin/schedule-stats";
 import { ScheduleTable } from "@/components/admin/schedule-table";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
@@ -49,7 +48,6 @@ export default function SchedulePage() {
           </StaggerChildren>
         </section>
       </FadeIn>
-      <ScheduleStats />
       <FadeIn>
         <ScheduleTable aside={<ScheduleSidePanels />} />
       </FadeIn>

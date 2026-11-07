@@ -3,22 +3,19 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Eye,
   Filter,
-  LayoutGrid,
   Loader2,
   PencilLine,
-  Printer,
   RefreshCw,
-  Rows3,
   Search,
   TriangleAlert,
   Timer,
 } from "lucide-react";
 import { masterDataApi, type JadwalPelajaran } from "@/lib/api/master-data";
+import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
 
 const HARI_LIST = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"] as const;
 const PAGE_SIZE = 10;
@@ -45,11 +42,11 @@ function statusPelajaran(row: JadwalPelajaran): { label: string; className: stri
 
 export function ScheduleTable({ aside }: { aside: ReactNode }) {
   const [query, setQuery] = useState("");
-  const [tingkat, setTingkat] = useState("Semua Tingkat");
-  const [jurusan, setJurusan] = useState("Semua Jurusan");
-  const [sesi, setSesi] = useState("Semua Sesi (1-6)");
+  const [tingkat, setTingkat] = useState("Tingkat");
+  const [subGrade, setSubGrade] = useState("Sub Grade");
+  const [jurusan, setJurusan] = useState("Jurusan");
+  const [sesi, setSesi] = useState("Sesi 1-6");
   const [day, setDay] = useState("Semua");
-  const [view, setView] = useState<"Tabel" | "Grid">("Tabel");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<JadwalPelajaran[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +88,10 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
     setRefreshKey((k) => k + 1);
   };
 
+  const tingkatOptions: JurusanOption[] = [{ value: "Tingkat", label: "Tingkat" }, ...[...new Set(data.map((r) => r.gradeCode))].sort().map((code) => ({ value: code, label: code }))];
+  const subGradeOptions: JurusanOption[] = [{ value: "Sub Grade", label: "Sub Grade" }, ...[...new Set(data.map((r) => r.classSection))].sort().map((code) => ({ value: code, label: code }))];
+  const sesiOptions: JurusanOption[] = [{ value: "Sesi 1-6", label: "Sesi 1-6" }, ...[...new Set(data.map((r) => r.sesi))].sort((a, b) => a - b).map((n) => ({ value: String(n), label: `Sesi ${n}` }))];
+  const jurusanOptions: JurusanOption[] = [{ value: "Jurusan", label: "Jurusan" }, ...[...new Set(data.map((r) => r.majorCode))].sort().map((code) => ({ value: code, label: code }))];
   const dayTabs = useMemo(
     () => [
       { value: "Semua", label: `Semua Hari (${data.length})` },
@@ -109,12 +110,13 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
         return (
           (!q || [s.className, s.subjectName, s.majorName, s.hari].some((v) => (v ?? "").toLowerCase().includes(q))) &&
           (day === "Semua" || s.hari === day) &&
-          (tingkat === "Semua Tingkat" || s.gradeCode === tingkat) &&
-          (jurusan === "Semua Jurusan" || s.majorCode === jurusan) &&
-          (sesi.startsWith("Semua") || s.sesi === Number(sesi.match(/\d/)?.[0]))
+          (tingkat === "Tingkat" || s.gradeCode === tingkat) &&
+          (subGrade === "Sub Grade" || s.classSection === subGrade) &&
+          (jurusan === "Jurusan" || s.majorCode === jurusan) &&
+          (sesi === "Sesi 1-6" || s.sesi === Number(sesi.match(/\d/)?.[0]))
         );
       }),
-    [data, query, tingkat, jurusan, sesi, day]
+    [data, query, tingkat, subGrade, jurusan, sesi, day]
   );
 
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
@@ -123,9 +125,10 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
 
   const reset = () => {
     setQuery("");
-    setTingkat("Semua Tingkat");
-    setJurusan("Semua Jurusan");
-    setSesi("Semua Sesi (1-6)");
+    setTingkat("Tingkat");
+    setSubGrade("Sub Grade");
+    setJurusan("Jurusan");
+    setSesi("Sesi 1-6");
     setDay("Semua");
   };
 
@@ -151,22 +154,6 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
               </button>
             ))}
           </div>
-          <div className="flex h-11 shrink-0 items-center gap-1 rounded-full bg-[#f1f4f9] p-1">
-            {(["Tabel", "Grid"] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                aria-label={`Tampilan ${mode}`}
-                aria-pressed={view === mode}
-                onClick={() => setView(mode)}
-                className={`flex size-9 items-center justify-center rounded-full ${
-                  view === mode ? "bg-white text-[#6c5dd3] shadow-sm" : "text-[#4e566c]"
-                }`}
-              >
-                {mode === "Tabel" ? <Rows3 className="size-4" /> : <LayoutGrid className="size-4" />}
-              </button>
-            ))}
-          </div>
         </div>
         <div className="flex flex-col gap-2.5 border-t border-[#eef0f5] pt-4 lg:flex-row lg:gap-3">
           <label className="relative flex-1">
@@ -179,58 +166,35 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
               className="h-11 w-full rounded-full bg-[#f1f4f9] pl-11 pr-4 text-sm outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30"
             />
           </label>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 lg:w-[520px]">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:w-[720px] lg:grid-cols-4">
             <label className="sr-only" htmlFor="schedule-tingkat">Filter tingkat</label>
-            <div className="relative">
-              <select
-                id="schedule-tingkat"
-                value={tingkat}
-                onChange={(e) => setTingkat(e.target.value)}
-                className="h-11 w-full appearance-none rounded-full bg-[#f1f4f9] px-4 pr-9 text-sm text-[#181c20] outline-none"
-              >
-                <option>Semua Tingkat</option>
-                <option>X</option>
-                <option>XI</option>
-                <option>XII</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
-            </div>
+            <SearchableDropdown
+              value={tingkat}
+              onChange={setTingkat}
+              options={tingkatOptions}
+              label="Tingkat"
+            />
+            <label className="sr-only" htmlFor="schedule-sub-grade">Filter sub grade</label>
+            <SearchableDropdown
+              value={subGrade}
+              onChange={setSubGrade}
+              options={subGradeOptions}
+              label="Sub Grade"
+            />
             <label className="sr-only" htmlFor="schedule-jurusan">Filter jurusan</label>
-            <div className="relative">
-              <select
-                id="schedule-jurusan"
-                value={jurusan}
-                onChange={(e) => setJurusan(e.target.value)}
-                className="h-11 w-full appearance-none rounded-full bg-[#f1f4f9] px-4 pr-9 text-sm text-[#181c20] outline-none"
-              >
-                <option>Semua Jurusan</option>
-                <option>TJKT</option>
-                <option>PPLG</option>
-                <option>DKV</option>
-                <option>AKL</option>
-                <option>TKR</option>
-                <option>TKI</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
-            </div>
+          <SearchableDropdown
+            value={jurusan}
+            onChange={setJurusan}
+            options={jurusanOptions}
+            label="Jurusan"
+          />
             <label className="sr-only" htmlFor="schedule-sesi">Filter sesi</label>
-            <div className="relative">
-              <select
-                id="schedule-sesi"
-                value={sesi}
-                onChange={(e) => setSesi(e.target.value)}
-                className="h-11 w-full appearance-none rounded-full bg-[#f1f4f9] px-4 pr-9 text-sm text-[#181c20] outline-none"
-              >
-                <option>Semua Sesi (1-6)</option>
-                <option>Sesi 1 (07:00 - 08:00)</option>
-                <option>Sesi 2 (08:00 - 09:00)</option>
-                <option>Sesi 3 (09:15 - 10:45)</option>
-                <option>Sesi 4 (10:45 - 12:00)</option>
-                <option>Sesi 5 (12:15 - 13:45)</option>
-                <option>Sesi 6 (13:45 - 15:00)</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
-            </div>
+            <SearchableDropdown
+              value={sesi}
+              onChange={setSesi}
+              options={sesiOptions}
+              label="Sesi 1-6"
+            />
           </div>
           <button
             type="button"
@@ -246,15 +210,12 @@ export function ScheduleTable({ aside }: { aside: ReactNode }) {
         <section className="overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
           <div className="flex flex-col justify-between gap-3 px-5 py-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
-              <h2 className="max-w-[300px] text-base font-bold leading-5 text-[#181c20]">Daftar Sesi Pembelajaran Alokasi Jam</h2>
+              <h2 className="max-w-[400px] text-base font-bold leading-5 text-[#181c20]">Daftar Sesi Pembelajaran Dan Alokasi Jam</h2>
               <span className="rounded-full bg-[#e5deff] px-2 py-1 text-[10px] font-semibold text-[#4331a8]">{rows.length} Sesi Ditampilkan</span>
             </div>
             <div className="flex items-center gap-2">
               <button type="button" aria-label="Muat ulang jadwal" onClick={() => reload()} disabled={loading} className="flex size-9 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] disabled:opacity-50">
                 <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-              </button>
-              <button type="button" aria-label="Cetak jadwal" onClick={() => window.alert("Cetak jadwal")} className="flex size-9 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff]">
-                <Printer className="size-4" />
               </button>
             </div>
           </div>
