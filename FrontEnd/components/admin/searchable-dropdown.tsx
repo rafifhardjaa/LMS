@@ -35,7 +35,9 @@ export function SearchableDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const selected = options.find((o) => o.value === value) ?? { value: "", label };
+  const matched = options.find((o) => o.value === value);
+  const selected = matched ?? { value: "", label };
+  const hasSelection = !!matched;
   const filtered = options.filter((o) => o.label.toLowerCase().includes(query.trim().toLowerCase()));
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export function SearchableDropdown({
         }`}
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="truncate font-semibold text-slate-800">{selected?.label}</span>
+          <span className={`truncate font-semibold ${hasSelection ? "text-slate-800" : "text-slate-400"}`}>{selected?.label}</span>
         </div>
         <ChevronDown
           className={`size-5 shrink-0 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
