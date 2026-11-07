@@ -515,7 +515,158 @@ export async function listTeachers(
       .orderBy(users.fullName);
 }
 
+// ── Buat sesi jadwal pelajaran ──────────────────────────────────────────
+const SESI_JAM: Record<number, { mulai: string; selesai: string }> = {
+  1: { mulai: "07:00:00", selesai: "08:00:00" },
+  2: { mulai: "08:00:00", selesai: "09:00:00" },
+  3: { mulai: "09:15:00", selesai: "10:45:00" },
+  4: { mulai: "10:45:00", selesai: "12:00:00" },
+  5: { mulai: "12:15:00", selesai: "13:45:00" },
+  6: { mulai: "13:45:00", selesai: "15:00:00" },
+};
+const HARI_VALID = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+
+export async function createJadwalPelajaran(input: {
+  classId: string;
+  subjectId: string;
+  hari: string;
+  sesi: number;
+  durasi?: number;
+}) {
+  assertUuid(input.classId);
+  assertUuid(input.subjectId);
+  if (!HARI_VALID.includes(input.hari)) throw new BadRequestError("Hari tidak valid");
+  const sesi = Number(input.sesi);
+  if (!SESI_JAM[sesi]) throw new BadRequestError("Sesi harus 1-6");
+  const durasi = input.durasi ? Number(input.durasi) : null;
+
+  const [classRow] = await db
+    .select({ id: classes.id, majorId: classes.majorId, gradeLevelId: classes.gradeLevelId, isActive: classes.isActive })
+    .from(classes)
+    .where(eq(classes.id, input.classId))
+    .limit(1);
+  if (!classRow) throw new NotFoundError("Kelas tidak ditemukan");
+  if (!classRow.isActive) throw new BadRequestError("Kelas sudah tidak aktif");
+
+  const [subjectRow] = await db
+    .select({ id: subjects.id, majorId: subjects.majorId, gradeLevelId: subjects.gradeLevelId, isActive: subjects.isActive })
+    .from(subjects)
+    .where(eq(subjects.id, input.subjectId))
+    .limit(1);
+  if (!subjectRow) throw new NotFoundError("Mata pelajaran tidak ditemukan");
+  if (!subjectRow.isActive) throw new BadRequestError("Mata pelajaran sudah tidak aktif");
+  if (subjectRow.gradeLevelId !== classRow.gradeLevelId) throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan kelas");
+  if (subjectRow.majorId && subjectRow.majorId !== classRow.majorId) throw new BadRequestError("Mata pelajaran tidak sesuai jurusan kelas");
+
+  const existing = await db
+    .select({ id: jadwalPelajaran.id })
+    .from(jadwalPelajaran)
+    .where(and(eq(jadwalPelajaran.classId, input.classId), eq(jadwalPelajaran.hari, input.hari), eq(jadwalPelajaran.sesi, sesi)))
+    .limit(1);
+  if (existing[0]) throw new BadRequestError("Slot jadwal sudah terisi untuk kelas, hari, dan sesi tersebut (bentrok kelas).");
+
+  const { mulai, selesai } = SESI_JAM[sesi]!;
+  const [hourM = 0, minM = 0] = mulai.split(":").map(Number);
+  const [hourS = 0, minS = 0] = selesai.split(":").map(Number);
+  const computedDurasi = hourS * 60 + minS - (hourM * 60 + minM);
+  const finalDurasi = durasi && [60, 75, 90].includes(durasi) ? durasi : computedDurasi;
+
+  const rows = await db
+    .insert(jadwalPelajaran)
+    .values({
+      classId: input.classId,
+      subjectId: input.subjectId,
+      gradeLevelId: classRow.gradeLevelId,
+      majorId: classRow.majorId,
+      hari: input.hari,
+      sesi,
+      mulai,
+      selesai,
+      durasi: finalDurasi,
+      bentrokKelas: 0,
+      durasiLebihDari90: finalDurasi > 90 ? 1 : 0,
+      diLuarJamKerja: 0,
+      jatuhDiIstirahat: 0,
+    })
+    .returning({ id: jadwalPelajaran.id });
+  const created = rows[0];
+  if (!created) throw new BadRequestError("Gagal membuat sesi jadwal");
+  return created;
+}
+
 // ── Daftar jadwal pelajaran ────────────────────────────────────────────────
+export async function removeJadwalPelajaran(id: string) {
+  assertUuid(id);
+  const rows = await db
+    .delete(jadwalPelajaran)
+    .where(eq(jadwalPelajaran.id, id))
+    .returning({ id: jadwalPelajaran.id });
+  if (rows.length === 0) throw new NotFoundError("Sesi jadwal pelajaran tidak ditemukan");
+}
+
+export async function updateJadwalPelajaran(
+  id: string,
+  input: { classId?: string; subjectId?: string; hari?: string; sesi?: number; durasi?: number }
+) {
+  assertUuid(id);
+  const [existing] = await db
+    .select({ id: jadwalPelajaran.id, classId: jadwalPelajaran.classId, subjectId: jadwalPelajaran.subjectId, hari: jadwalPelajaran.hari, sesi: jadwalPelajaran.sesi, durasi: jadwalPelajaran.durasi })
+    .from(jadwalPelajaran)
+    .where(eq(jadwalPelajaran.id, id))
+    .limit(1);
+  if (!existing) throw new NotFoundError("Sesi jadwal pelajaran tidak ditemukan");
+
+  const values: Record<string, unknown> = { updatedAt: new Date() };
+  const nextClassId = input.classId ?? existing.classId;
+  const nextSubjectId = input.subjectId ?? existing.subjectId;
+  const nextHari = input.hari ?? existing.hari;
+  const nextSesi = input.sesi ?? existing.sesi;
+  if (input.classId) { assertUuid(input.classId); values.classId = input.classId; }
+  if (input.subjectId) { assertUuid(input.subjectId); values.subjectId = input.subjectId; }
+  if (input.hari !== undefined) {
+    if (!HARI_VALID.includes(input.hari)) throw new BadRequestError("Hari tidak valid");
+    values.hari = input.hari;
+  }
+  if (input.sesi !== undefined) {
+    const sesi = Number(input.sesi);
+    if (!SESI_JAM[sesi]) throw new BadRequestError("Sesi harus 1-6");
+    values.sesi = sesi;
+    values.mulai = SESI_JAM[sesi]!.mulai;
+    values.selesai = SESI_JAM[sesi]!.selesai;
+  }
+  if (input.classId || input.subjectId || input.hari !== undefined || input.sesi !== undefined) {
+    const [classRow] = await db.select({ id: classes.id, majorId: classes.majorId, gradeLevelId: classes.gradeLevelId }).from(classes).where(eq(classes.id, nextClassId)).limit(1);
+    if (!classRow) throw new NotFoundError("Kelas tidak ditemukan");
+    const [subjectRow] = await db.select({ id: subjects.id, majorId: subjects.majorId, gradeLevelId: subjects.gradeLevelId }).from(subjects).where(eq(subjects.id, nextSubjectId)).limit(1);
+    if (!subjectRow) throw new NotFoundError("Mata pelajaran tidak ditemukan");
+    if (subjectRow.gradeLevelId !== classRow.gradeLevelId) throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan kelas");
+    if (subjectRow.majorId && subjectRow.majorId !== classRow.majorId) throw new BadRequestError("Mata pelajaran tidak sesuai jurusan kelas");
+    values.gradeLevelId = classRow.gradeLevelId;
+    values.majorId = classRow.majorId;
+    const clash = await db
+      .select({ id: jadwalPelajaran.id })
+      .from(jadwalPelajaran)
+      .where(and(eq(jadwalPelajaran.classId, nextClassId), eq(jadwalPelajaran.hari, nextHari), eq(jadwalPelajaran.sesi, nextSesi)))
+      .limit(1);
+    if (clash[0] && clash[0].id !== id) throw new BadRequestError("Slot jadwal sudah terisi untuk kelas, hari, dan sesi tersebut (bentrok kelas).");
+  }
+  if (input.durasi !== undefined) {
+    const durasi = Number(input.durasi);
+    if (![60, 75, 90].includes(durasi)) throw new BadRequestError("Durasi harus 60, 75, atau 90 menit");
+    values.durasi = durasi;
+    values.durasiLebihDari90 = durasi > 90 ? 1 : 0;
+  } else if (input.sesi !== undefined) {
+    const { mulai, selesai } = SESI_JAM[Number(input.sesi)]!;
+    const [hM = 0, mM = 0] = mulai.split(":").map(Number);
+    const [hS = 0, mS = 0] = selesai.split(":").map(Number);
+    values.durasi = hS * 60 + mS - (hM * 60 + mM);
+  }
+  const rows = await db.update(jadwalPelajaran).set(values).where(eq(jadwalPelajaran.id, id)).returning({ id: jadwalPelajaran.id });
+  const updated = rows[0];
+  if (!updated) throw new BadRequestError("Gagal memperbarui sesi jadwal pelajaran");
+  return updated;
+}
+
 export async function listJadwalPelajaran(filters: {
   classId?: string;
   gradeLevelId?: string;
