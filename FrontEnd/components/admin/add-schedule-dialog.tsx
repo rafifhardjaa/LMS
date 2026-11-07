@@ -600,24 +600,24 @@ export function AddScheduleDialog({
               <div className="grid grid-cols-1 gap-2 pt-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">1. Tingkat <span className="text-[#c0262d]">*</span></label>
-                  <SearchableDropdown value={filterTingkat} onChange={handleFilterTingkat} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={submitting || loadingSchedules} />
+                  <SearchableDropdown value={filterTingkat === "Semua Tingkat" ? "" : filterTingkat} onChange={handleFilterTingkat} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={submitting || loadingSchedules} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">2. Jurusan <span className="text-[#c0262d]">*</span></label>
-                  <SearchableDropdown value={filterJurusan} onChange={handleFilterJurusan} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : !tingkatChosen ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={submitting || loadingSchedules || !tingkatChosen} />
+                  <SearchableDropdown value={filterJurusan === "Semua Jurusan" ? "" : filterJurusan} onChange={handleFilterJurusan} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : !tingkatChosen ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={submitting || loadingSchedules || !tingkatChosen} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">3. Sub Grade (A,B,C,D) <span className="text-[#c0262d]">*</span></label>
-                  <SearchableDropdown value={filterSubGrade} onChange={handleFilterSubGrade} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : !jurusanChosen ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={submitting || loadingSchedules || !jurusanChosen} />
+                  <SearchableDropdown value={filterSubGrade === "Semua Sub Grade" ? "" : filterSubGrade} onChange={handleFilterSubGrade} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : !jurusanChosen ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={submitting || loadingSchedules || !jurusanChosen} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">4. Hari <span className="text-[#c0262d]">*</span></label>
-                    <SearchableDropdown value={filterHari} onChange={handleFilterHari} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : !subGradeChosen ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={submitting || loadingSchedules || !subGradeChosen} />
+                    <SearchableDropdown value={filterHari === "Semua Hari" ? "" : filterHari} onChange={handleFilterHari} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : !subGradeChosen ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={submitting || loadingSchedules || !subGradeChosen} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">5. Sesi <span className="text-[#c0262d]">*</span></label>
-                    <SearchableDropdown value={filterSesi} onChange={handleFilterSesi} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : !hariChosen ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={submitting || loadingSchedules || !hariChosen} />
+                    <SearchableDropdown value={filterSesi === "Semua Sesi" ? "" : filterSesi} onChange={handleFilterSesi} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : !hariChosen ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={submitting || loadingSchedules || !hariChosen} />
                   </div>
                 </div>
               </div>
