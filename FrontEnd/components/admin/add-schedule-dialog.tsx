@@ -14,6 +14,7 @@ import {
   PencilLine,
   PlusCircle,
   School,
+  Search,
   Sparkles,
   Timer,
   Trash2,
@@ -45,6 +46,22 @@ function gradePhase(code: string) {
 
 const EMPTY = { hari: "Senin", sesi: 1, durasi: 60, gradeLevelId: "", majorId: "", classId: "", subjectId: "" };
 
+type ScheduleForm = typeof EMPTY;
+
+function formFromSchedule(schedule: JadwalPelajaran): ScheduleForm {
+  return {
+    hari: schedule.hari || "Senin",
+    sesi: schedule.sesi || 1,
+    durasi: schedule.durasi || 60,
+    gradeLevelId: schedule.gradeLevelId || "",
+    majorId: schedule.majorId || "",
+    classId: schedule.classId || "",
+    subjectId: schedule.subjectId || "",
+  };
+}
+
+const FORM_KEYS = ["hari", "sesi", "durasi", "gradeLevelId", "majorId", "classId", "subjectId"] as const;
+
 type ScheduleMode = "add" | "edit" | "delete";
 
 export function AddScheduleDialog({
@@ -72,7 +89,8 @@ export function AddScheduleDialog({
   const [mode, setMode] = useState<ScheduleMode>(initialSchedule ? "edit" : "add");
   const [editingId, setEditingId] = useState<string | null>(initialSchedule?.id ?? null);
   const [deletingId, setDeletingId] = useState<string>("");
-  const [form, setForm] = useState(initialSchedule ? { hari: initialSchedule.hari || "Senin", sesi: initialSchedule.sesi || 1, durasi: initialSchedule.durasi || 60, gradeLevelId: initialSchedule.gradeLevelId || "", majorId: initialSchedule.majorId || "", classId: initialSchedule.classId || "", subjectId: initialSchedule.subjectId || "" } : EMPTY);
+  const [form, setForm] = useState<ScheduleForm>(initialSchedule ? formFromSchedule(initialSchedule) : EMPTY);
+  const [baseline, setBaseline] = useState<ScheduleForm | null>(initialSchedule ? formFromSchedule(initialSchedule) : null);
 
   const selectedSesi = SESI_LIST.find((s) => s.sesi === form.sesi) ?? SESI_LIST[0];
   const selectedClass = classes.find((c) => c.id === form.classId);
@@ -87,9 +105,16 @@ export function AddScheduleDialog({
   const scheduleConflict = mode !== "delete" && form.classId
     ? scheduleList.find((s) => s.id !== editingId && s.classId === form.classId && s.hari === form.hari && s.sesi === form.sesi)
     : undefined;
+  const selectedSchedule = editingId
+    ? scheduleList.find((s) => s.id === editingId) ?? initialSchedule ?? undefined
+    : undefined;
+  const isDirty = Boolean(editingId && baseline && FORM_KEYS.some((key) => form[key] !== baseline[key]));
+  const dirtyConfirm = (message: string) => !isDirty || window.confirm(message);
+  const dialogTitle = mode === "edit" ? "Perbarui Sesi Jadwal Pelajaran" : mode === "delete" ? "Hapus Sesi Jadwal Pelajaran" : "Tambah Sesi Jadwal Pelajaran";
 
   const reset = () => {
     setForm(EMPTY);
+    setBaseline(null);
     setClasses([]);
     setSubjects([]);
     setSubmitting(false);
@@ -105,10 +130,12 @@ export function AddScheduleDialog({
   };
 
   const switchMode = (nextMode: ScheduleMode) => {
-    if (submitting) return;
+    if (submitting || nextMode === mode) return;
+    if (nextMode !== "edit" && !dirtyConfirm("Perubahan belum disimpan. Ganti mode dan buang perubahan?")) return;
     setMode(nextMode);
     setEditingId(null);
     setDeletingId("");
+    setBaseline(null);
     if (nextMode === "add") setForm(EMPTY);
   };
 
@@ -209,13 +236,28 @@ export function AddScheduleDialog({
 
   const handleCancel = () => {
     if (submitting) return;
+    if (!dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?")) return;
     reset();
     onOpenChange(false);
   };
 
   const handleSelectEdit = (schedule: JadwalPelajaran) => {
+    if (editingId && editingId !== schedule.id && !dirtyConfirm("Perubahan pada jadwal sebelumnya belum disimpan. Ganti jadwal dan buang perubahan?")) return;
+    const next = formFromSchedule(schedule);
     setEditingId(schedule.id);
-    setForm({ hari: schedule.hari || "Senin", sesi: schedule.sesi || 1, durasi: schedule.durasi || 60, gradeLevelId: schedule.gradeLevelId || "", majorId: schedule.majorId || "", classId: schedule.classId || "", subjectId: schedule.subjectId || "" });
+    setForm(next);
+    setBaseline(next);
+  };
+
+  const handleClearSelection = () => {
+    if (!dirtyConfirm("Perubahan belum disimpan. Lepas jadwal terpilih dan buang perubahan?")) return;
+    setEditingId(null);
+    setForm(EMPTY);
+    setBaseline(null);
+  };
+
+  const handleRevert = () => {
+    if (baseline) setForm(baseline);
   };
 
   const handleDelete = async () => {
@@ -273,7 +315,12 @@ export function AddScheduleDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => { if (!next) reset(); onOpenChange(next); }}>
+    <Dialog open={open} onOpenChange={(next) => {
+      if (next) { onOpenChange(true); return; }
+      if (!dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?")) return;
+      reset();
+      onOpenChange(false);
+    }}>
       <DialogContent
         showCloseButton={false}
         overlayClassName="bg-slate-900/60 backdrop-blur-sm supports-backdrop-filter:backdrop-blur-sm"
@@ -288,7 +335,7 @@ export function AddScheduleDialog({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <DialogTitle className="text-lg font-bold tracking-tight text-white">Tambah Sesi Jadwal Pelajaran</DialogTitle>
+                <DialogTitle className="text-lg font-bold tracking-tight text-white">{dialogTitle}</DialogTitle>
               </div>
             </div>
           </div>
@@ -322,6 +369,8 @@ export function AddScheduleDialog({
                   <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#ba1a1a]"><Info className="size-3.5" /> Mode Aktif: menghapus sesi jadwal dari Timetable Master. Tindakan ini tidak bisa dibatalkan.</p>
                 </div>
               </div>
+            ) : mode === "edit" ? (
+              <p className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white px-2.5 py-1.5 text-[11px] text-[#4e566c]"><Info className="size-3.5 shrink-0 text-[#5343b9]" /><span><strong>Mode Aktif:</strong> {editingId ? "ubah detail jadwal terpilih lalu simpan ke Timetable Master." : "pilih jadwal pada panel kanan untuk mulai mengubah."}</span></p>
             ) : (
               <p className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white px-2.5 py-1.5 text-[11px] text-[#4e566c]"><Info className="size-3.5 shrink-0 text-[#5343b9]" /><span><strong>Mode Aktif:</strong> Tambah sesi belajar baru ke timetable rombel tanpa menimpa slot lain.</span></p>
             )}
@@ -346,6 +395,21 @@ export function AddScheduleDialog({
             </section>
           ) : (
             <>
+          {mode === "edit" ? (
+            <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5deff] bg-[#faf8ff] px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#5343b9] text-white"><PencilLine className="size-4" /></span>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[#181c20]">Ubah Detail Jadwal</p>
+                  <p className="text-[11px] text-[#787584]">Perubahan hanya berlaku untuk jadwal yang dipilih di panel kanan.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isDirty ? <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">Belum disimpan</span> : null}
+                <button type="button" onClick={handleRevert} disabled={!isDirty || submitting} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-[#4e566c] transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Batalkan perubahan</button>
+              </div>
+            </section>
+          ) : null}
           {/* Section 1 */}
           <section>
             <div className="flex items-center gap-2 border-b border-[#eceef3] pb-2">
@@ -423,10 +487,25 @@ export function AddScheduleDialog({
         </form>
         {mode === "edit" ? (
           <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:flex-none lg:border-l lg:border-t-0">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#787584]">Cari Jadwal</span>
-                <span className="text-[10px] font-semibold text-[#787584]">{loadingSchedules ? "Memuat..." : `${filteredSchedules.length} ditemukan`}</span>
+            <div className="flex flex-col gap-2.5 pb-40">
+              <div className="sticky top-0 z-10 -mx-5 -mt-5 border-b border-slate-200/70 bg-[#f8f9fc] px-5 pb-3 pt-5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#787584]"><Search className="size-4 text-[#5343b9]" /> Langkah 1 · Pilih Jadwal</span>
+                  <span className="text-[10px] font-semibold text-[#787584]">{loadingSchedules ? "Memuat..." : `${filteredSchedules.length} ditemukan`}</span>
+                </div>
+                {selectedSchedule ? (
+                  <div className="mt-2 rounded-xl border border-[#d9d3f0] bg-white p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-[#181c20]">{selectedSchedule.className} • {selectedSchedule.subjectName}</p>
+                        <p className="mt-0.5 text-[11px] text-[#787584]">{selectedSchedule.hari} • Sesi {selectedSchedule.sesi} • {String(selectedSchedule.waktuMulai ?? "").slice(0, 5)}-{String(selectedSchedule.waktuSelesai ?? "").slice(0, 5)} WIB • {selectedSchedule.durasi} menit</p>
+                      </div>
+                      <button type="button" onClick={handleClearSelection} disabled={submitting} className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-1 text-[10px] font-semibold text-[#4e566c] transition-colors hover:bg-slate-50 disabled:opacity-50">Ganti</button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-2 rounded-xl border border-dashed border-[#c9c4d5] bg-white px-3 py-2 text-[11px] leading-4 text-[#787584]">Belum ada jadwal dipilih. Gunakan filter di bawah untuk mempersempit pencarian.</p>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex flex-col gap-1.5">
@@ -470,27 +549,29 @@ export function AddScheduleDialog({
                 />
                 <p className="text-[11px] text-[#787584]">Isi form di sebelah kiri akan mengikuti jadwal yang dipilih.</p>
               </div>
-              {editingId ? <p className="flex items-center gap-1.5 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-700"><CheckCircle2 className="size-3.5 shrink-0" /> Jadwal terpilih dikunci di panel ini.</p> : null}
             </div>
           </aside>
         ) : null}
         </div>
 
         <DialogFooter className="mx-0 mb-0 flex flex-row shrink-0 items-center justify-between gap-3 border-t border-slate-200/80 bg-slate-50 px-7 py-4">
-          <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
-            <button type="button" onClick={handleCancel} disabled={submitting} className="rounded-xl border border-slate-300 px-5 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-50">Batal</button>
-            {mode === "delete" ? (
-              <button type="button" onClick={() => void handleDelete()} disabled={submitting || !deletingId} className="flex items-center gap-1.5 rounded-xl bg-[#ba1a1a] px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-red-900/20 transition-all hover:bg-[#93000a] disabled:opacity-60">
-                {submitting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                <span>{submitting ? "Menghapus..." : "Hapus Sesi Jadwal"}</span>
-              </button>
-            ) : (
-              <button type="submit" form="add-schedule-form" disabled={submitting || (mode === "edit" && !editingId) || Boolean(scheduleConflict)} className="flex items-center gap-1.5 rounded-xl bg-[#6c5dd3] px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-[#6c5dd3]/30 transition-all hover:bg-[#5343b9] disabled:opacity-60">
-                {submitting ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-                <span>{submitting ? "Menyimpan..." : mode === "edit" ? " Simpan Perubahan" : " Simpan Sesi Jadwal"}</span>
-              </button>
-            )}
-          </div>
+        <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
+          {mode === "edit" && editingId ? (
+            <p className="mr-auto hidden text-[11px] font-medium sm:block">{isDirty ? "Ada perubahan belum disimpan" : "Belum ada perubahan"}</p>
+          ) : null}
+          <button type="button" onClick={handleCancel} disabled={submitting} className="rounded-xl border border-slate-300 px-5 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-50">Batal</button>
+          {mode === "delete" ? (
+            <button type="button" onClick={() => void handleDelete()} disabled={submitting || !deletingId} className="flex items-center gap-1.5 rounded-xl bg-[#ba1a1a] px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-red-900/20 transition-all hover:bg-[#93000a] disabled:opacity-60">
+              {submitting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              <span>{submitting ? "Menghapus..." : "Hapus Sesi Jadwal"}</span>
+            </button>
+          ) : (
+            <button type="submit" form="add-schedule-form" disabled={submitting || (mode === "edit" && (!editingId || !isDirty)) || Boolean(scheduleConflict)} className="flex items-center gap-1.5 rounded-xl bg-[#6c5dd3] px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-[#6c5dd3]/30 transition-all hover:bg-[#5343b9] disabled:opacity-60">
+              {submitting ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+              <span>{submitting ? "Menyimpan..." : mode === "edit" ? " Simpan Perubahan" : " Simpan Sesi Jadwal"}</span>
+            </button>
+          )}
+        </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
