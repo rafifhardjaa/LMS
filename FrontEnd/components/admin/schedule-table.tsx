@@ -40,7 +40,7 @@ function statusPelajaran(row: JadwalPelajaran): { label: string; className: stri
   return { label: "Bebas Bentrok", className: "bg-[#ecfdf5] text-[#059669]" };
 }
 
-export function ScheduleTable({ aside, refreshKey, onDataLoaded, onEdit }: { aside: ReactNode; refreshKey?: number; onDataLoaded?: (rows: JadwalPelajaran[]) => void; onEdit?: (row: JadwalPelajaran) => void }) {
+export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: ReactNode; refreshKey?: number; onDataLoaded?: (rows: JadwalPelajaran[]) => void }) {
   const [query, setQuery] = useState("");
   const [tingkat, setTingkat] = useState("Tingkat");
   const [subGrade, setSubGrade] = useState("Sub Grade");
@@ -286,9 +286,6 @@ export function ScheduleTable({ aside, refreshKey, onDataLoaded, onEdit }: { asi
                       <div className="inline-flex items-center gap-1">
                         <button type="button" aria-label="Detail sesi" onClick={() => window.alert(`Detail sesi ${s.sesi} ${s.className}`)} className="rounded-full p-1.5 text-[#6c5dd3] hover:bg-[#6c5dd3]/10">
                           <Eye className="size-[18px]" />
-                        </button>
-                        <button type="button" aria-label="Edit sesi" onClick={() => onEdit?.(s)} className="rounded-full p-1.5 text-[#4e566c] hover:bg-[#eceef3]">
-                          <PencilLine className="size-[18px]" />
                         </button>
                       </div>
                     </td>
