@@ -330,6 +330,20 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<JadwalPelajaran[]>>(
         `/api/v1/jadwal-pelajaran${queryString(filters)}`
       ),
+    create: (body: { classId: string; subjectId: string; hari: string; sesi: number; durasi?: number }) =>
+      apiFetch<ApiSuccess<{ id: string }>>("/api/v1/jadwal-pelajaran", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: string, body: { classId?: string; subjectId?: string; hari?: string; sesi?: number; durasi?: number }) =>
+      apiFetch<ApiSuccess<{ id: string }>>(`/api/v1/jadwal-pelajaran/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(`/api/v1/jadwal-pelajaran/${id}`, {
+        method: "DELETE",
+      }),
   },
   teacherAssignments: {
     listSubjects: (filters: { teacherId?: string; subjectId?: string } = {}) =>
