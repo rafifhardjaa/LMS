@@ -78,6 +78,12 @@ export function AddScheduleDialog({
   const selectedClass = classes.find((c) => c.id === form.classId);
   const selectedSubject = subjects.find((s) => s.id === form.subjectId);
   const scheduleList = dbSchedules ?? schedules;
+  const [filterTingkat, setFilterTingkat] = useState("Semua Tingkat");
+  const [filterJurusan, setFilterJurusan] = useState("Semua Jurusan");
+  const [filterKelas, setFilterKelas] = useState("Semua Rombel");
+  const [filterHari, setFilterHari] = useState("Semua Hari");
+  const [filterSesi, setFilterSesi] = useState("Semua Sesi");
+  const [filterMapel, setFilterMapel] = useState("");
   const scheduleConflict = mode !== "delete" && form.classId
     ? scheduleList.find((s) => s.id !== editingId && s.classId === form.classId && s.hari === form.hari && s.sesi === form.sesi)
     : undefined;
@@ -90,6 +96,12 @@ export function AddScheduleDialog({
     setMode("add");
     setEditingId(null);
     setDeletingId("");
+    setFilterTingkat("Semua Tingkat");
+    setFilterJurusan("Semua Jurusan");
+    setFilterKelas("Semua Rombel");
+    setFilterHari("Semua Hari");
+    setFilterSesi("Semua Sesi");
+    setFilterMapel("");
   };
 
   const switchMode = (nextMode: ScheduleMode) => {
@@ -173,8 +185,21 @@ export function AddScheduleDialog({
   const majorOptions: JurusanOption[] = majors.map((m) => ({ value: m.id, label: `${m.code} - ${m.name}` }));
   const classOptions: JurusanOption[] = classes.map((c) => ({ value: c.id, label: `${c.name} • ${c.majorCode} ${c.gradeCode}` }));
   const subjectOptions: JurusanOption[] = subjects.map((s) => ({ value: s.id, label: `${s.name}${s.code ? ` [${s.code}]` : ""}` }));
+  const filterTingkatOptions: JurusanOption[] = [{ value: "Semua Tingkat", label: "Semua Tingkat" }, ...gradeLevels.map((g) => ({ value: g.id, label: `Kelas ${g.code} (${gradePhase(g.code)})` }))];
+  const filterJurusanOptions: JurusanOption[] = [{ value: "Semua Jurusan", label: "Semua Jurusan" }, ...majors.map((m) => ({ value: m.id, label: `${m.code} - ${m.name}` }))];
+  const filterKelasOptions: JurusanOption[] = [{ value: "Semua Rombel", label: "Semua Rombel" }, ...[...new Set(scheduleList.map((s) => s.classId))].map((cid) => { const s = scheduleList.find((x) => x.classId === cid); return { value: cid, label: s ? `${s.className} • ${s.majorCode} ${s.gradeCode}` : cid }; })];
+  const filterHariOptions: JurusanOption[] = [{ value: "Semua Hari", label: "Semua Hari" }, ...HARI_LIST.map((h) => ({ value: h, label: h }))];
+  const filterSesiOptions: JurusanOption[] = [{ value: "Semua Sesi", label: "Semua Sesi" }, ...SESI_LIST.map((s) => ({ value: String(s.sesi), label: `Sesi ${s.sesi} • ${s.mulai}-${s.selesai}` }))];
   const scheduleLabel = (s: JadwalPelajaran) => `Sesi ${s.sesi} • ${s.hari} ${String(s.waktuMulai ?? "").slice(0, 5)}-${String(s.waktuSelesai ?? "").slice(0, 5)} • ${s.className} • ${s.subjectName}`;
-  const editScheduleOptions: JurusanOption[] = scheduleList.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
+  const filteredSchedules = scheduleList.filter((s) =>
+    (filterTingkat === "Semua Tingkat" || s.gradeLevelId === filterTingkat) &&
+    (filterJurusan === "Semua Jurusan" || s.majorId === filterJurusan) &&
+    (filterKelas === "Semua Rombel" || s.classId === filterKelas) &&
+    (filterHari === "Semua Hari" || s.hari === filterHari) &&
+    (filterSesi === "Semua Sesi" || s.sesi === Number(filterSesi)) &&
+    (!filterMapel.trim() || s.subjectName.toLowerCase().includes(filterMapel.trim().toLowerCase()))
+  );
+  const editScheduleOptions: JurusanOption[] = filteredSchedules.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
   const deleteScheduleOptions: JurusanOption[] = scheduleList.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
 
   const summary = useMemo(() => {
@@ -285,8 +310,34 @@ export function AddScheduleDialog({
             </div>
             {mode === "edit" ? (
               <div className="mt-2 rounded-2xl border border-slate-200/70 bg-white p-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Jadwal yang akan diperbarui <span className="text-[#c0262d]">*</span></label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
+                    <SearchableDropdown value={filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Semua Tingkat" disabled={loadingSchedules} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
+                    <SearchableDropdown value={filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label="Semua Jurusan" disabled={loadingSchedules} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Rombel Kelas</label>
+                    <SearchableDropdown value={filterKelas} onChange={setFilterKelas} options={filterKelasOptions} label="Semua Rombel" disabled={loadingSchedules} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
+                    <SearchableDropdown value={filterHari} onChange={setFilterHari} options={filterHariOptions} label="Semua Hari" disabled={loadingSchedules} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
+                    <SearchableDropdown value={filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label="Semua Sesi" disabled={loadingSchedules} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Cari Mapel</label>
+                    <input type="text" value={filterMapel} onChange={(e) => setFilterMapel(e.target.value)} placeholder="Nama mata pelajaran..." className="h-11 w-full rounded-full bg-[#f1f4f9] px-4 text-xs font-semibold text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:opacity-50" disabled={loadingSchedules} />
+                  </div>
+                </div>
+                <div className="mt-2.5 flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-[#181c20]">Jadwal yang akan diperbarui <span className="text-[#c0262d]">*</span> <span className="ml-1 font-semibold text-[#787584]">({filteredSchedules.length} ditemukan)</span></label>
                   <SearchableDropdown
                     value={editingId ?? ""}
                     onChange={(v) => {
@@ -294,8 +345,8 @@ export function AddScheduleDialog({
                       if (s) handleSelectEdit(s);
                     }}
                     options={editScheduleOptions}
-                    label={loadingSchedules ? "Memuat data jadwal..." : scheduleList.length ? "Pilih jadwal yang akan diperbarui" : "Belum ada data jadwal"}
-                    disabled={submitting || loadingSchedules || !scheduleList.length}
+                    label={loadingSchedules ? "Memuat data jadwal..." : filteredSchedules.length ? "Pilih jadwal yang akan diperbarui" : "Tidak ada jadwal yang cocok"}
+                    disabled={submitting || loadingSchedules || !filteredSchedules.length}
                   />
                   <p className="text-[11px] text-[#787584]">Isi konten form di bawah akan mengikuti jadwal yang dipilih. Simpan untuk memperbarui.</p>
                 </div>
