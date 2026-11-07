@@ -1,17 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { CalendarCheck2, CalendarPlus, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { AddScheduleDialog } from "@/components/admin/add-schedule-dialog";
 import { ScheduleSidePanels } from "@/components/admin/schedule-side-panels";
 import { ScheduleTable } from "@/components/admin/schedule-table";
+import type { JadwalPelajaran } from "@/lib/api/master-data";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function SchedulePage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [schedules, setSchedules] = useState<JadwalPelajaran[]>([]);
+
   return (
     <div className="flex w-full flex-col gap-4 pt-2">
       <FadeIn>
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
-          <span className="rounded-full bg-[#eceef3] px-3 py-1 text-[#4e566c]">● SMK MATARAM • TIMETABLE KURIKULUM MERDEKA</span>
         </div>
         <section className="mt-4 flex flex-col gap-4 rounded-2xl border border-[#eef0f5] bg-white px-5 py-4 shadow-[0_8px_24px_rgba(32,44,90,0.04)] xl:flex-row xl:items-center xl:justify-between xl:gap-6">
           <SlideIn direction="left" className="flex min-w-0 flex-1 items-start gap-4">
@@ -19,7 +25,6 @@ export default function SchedulePage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-xl font-bold leading-snug tracking-tight text-[#181c20] sm:text-2xl">Manajemen Jadwal Pelajaran &amp; Sesi Belajar</h1>              </div>
-              <p className="mt-1.5 max-w-[620px] text-xs leading-5 text-[#4e566c]">Pusat pengelolaan distribusi jadwal 810 sesi pembelajaran mingguan SMK Mataram (Senin-Jumat, Sesi 1-6 / 07:00-15:00) terverifikasi bebas bentrok.</p>
             </div>
           </SlideIn>
           <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex shrink-0 flex-wrap items-center gap-2">
@@ -37,7 +42,7 @@ export default function SchedulePage() {
             <StaggerItem>
               <motion.button
                 type="button"
-                onClick={() => window.alert("Tambah Sesi Jadwal")}
+                onClick={() => setDialogOpen(true)}
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -49,8 +54,9 @@ export default function SchedulePage() {
         </section>
       </FadeIn>
       <FadeIn>
-        <ScheduleTable aside={<ScheduleSidePanels />} />
+        <ScheduleTable aside={<ScheduleSidePanels />} refreshKey={refreshKey} onDataLoaded={setSchedules} />
       </FadeIn>
+      <AddScheduleDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={() => setRefreshKey((k) => k + 1)} schedules={schedules} />
     </div>
   );
 }
