@@ -510,24 +510,24 @@ export function AddScheduleDialog({
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
-                  <SearchableDropdown value={filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterTingkat === "Semua Tingkat" ? "" : filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
-                  <SearchableDropdown value={filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterTingkat === "Semua Tingkat" ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterJurusan === "Semua Jurusan" ? "" : filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterTingkat === "Semua Tingkat" ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={loadingSchedules} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
-                  <SearchableDropdown value={filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterJurusan === "Semua Jurusan" ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterSubGrade === "Semua Sub Grade" ? "" : filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterJurusan === "Semua Jurusan" ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={loadingSchedules} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
-                    <SearchableDropdown value={filterHari} onChange={setFilterHari} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterSubGrade === "Semua Sub Grade" ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={loadingSchedules} />
+                    <SearchableDropdown value={filterHari === "Semua Hari" ? "" : filterHari} onChange={setFilterHari} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterSubGrade === "Semua Sub Grade" ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={loadingSchedules} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
-                    <SearchableDropdown value={filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterHari === "Semua Hari" ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={loadingSchedules} />
+                    <SearchableDropdown value={filterSesi === "Semua Sesi" ? "" : filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterHari === "Semua Hari" ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={loadingSchedules} />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
