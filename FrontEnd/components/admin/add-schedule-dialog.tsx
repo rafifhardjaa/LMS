@@ -510,24 +510,24 @@ export function AddScheduleDialog({
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
-                  <SearchableDropdown value={filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Semua Tingkat" disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
-                  <SearchableDropdown value={filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label="Semua Jurusan" disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label="Pilih jurusan terlebih dahulu" disabled={loadingSchedules} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
-                  <SearchableDropdown value={filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label="Semua Sub Grade" disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label="Pilih sub grade terlebih dahulu" disabled={loadingSchedules} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
-                    <SearchableDropdown value={filterHari} onChange={setFilterHari} options={filterHariOptions} label="Semua Hari" disabled={loadingSchedules} />
+                    <SearchableDropdown value={filterHari} onChange={setFilterHari} options={filterHariOptions} label="Pilih hari terlebih dahulu" disabled={loadingSchedules} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
-                    <SearchableDropdown value={filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label="Semua Sesi" disabled={loadingSchedules} />
+                    <SearchableDropdown value={filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label="Pilih sesi terlebih dahulu" disabled={loadingSchedules} />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
