@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -92,6 +93,23 @@ export function AddScheduleDialog({
   const [form, setForm] = useState<ScheduleForm>(initialSchedule ? formFromSchedule(initialSchedule) : EMPTY);
   const [baseline, setBaseline] = useState<ScheduleForm | null>(initialSchedule ? formFromSchedule(initialSchedule) : null);
 
+  // Konfirmasi dialog state (Promise-based)
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const confirmResolveRef = useRef<(ok: boolean) => void>(() => {});
+
+  const askConfirm = (message: string) =>
+    new Promise<boolean>((resolve) => {
+      confirmResolveRef.current = resolve;
+      setConfirmMessage(message);
+      setConfirmOpen(true);
+    });
+
+  const respondConfirm = (ok: boolean) => {
+    confirmResolveRef.current(ok);
+    confirmResolveRef.current = () => {};
+  };
+
   const selectedSesi = SESI_LIST.find((s) => s.sesi === form.sesi) ?? SESI_LIST[0];
   const selectedClass = classes.find((c) => c.id === form.classId);
   const selectedSubject = subjects.find((s) => s.id === form.subjectId);
@@ -101,7 +119,14 @@ export function AddScheduleDialog({
   const [filterSubGrade, setFilterSubGrade] = useState("Semua Sub Grade");
   const [filterHari, setFilterHari] = useState("Semua Hari");
   const [filterSesi, setFilterSesi] = useState("Semua Sesi");
-  const [filterMapel, setFilterMapel] = useState("");
+
+  // Lock logic: sebelum parent dipilih, child terkunci
+  const tingkatChosen = filterTingkat !== "Semua Tingkat";
+  const jurusanChosen = tingkatChosen && filterJurusan !== "Semua Jurusan";
+  const subGradeChosen = jurusanChosen && filterSubGrade !== "Semua Sub Grade";
+  const hariChosen = subGradeChosen && filterHari !== "Semua Hari";
+  const sesiChosen = hariChosen && filterSesi !== "Semua Sesi";
+  const editLocked = submitting || loadingSchedules || !sesiChosen;
   const scheduleConflict = mode !== "delete" && form.classId
     ? scheduleList.find((s) => s.id !== editingId && s.classId === form.classId && s.hari === form.hari && s.sesi === form.sesi)
     : undefined;
@@ -109,7 +134,7 @@ export function AddScheduleDialog({
     ? scheduleList.find((s) => s.id === editingId) ?? initialSchedule ?? undefined
     : undefined;
   const isDirty = Boolean(editingId && baseline && FORM_KEYS.some((key) => form[key] !== baseline[key]));
-  const dirtyConfirm = (message: string) => !isDirty || window.confirm(message);
+  const dirtyConfirm = async (message: string) => !isDirty || (await askConfirm(message));
   const dialogTitle = mode === "edit" ? "Perbarui Sesi Jadwal Pelajaran" : mode === "delete" ? "Hapus Sesi Jadwal Pelajaran" : "Tambah Sesi Jadwal Pelajaran";
 
   const reset = () => {
@@ -126,12 +151,13 @@ export function AddScheduleDialog({
     setFilterSubGrade("Semua Sub Grade");
     setFilterHari("Semua Hari");
     setFilterSesi("Semua Sesi");
-    setFilterMapel("");
   };
 
-  const switchMode = (nextMode: ScheduleMode) => {
+  const switchMode = async (nextMode: ScheduleMode) => {
     if (submitting || nextMode === mode) return;
-    if (nextMode !== "edit" && !dirtyConfirm("Perubahan belum disimpan. Ganti mode dan buang perubahan?")) return;
+    const ok = await dirtyConfirm("Perubahan belum disimpan. Ganti mode dan buang perubahan?");
+    setConfirmOpen(false);
+    if (!ok) return;
     setMode(nextMode);
     setEditingId(null);
     setDeletingId("");
@@ -223,10 +249,9 @@ export function AddScheduleDialog({
     (filterJurusan === "Semua Jurusan" || s.majorId === filterJurusan) &&
     (filterSubGrade === "Semua Sub Grade" || s.classSection === filterSubGrade) &&
     (filterHari === "Semua Hari" || s.hari === filterHari) &&
-    (filterSesi === "Semua Sesi" || s.sesi === Number(filterSesi)) &&
-    (!filterMapel.trim() || s.subjectName.toLowerCase().includes(filterMapel.trim().toLowerCase()))
+    (filterSesi === "Semua Sesi" || s.sesi === Number(filterSesi))
   );
-  const editScheduleOptions: JurusanOption[] = filteredSchedules.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
+  const editScheduleOptions: JurusanOption[] = [...new Set(filteredSchedules.map((s) => s.subjectName))].map((subjectName) => ({ value: subjectName, label: subjectName }));
   const deleteScheduleOptions: JurusanOption[] = scheduleList.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
 
   const summary = useMemo(() => {
@@ -234,23 +259,31 @@ export function AddScheduleDialog({
     return `${selectedSubject.name} untuk ${selectedClass.name} pada ${form.hari} Sesi ${form.sesi} (${selectedSesi.mulai}-${selectedSesi.selesai} WIB, ${form.durasi} menit).`;
   }, [selectedClass, selectedSubject, form.hari, form.sesi, form.durasi, selectedSesi]);
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (submitting) return;
-    if (!dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?")) return;
+    const ok = await dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?");
+    setConfirmOpen(false);
+    if (!ok) return;
     reset();
     onOpenChange(false);
   };
 
-  const handleSelectEdit = (schedule: JadwalPelajaran) => {
-    if (editingId && editingId !== schedule.id && !dirtyConfirm("Perubahan pada jadwal sebelumnya belum disimpan. Ganti jadwal dan buang perubahan?")) return;
+  const handleSelectEdit = async (schedule: JadwalPelajaran) => {
+    if (editingId && editingId !== schedule.id) {
+      const ok = await dirtyConfirm("Perubahan pada jadwal sebelumnya belum disimpan. Ganti jadwal dan buang perubahan?");
+      setConfirmOpen(false);
+      if (!ok) return;
+    }
     const next = formFromSchedule(schedule);
     setEditingId(schedule.id);
     setForm(next);
     setBaseline(next);
   };
 
-  const handleClearSelection = () => {
-    if (!dirtyConfirm("Perubahan belum disimpan. Lepas jadwal terpilih dan buang perubahan?")) return;
+  const handleClearSelection = async () => {
+    const ok = await dirtyConfirm("Perubahan belum disimpan. Lepas jadwal terpilih dan buang perubahan?");
+    setConfirmOpen(false);
+    if (!ok) return;
     setEditingId(null);
     setForm(EMPTY);
     setBaseline(null);
@@ -266,16 +299,23 @@ export function AddScheduleDialog({
       toast.error("Jadwal belum dipilih", { description: "Pilih jadwal yang akan dihapus terlebih dahulu." });
       return;
     }
-    if (!window.confirm(`Hapus sesi jadwal ${target.className} • Sesi ${target.sesi} ${target.hari} • ${target.subjectName}?`)) return;
+
+    const ok = await askConfirm(`Hapus sesi jadwal ${target.className} • Sesi ${target.sesi} ${target.hari} • ${target.subjectName}?`);
+    if (!ok) {
+      setConfirmOpen(false);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await masterDataApi.jadwalPelajaran.remove(target.id);
       if (res.error) throw new Error(res.error.message || res.error.error || `HTTP ${res.status}`);
+      setConfirmOpen(false);
       toast.success("Sesi jadwal dihapus", { description: `${target.className} • Sesi ${target.sesi} ${target.hari} • ${target.subjectName}.` });
       onSuccess?.();
-      reset();
-      onOpenChange(false);
+      setDeletingId("");
     } catch (err) {
+      setConfirmOpen(false);
       toast.error("Gagal menghapus sesi jadwal", { description: err instanceof Error ? err.message : "Kesalahan tidak diketahui" });
     } finally {
       setSubmitting(false);
@@ -315,9 +355,12 @@ export function AddScheduleDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => {
+    <>
+      <Dialog open={open} onOpenChange={async (next) => {
       if (next) { onOpenChange(true); return; }
-      if (!dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?")) return;
+      const ok = await dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?");
+      setConfirmOpen(false);
+      if (!ok) return;
       reset();
       onOpenChange(false);
     }}>
@@ -395,21 +438,6 @@ export function AddScheduleDialog({
             </section>
           ) : (
             <>
-          {mode === "edit" ? (
-            <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e5deff] bg-[#faf8ff] px-4 py-3">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#5343b9] text-white"><PencilLine className="size-4" /></span>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-[#181c20]">Ubah Detail Jadwal</p>
-                  <p className="text-[11px] text-[#787584]">Perubahan hanya berlaku untuk jadwal yang dipilih di panel kanan.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isDirty ? <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">Belum disimpan</span> : null}
-                <button type="button" onClick={handleRevert} disabled={!isDirty || submitting} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-[#4e566c] transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">Batalkan perubahan</button>
-              </div>
-            </section>
-          ) : null}
           {/* Section 1 */}
           <section>
             <div className="flex items-center gap-2 border-b border-[#eceef3] pb-2">
@@ -488,66 +516,43 @@ export function AddScheduleDialog({
         {mode === "edit" ? (
           <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:flex-none lg:border-l lg:border-t-0">
             <div className="flex flex-col gap-2 pb-40">
-              <div className="sticky top-0 z-10 border-b border-slate-200/70 bg-[#f8f9fc] px-5 pb-3 pt-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#787584]"><Search className="size-4 text-[#5343b9]" /> Langkah 1 · Pilih Jadwal</span>
-                  <span className="text-[10px] font-semibold text-[#787584]">{loadingSchedules ? "Memuat..." : `${filteredSchedules.length} ditemukan`}</span>
-                </div>
-                {selectedSchedule ? (
-                  <div className="mt-2 rounded-xl border border-[#d9d3f0] bg-white p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-[#181c20]">{selectedSchedule.className} • {selectedSchedule.subjectName}</p>
-                        <p className="mt-0.5 text-[11px] text-[#787584]">{selectedSchedule.hari} • Sesi {selectedSchedule.sesi} • {String(selectedSchedule.waktuMulai ?? "").slice(0, 5)}-{String(selectedSchedule.waktuSelesai ?? "").slice(0, 5)} WIB • {selectedSchedule.durasi} menit</p>
-                      </div>
-                      <button type="button" onClick={handleClearSelection} disabled={submitting} className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-1 text-[10px] font-semibold text-[#4e566c] transition-colors hover:bg-slate-50 disabled:opacity-50">Ganti</button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="mt-2 rounded-xl border border-dashed border-[#c9c4d5] bg-white px-3 py-2 text-[11px] leading-4 text-[#787584]">Belum ada jadwal dipilih. Gunakan filter di bawah untuk mempersempit pencarian.</p>
-                )}
-              </div>
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
-                  <SearchableDropdown value={filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Semua Tingkat" disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterTingkat === "Semua Tingkat" ? "" : filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
-                  <SearchableDropdown value={filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label="Semua Jurusan" disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterJurusan === "Semua Jurusan" ? "" : filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterTingkat === "Semua Tingkat" ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={loadingSchedules || !tingkatChosen} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
-                  <SearchableDropdown value={filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label="Semua Sub Grade" disabled={loadingSchedules} />
+                  <SearchableDropdown value={filterSubGrade === "Semua Sub Grade" ? "" : filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterJurusan === "Semua Jurusan" ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={loadingSchedules || !jurusanChosen} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
-                    <SearchableDropdown value={filterHari} onChange={setFilterHari} options={filterHariOptions} label="Semua Hari" disabled={loadingSchedules} />
+                    <SearchableDropdown value={filterHari === "Semua Hari" ? "" : filterHari} onChange={setFilterHari} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterSubGrade === "Semua Sub Grade" ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={loadingSchedules || !subGradeChosen} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
-                    <SearchableDropdown value={filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label="Semua Sesi" disabled={loadingSchedules} />
+                    <SearchableDropdown value={filterSesi === "Semua Sesi" ? "" : filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterHari === "Semua Hari" ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={loadingSchedules || !hariChosen} />
                   </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Cari Mapel</label>
-                  <input type="text" value={filterMapel} onChange={(e) => setFilterMapel(e.target.value)} placeholder="Nama mata pelajaran..." className="h-11 w-full rounded-full bg-[#f1f4f9] px-4 text-xs font-semibold text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:opacity-50" disabled={loadingSchedules} />
                 </div>
               </div>
               <div className="mt-1 flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#181c20]">Jadwal yang akan diperbarui <span className="text-[#c0262d]">*</span></label>
+                <label className="text-[11px] font-bold text-[#181c20]">pilih mata pelajaran <span className="text-[#c0262d]">*</span></label>
                 <SearchableDropdown
                   value={editingId ?? ""}
                   onChange={(v) => {
-                    const s = scheduleList.find((item) => item.id === v);
+                    const s = filteredSchedules.find((item) => item.subjectName === v);
                     if (s) handleSelectEdit(s);
                   }}
                   options={editScheduleOptions}
-                  label={loadingSchedules ? "Memuat data jadwal..." : filteredSchedules.length ? "Pilih jadwal yang akan diperbarui" : "Tidak ada jadwal yang cocok"}
-                  disabled={submitting || loadingSchedules || !filteredSchedules.length}
+                  label={loadingSchedules ? "Memuat data mata pelajaran..." : !sesiChosen ? "Pilih sesi terlebih dahulu" : filteredSchedules.length ? "Pilih mata pelajaran" : "Tidak ada mata pelajaran yang cocok"}
+                  disabled={submitting || loadingSchedules || !sesiChosen || !filteredSchedules.length}
                 />
-                <p className="text-[11px] text-[#787584]">Isi form di sebelah kiri akan mengikuti jadwal yang dipilih.</p>
+                <p className="text-[11px] text-[#787584]">Isi form di sebelah kiri akan mengikuti mata pelajaran yang dipilih.</p>
               </div>
             </div>
           </aside>
@@ -575,5 +580,24 @@ export function AddScheduleDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <DialogContent className="bg-[#f8f9fc] border border-[#c9c4d5]/60">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#ffe5e5] text-[#ba1a1a]">
+            <AlertTriangle className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-sm font-bold text-[#181c20] tracking-tight">Konfirmasi Tindakan</DialogTitle>
+            <DialogDescription className="mt-1 text-sm leading-6 text-[#787584]">{confirmMessage}</DialogDescription>
+          </div>
+        </div>
+        <DialogFooter className="border-t border-[#c9c4d5]/60 bg-[#f8f9fc] px-6 py-4 flex justify-end gap-2">
+          <button type="button" onClick={() => respondConfirm(false)} className="flex items-center justify-center gap-1.5 rounded-xl border border-[#c9c4d5]/60 bg-white px-4 py-2.5 text-sm font-semibold text-[#4e566c] transition-all hover:bg-[#eceef3] active:bg-[#d9d3f0]">Batal</button>
+          <button type="button" onClick={() => respondConfirm(true)} className="flex items-center justify-center gap-1.5 rounded-xl bg-[#ba1a1a] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-900/20 transition-all hover:bg-[#93000a] active:bg-[#7a0008]">Ya, Hapus</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
