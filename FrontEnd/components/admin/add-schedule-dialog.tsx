@@ -80,7 +80,7 @@ export function AddScheduleDialog({
   const scheduleList = dbSchedules ?? schedules;
   const [filterTingkat, setFilterTingkat] = useState("Semua Tingkat");
   const [filterJurusan, setFilterJurusan] = useState("Semua Jurusan");
-  const [filterKelas, setFilterKelas] = useState("Semua Rombel");
+  const [filterSubGrade, setFilterSubGrade] = useState("Semua Sub Grade");
   const [filterHari, setFilterHari] = useState("Semua Hari");
   const [filterSesi, setFilterSesi] = useState("Semua Sesi");
   const [filterMapel, setFilterMapel] = useState("");
@@ -98,7 +98,7 @@ export function AddScheduleDialog({
     setDeletingId("");
     setFilterTingkat("Semua Tingkat");
     setFilterJurusan("Semua Jurusan");
-    setFilterKelas("Semua Rombel");
+    setFilterSubGrade("Semua Sub Grade");
     setFilterHari("Semua Hari");
     setFilterSesi("Semua Sesi");
     setFilterMapel("");
@@ -187,14 +187,14 @@ export function AddScheduleDialog({
   const subjectOptions: JurusanOption[] = subjects.map((s) => ({ value: s.id, label: `${s.name}${s.code ? ` [${s.code}]` : ""}` }));
   const filterTingkatOptions: JurusanOption[] = [{ value: "Semua Tingkat", label: "Semua Tingkat" }, ...gradeLevels.map((g) => ({ value: g.id, label: `Kelas ${g.code} (${gradePhase(g.code)})` }))];
   const filterJurusanOptions: JurusanOption[] = [{ value: "Semua Jurusan", label: "Semua Jurusan" }, ...majors.map((m) => ({ value: m.id, label: `${m.code} - ${m.name}` }))];
-  const filterKelasOptions: JurusanOption[] = [{ value: "Semua Rombel", label: "Semua Rombel" }, ...[...new Set(scheduleList.map((s) => s.classId))].map((cid) => { const s = scheduleList.find((x) => x.classId === cid); return { value: cid, label: s ? `${s.className} • ${s.majorCode} ${s.gradeCode}` : cid }; })];
+  const filterSubGradeOptions: JurusanOption[] = [{ value: "Semua Sub Grade", label: "Semua Sub Grade" }, ...[...new Set(scheduleList.map((s) => s.classSection || ""))].filter((section) => section).sort((a, b) => a.localeCompare(b)).map((section) => ({ value: section, label: `Sub Grade ${section}` }))];
   const filterHariOptions: JurusanOption[] = [{ value: "Semua Hari", label: "Semua Hari" }, ...HARI_LIST.map((h) => ({ value: h, label: h }))];
   const filterSesiOptions: JurusanOption[] = [{ value: "Semua Sesi", label: "Semua Sesi" }, ...SESI_LIST.map((s) => ({ value: String(s.sesi), label: `Sesi ${s.sesi} • ${s.mulai}-${s.selesai}` }))];
   const scheduleLabel = (s: JadwalPelajaran) => `Sesi ${s.sesi} • ${s.hari} ${String(s.waktuMulai ?? "").slice(0, 5)}-${String(s.waktuSelesai ?? "").slice(0, 5)} • ${s.className} • ${s.subjectName}`;
   const filteredSchedules = scheduleList.filter((s) =>
     (filterTingkat === "Semua Tingkat" || s.gradeLevelId === filterTingkat) &&
     (filterJurusan === "Semua Jurusan" || s.majorId === filterJurusan) &&
-    (filterKelas === "Semua Rombel" || s.classId === filterKelas) &&
+    (filterSubGrade === "Semua Sub Grade" || s.classSection === filterSubGrade) &&
     (filterHari === "Semua Hari" || s.hari === filterHari) &&
     (filterSesi === "Semua Sesi" || s.sesi === Number(filterSesi)) &&
     (!filterMapel.trim() || s.subjectName.toLowerCase().includes(filterMapel.trim().toLowerCase()))
@@ -428,7 +428,7 @@ export function AddScheduleDialog({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#787584]">Cari Jadwal</span>
                 <span className="text-[10px] font-semibold text-[#787584]">{loadingSchedules ? "Memuat..." : `${filteredSchedules.length} ditemukan`}</span>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
                   <SearchableDropdown value={filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Semua Tingkat" disabled={loadingSchedules} />
@@ -438,16 +438,18 @@ export function AddScheduleDialog({
                   <SearchableDropdown value={filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label="Semua Jurusan" disabled={loadingSchedules} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Rombel Kelas</label>
-                  <SearchableDropdown value={filterKelas} onChange={setFilterKelas} options={filterKelasOptions} label="Semua Rombel" disabled={loadingSchedules} />
+                  <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
+                  <SearchableDropdown value={filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label="Semua Sub Grade" disabled={loadingSchedules} />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
-                  <SearchableDropdown value={filterHari} onChange={setFilterHari} options={filterHariOptions} label="Semua Hari" disabled={loadingSchedules} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
-                  <SearchableDropdown value={filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label="Semua Sesi" disabled={loadingSchedules} />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
+                    <SearchableDropdown value={filterHari} onChange={setFilterHari} options={filterHariOptions} label="Semua Hari" disabled={loadingSchedules} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
+                    <SearchableDropdown value={filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label="Semua Sesi" disabled={loadingSchedules} />
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Cari Mapel</label>
