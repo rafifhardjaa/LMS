@@ -328,8 +328,8 @@ export function AddScheduleDialog({
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col gap-0 overflow-hidden lg:flex-row lg:overflow-visible">
-          <form id="add-schedule-form" onSubmit={handleSubmit} className="flex-1 space-y-6 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+        <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row">
+          <form id="add-schedule-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-6 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
           {mode === "delete" ? (
             <section className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/50 px-6 py-16 text-center">
               <span className="flex size-14 items-center justify-center rounded-full bg-red-100 text-[#ba1a1a]"><Trash2 className="size-7" /></span>
@@ -422,7 +422,7 @@ export function AddScheduleDialog({
           )}
         </form>
         {mode === "edit" ? (
-          <aside className="shrink-0 border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:border-l lg:border-t-0 lg:h-[calc(100dvh-16rem)] lg:min-h-0 lg:overflow-y-auto">
+          <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:flex-none lg:border-l lg:border-t-0">
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#787584]">Cari Jadwal</span>
