@@ -333,7 +333,6 @@ export function AddPlacementDialog({
   };
 
   const handleGradeLevelChange = (gradeLevelId: string) => {
-    if (mode === "edit") return;
     setForm((prev) => ({ ...prev, gradeLevelId, subjectId: "" }));
     setSubjects([]);
   };
@@ -474,7 +473,6 @@ export function AddPlacementDialog({
               <SearchableDropdown
                 value={form.majorId}
                 onChange={(value) => {
-                  if (mode === "edit") return;
                   setForm((prev) => ({
                     ...prev,
                     majorId: value,
@@ -483,7 +481,7 @@ export function AddPlacementDialog({
                 }}
                 options={majorOptions}
                 label={majors.length ? "Pilih konsentrasi keahlian" : "Belum ada data konsentrasi keahlian"}
-                disabled={mode === "edit" || !majors.length}
+                disabled={!majors.length}
               />
             </div>
           </div>
@@ -501,8 +499,7 @@ export function AddPlacementDialog({
                       key={grade.id}
                       type="button"
                       onClick={() => handleGradeLevelChange(grade.id)}
-                      disabled={mode === "edit"}
-                      className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition-all ${
                         selected
                           ? "border-2 border-[#6c5dd3] bg-[#f5f3ff]/60"
                           : "border border-slate-200 bg-white hover:border-[#c9c4d5]"
