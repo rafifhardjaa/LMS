@@ -83,7 +83,6 @@ export function AddPlacementDialog({
   const selectedTeacher = teachers.find((teacher) => teacher.id === form.teacherId);
   const selectedSubject = subjects.find((subject) => subject.id === form.subjectId);
   const selectedAssignment = assignments.find((a) => a.id === editingId);
-  const selectedMajor = majors.find((m) => m.id === form.majorId);
   const selectedGrade = gradeLevels.find((g) => g.id === form.gradeLevelId);
   const isDirty = Boolean(editingId && baseline && ((Object.keys(EMPTY_STATE) as (keyof typeof EMPTY_STATE)[]).some((k) => form[k] !== baseline[k])));
 
@@ -589,68 +588,13 @@ export function AddPlacementDialog({
                 <div className="text-[11px] leading-5 text-[#787584]">
                   <p><span className="font-semibold text-[#181c20]">Guru:</span> {selectedTeacher?.fullName ?? "-"}</p>
                   <p><span className="font-semibold text-[#181c20]">NIP:</span> {selectedTeacher?.nomorInduk ?? "-"}</p>
-                  <p><span className="font-semibold text-[#181c20]">Jurusan:</span> {selectedMajor ? `${selectedMajor.code} - ${selectedMajor.name}` : "-"}</p>
                   <p><span className="font-semibold text-[#181c20]">Tingkat:</span> {selectedGrade ? `Kelas ${selectedGrade.code} (${gradePhase(selectedGrade.code)})` : "-"}</p>
                   <p><span className="font-semibold text-[#181c20]">Mapel:</span> {selectedSubject ? `${selectedSubject.name}${selectedSubject.code ? ` (${selectedSubject.code})` : ""}` : "-"}</p>
-                  <p><span className="font-semibold text-[#181c20]">Semester:</span> {selectedSubject?.semester ? `Semester ${selectedSubject.semester}` : "-"}</p>
                   <p><span className="font-semibold text-[#181c20]">Sub Grade:</span> {filterSubGrade !== "Semua Sub Grade" ? filterSubGrade : selectedAssignment?.section ? selectedAssignment.section.split(",").map((s) => s.trim()).filter(Boolean).join(", ") : "-"}</p>
-                  <p><span className="font-semibold text-[#181c20]">Ditempatkan:</span> {selectedAssignment?.assignedAt ? new Date(selectedAssignment.assignedAt).toLocaleDateString("id-ID") : "-"}</p>
                 </div>
                 {!editingId ? (
                   <p className="mt-2 rounded-lg bg-[#f8f9fc] px-2.5 py-2 text-[10px] leading-4 text-[#787584]">Belum ada penempatan dipilih. Pilih tingkat, sub grade, lalu penempatan di atas.</p>
                 ) : null}
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#eef2ff] text-xs font-bold text-[#4f46e5]"><Info className="size-3.5" /></span>
-                  <p className="text-xs font-bold text-[#181c20]">Isi form penempatan</p>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase tracking-wide text-[#787584]">Guru (form)</label>
-                      <SearchableDropdown
-                        value={form.teacherId}
-                        onChange={(value) => {
-                          setForm((prev) => ({ ...prev, teacherId: value }));
-                          setEditingId((prev) => {
-                            if (!prev) return prev;
-                            const still = assignments.some((a) => a.id === prev && a.teacherId === value);
-                            return still ? prev : null;
-                          });
-                        }}
-                        options={teacherOptions}
-                        label={teachers.length ? "Cari dan pilih guru" : "Belum ada data guru"}
-                        disabled={submitting || !teachers.length}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase tracking-wide text-[#787584]">Konsentrasi Keahlian (form)</label>
-                      <SearchableDropdown
-                        value={form.majorId}
-                        onChange={() => {}}
-                        options={majorOptions}
-                        label={selectedMajor ? `${selectedMajor.code} - ${selectedMajor.name}` : majors.length ? "Pilih konsentrasi keahlian" : "Belum ada data konsentrasi keahlian"}
-                        disabled
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 gap-2.5">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wide text-[#787584]">Tingkat &amp; Fase (form)</label>
-                        <div className="rounded-lg bg-[#f1f4f9] px-3 py-2 text-[11px] font-semibold text-[#181c20]">{selectedGrade ? `Kelas ${selectedGrade.code} (${gradePhase(selectedGrade.code)})` : "-"}</div>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wide text-[#787584]">Mata Pelajaran (form)</label>
-                        <SearchableDropdown
-                          value={form.subjectId}
-                          onChange={(value) => setForm((prev) => ({ ...prev, subjectId: value }))}
-                          options={subjectOptions}
-                          label={loadingSubjects ? "Memuat..." : subjectOptions.length ? "Pilih mata pelajaran" : "Tidak ada mata pelajaran"}
-                          disabled={submitting || loadingSubjects || !subjectOptions.length}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mt-2 flex items-center gap-1.5 text-[10px] text-[#787584]"><Info className="size-3.5" /> Guru &amp; mapel bisa diubah di sini atau di form kiri; jurusan &amp; tingkat mengikuti penempatan asli.</p>
               </div>
             </div>
           </aside>
@@ -771,7 +715,6 @@ export function AddPlacementDialog({
         <DialogFooter className="mx-0 mb-0 flex flex-row shrink-0 items-center justify-between gap-3 border-t border-slate-200/80 bg-slate-50 px-7 py-4">
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
             <Info className="size-4 text-[#6c5dd3]" />
-            <span>Penempatan menyimpan guru pada mata pelajaran yang dipilih.</span>
           </div>
           <div className="flex items-center gap-3">
             <button
