@@ -7,6 +7,7 @@ import {
   listTeacherSubjects,
   removeTeacherClassroom,
   removeTeacherSubject,
+  updateTeacherSubject,
 } from "../services/master-data-service";
 import { handleError } from "../utils/response";
 
@@ -24,6 +25,7 @@ export const teacherAssignmentsRoute = new Elysia({
               ? user.id
               : query.teacherId || query.teacher_id,
           subjectId: query.subjectId || query.subject_id,
+          section: query.section,
         });
         return status(200, {
           success: true,
@@ -73,6 +75,40 @@ export const teacherAssignmentsRoute = new Elysia({
         teacherId: t.Optional(t.String()),
         teacher_id: t.Optional(t.String()),
         subjectId: t.Optional(t.String()),
+        subject_id: t.Optional(t.String()),
+      }),
+    }
+  )
+  .put(
+    "/subjects/:id",
+    async ({ params, body, status }: any) => {
+      try {
+        const updated = await updateTeacherSubject(params.id, {
+          teacherId: body.teacherId ?? body.teacher_id,
+          subjectId: body.subjectId ?? body.subject_id,
+        });
+        return status(200, {
+          success: true,
+          message: "Teacher subject assignment updated",
+          data: updated,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin"]),
+      detail: {
+        tags: ["Teacher Assignments"],
+        summary: "Perbarui penugasan mapel guru (admin)",
+        security: [{ BearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: t.Object({
+        teacherId: t.String(),
+        teacher_id: t.Optional(t.String()),
+        subjectId: t.String(),
         subject_id: t.Optional(t.String()),
       }),
     }

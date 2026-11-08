@@ -863,10 +863,16 @@ export type AssignmentFilters = {
   classId?: string;
 };
 
-export async function listTeacherSubjects(filters: AssignmentFilters = {}) {
+export async function listTeacherSubjects(filters: AssignmentFilters & { section?: string } = {}) {
   const conditions: SQL[] = [];
   if (filters.teacherId) conditions.push(eq(teacherSubjects.teacherId, filters.teacherId));
   if (filters.subjectId) conditions.push(eq(teacherSubjects.subjectId, filters.subjectId));
+  const sectionFilter = filters.section?.trim();
+  if (sectionFilter) {
+    conditions.push(
+      sql`exists (select 1 from teacher_classrooms tc join classes c on c.id = tc.class_id where tc.teacher_id = ${teacherSubjects.teacherId} and c.section = ${sectionFilter})`
+    );
+  }
 
   return db
     .select({
@@ -877,6 +883,8 @@ export async function listTeacherSubjects(filters: AssignmentFilters = {}) {
       subjectId: teacherSubjects.subjectId,
       subjectName: subjects.name,
       subjectCode: subjects.code,
+      gradeLevelId: subjects.gradeLevelId,
+      section: sql<string | null>`(select string_agg(distinct c.section, ', ' order by c.section) from teacher_classrooms tc join classes c on c.id = tc.class_id where tc.teacher_id = ${teacherSubjects.teacherId})`,
       assignedAt: teacherSubjects.assignedAt,
     })
     .from(teacherSubjects)
@@ -899,6 +907,35 @@ export async function assignTeacherSubject(input: {
       .returning({ id: teacherSubjects.id });
     return rows[0];
   } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new BadRequestError("Guru sudah ditugaskan pada mata pelajaran ini");
+    }
+    if (isForeignKeyViolation(err)) {
+      throw new BadRequestError("Guru atau mata pelajaran tidak ditemukan");
+    }
+    throw err;
+  }
+}
+
+export async function updateTeacherSubject(
+  id: string,
+  input: { teacherId: string; subjectId: string }
+) {
+  assertUuid(id);
+  await assertTeacher(input.teacherId);
+  assertUuid(input.subjectId);
+  try {
+    const rows = await db
+      .update(teacherSubjects)
+      .set({ teacherId: input.teacherId, subjectId: input.subjectId })
+      .where(eq(teacherSubjects.id, id))
+      .returning({ id: teacherSubjects.id });
+    if (rows.length === 0) {
+      throw new NotFoundError("Penugasan mata pelajaran tidak ditemukan");
+    }
+    return rows[0];
+  } catch (err) {
+    if (err instanceof NotFoundError) throw err;
     if (isUniqueViolation(err)) {
       throw new BadRequestError("Guru sudah ditugaskan pada mata pelajaran ini");
     }
