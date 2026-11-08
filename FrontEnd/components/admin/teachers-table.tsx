@@ -61,29 +61,33 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
   const fieldOptions = ["Semua Bidang", ...new Set(teachers.map((t) => t.majorCode).filter(Boolean))];
 
   return (
-    <section className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-2xl border border-[#e0e2e7] bg-white p-4 md:flex-row md:items-center">
+    <section className="overflow-hidden rounded-2xl border border-[#e0e2e7] bg-white shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
+      <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-bold text-[#181c20]">Daftar Pendidik & Pengampu</h2>
+          <span className="rounded-full bg-[#e5deff] px-2.5 py-1 text-[11px] font-semibold text-[#4331a8]">Total {rows.length} Guru</span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 md:flex-row md:items-center">
         <label className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-[#787584]" aria-hidden="true" />
           <input aria-label="Cari guru" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="Cari nama guru, NIP, atau email..." className="h-11 w-full rounded-full bg-[#f1f4f9] pl-10 pr-4 text-sm text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30" />
         </label>
-        <select value={fieldFilter} onChange={(e) => { setFieldFilter(e.target.value); setPage(1); }} className="h-11 rounded-full bg-[#f1f4f9] px-4 text-sm text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
-          {fieldOptions.map((o) => <option key={o}>{o}</option>)}
-        </select>
-        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="h-11 rounded-full bg-[#f1f4f9] px-4 text-sm text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
-          {statusOptions.map((o) => <option key={o}>{o}</option>)}
-        </select>
+        <div className="relative shrink-0">
+          <select value={fieldFilter} onChange={(e) => { setFieldFilter(e.target.value); setPage(1); }} className="h-11 appearance-none rounded-full bg-[#f1f4f9] pl-4 pr-9 text-sm text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
+            {fieldOptions.map((o) => <option key={o}>{o}</option>)}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#787584]" aria-hidden="true" />
+        </div>
+        <div className="relative shrink-0">
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="h-11 appearance-none rounded-full bg-[#f1f4f9] pl-4 pr-9 text-sm text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
+            {statusOptions.map((o) => <option key={o}>{o}</option>)}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#787584]" aria-hidden="true" />
+        </div>
         <button type="button" onClick={reset} aria-label="Reset filter" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] hover:text-[#6c5dd3]"><RefreshCw className="size-[18px]" /></button>
       </div>
-
-      <div className="overflow-hidden rounded-2xl border border-[#e0e2e7] bg-white shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
-        <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-bold text-[#181c20]">Daftar Pendidik & Pengampu</h2>
-            <span className="rounded-full bg-[#e5deff] px-2.5 py-1 text-[11px] font-semibold text-[#4331a8]">Total {rows.length} Guru</span>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
+      <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-left">
             <thead className="bg-[#f8f9fc] text-[10px] font-semibold uppercase tracking-wide text-[#4e566c]">
               <tr><th className="px-5 py-3">Guru & Identitas</th><th className="px-5 py-3">Bidang Rumpun & Mapel</th><th className="px-5 py-3">Status & Dapodik</th><th className="px-5 py-3 text-right">Aksi</th></tr>
@@ -102,7 +106,6 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
           </table>
         </div>
         <div className="flex flex-col gap-2 border-t border-[#eceef3] px-5 py-3 text-[11px] text-[#787584] sm:flex-row sm:items-center sm:justify-between"><span className="flex items-center gap-2"><RefreshCw className="size-3.5 text-[#059669]" /> Terakhir disinkronkan dengan Dapodik Kemendikbud</span><nav aria-label="Paginasi guru" className="flex items-center gap-1"><button type="button" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage(page - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronLeft className="size-4" /></button>{Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => <button key={n} type="button" aria-current={page === n ? "page" : undefined} onClick={() => setPage(n)} className={`size-8 rounded-full font-semibold ${page === n ? "bg-[#e5deff] text-[#6c5dd3]" : "text-[#4e566c] hover:bg-[#f1f4f9]"}`}>{n}</button>)}<button type="button" aria-label="Halaman berikutnya" disabled={page >= pageCount} onClick={() => setPage(page + 1)} className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronRight className="size-4" /></button></nav></div>
-      </div>
     </section>
   );
 }
