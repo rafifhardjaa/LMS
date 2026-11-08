@@ -9,12 +9,12 @@ import {
   CheckCircle2,
   KeyRound,
   Mail,
-  ShieldCheck,
   Sparkles,
   UserCircle,
   UserPlus,
   X,
 } from "lucide-react";
+import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
 import {
   Dialog,
   DialogContent,
@@ -71,6 +71,8 @@ function FieldError({ message }: { message?: string }) {
 
 export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDialogProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [role, setRole] = useState("Guru");
+  const [accountStatus, setAccountStatus] = useState("Aktif");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -78,7 +80,18 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     setForm(EMPTY_FORM);
     setErrors({});
     setSubmitting(false);
+    setRole("Guru");
+    setAccountStatus("Aktif");
   };
+
+  const roleOptions: JurusanOption[] = [
+    { value: "Guru", label: "Guru" },
+    { value: "Admin", label: "Admin" },
+  ];
+  const statusOptions: JurusanOption[] = [
+    { value: "Aktif", label: "Aktif" },
+    { value: "Nonaktif", label: "Nonaktif" },
+  ];
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -200,6 +213,27 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
           onSubmit={handleSubmit}
           className="flex-1 space-y-6 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
         >
+          <div className="rounded-2xl border border-[#e5deff] bg-[#f5f3ff] p-4">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-[#4331a8]">
+              <Sparkles className="size-4" /> Metode Tindakan / Manajemen Sesi
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <button type="button" className="flex h-11 items-center justify-center gap-2 rounded-full bg-[#6c5dd3] text-xs font-bold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)]">
+                <Sparkles className="size-4" /> Tambah Baru
+              </button>
+              <button type="button" className="flex h-11 items-center justify-center gap-2 rounded-full border border-[#e0e2e7] bg-white text-xs font-bold text-[#6c5dd3] hover:bg-[#f8f6ff]">
+                <Sparkles className="size-4" /> Perbarui
+              </button>
+              <button type="button" className="flex h-11 items-center justify-center gap-2 rounded-full border border-[#e0e2e7] bg-white text-xs font-bold text-[#ba1a1a] hover:bg-[#fff5f5]">
+                <Sparkles className="size-4" /> Hapus
+              </button>
+            </div>
+            <div className="mt-3 flex items-start gap-2 rounded-xl border border-[#e5deff] bg-white px-3 py-2 text-[11px] leading-4 text-[#4e566c]">
+              <Sparkles className="mt-0.5 size-4 shrink-0 text-[#6c5dd3]" />
+              <p><span className="font-bold text-[#4331a8]">Mode Aktif:</span> Tambah guru baru ke data pendidik tanpa menimpa data lain.</p>
+            </div>
+          </div>
+
           <div className="flex items-start gap-3 rounded-2xl border border-[#e5deff] bg-[#f5f3ff] p-4">
             <Sparkles className="mt-0.5 size-5 shrink-0 text-[#6c5dd3]" />
             <div>
@@ -301,18 +335,12 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel>Peran Akun</FieldLabel>
-                <div className="flex h-11 items-center gap-2 rounded-xl bg-[#f1f4f9] px-3.5 text-xs font-medium text-[#181c20]">
-                  <ShieldCheck className="size-[18px] text-[#6c5dd3]" />
-                  Guru
-                </div>
+                <SearchableDropdown value={role} onChange={setRole} options={roleOptions} label="Guru" />
               </div>
 
               <div>
                 <FieldLabel>Status Akun</FieldLabel>
-                <div className="flex h-11 items-center gap-2 rounded-xl bg-[#f1f4f9] px-3.5 text-xs font-medium text-[#181c20]">
-                  <span className="size-1.5 rounded-full bg-emerald-500" />
-                  Aktif
-                </div>
+                <SearchableDropdown value={accountStatus} onChange={setAccountStatus} options={statusOptions} label="Aktif" />
               </div>
 
               <div className="sm:col-span-2">
