@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Download, UserPlus, UserRoundCheck } from "lucide-react";
 import { motion } from "framer-motion";
-import { TeacherStats } from "@/components/admin/teacher-stats";
 import { TeachersSidePanels } from "@/components/admin/teachers-side-panels";
 import { TeachersTable } from "@/components/admin/teachers-table";
 import { AddTeacherDialog } from "@/components/admin/add-teacher-dialog";
@@ -69,8 +68,6 @@ export default function TeachersPage() {
           </StaggerChildren>
         </div>
       </FadeIn>
-
-      <TeacherStats />
 
       <FadeIn>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
