@@ -4,12 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { masterDataApi } from "@/lib/api/master-data";
 import { TeacherSummary } from "@/lib/api/master-data";
 import { useAuthStore } from "@/lib/store/auth-store";
+import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
 import {
-  BadgeCheck,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
   RefreshCw,
   Search,
 } from "lucide-react";
@@ -22,8 +20,8 @@ const statusStyle: Record<string, string> = {
 
 export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; onTeacherAdded?: () => void }) {
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("Semua Status");
-  const [fieldFilter, setFieldFilter] = useState("Semua Bidang");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [fieldFilter, setFieldFilter] = useState("");
   const [page, setPage] = useState(1);
   const [teachers, setTeachers] = useState<TeacherSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +31,7 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
     setLoading(true);
     setError(null);
     try {
-      const res = await masterDataApi.teachers.list(query || undefined, statusFilter !== "Semua Status" ? statusFilter : undefined);
+      const res = await masterDataApi.teachers.list(query || undefined, statusFilter || undefined);
       if (res.error) throw new Error((res.error as { message?: string }).message ?? "Gagal memuat guru");
       setTeachers(res.data?.data ?? []);
     } catch (e) {
@@ -48,18 +46,25 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
   const rows = useMemo(() => teachers.filter((t) => {
     const q = query.trim().toLowerCase();
     return (!q || [t.fullName, t.nomorInduk, t.email].some((v) => (v ?? "").toLowerCase().includes(q)))
-      && (statusFilter === "Semua Status" || (t.isActive ? "Aktif" : "Nonaktif") === statusFilter)
-      && (fieldFilter === "Semua Bidang" || t.majorCode === fieldFilter);
+      && (!statusFilter || (t.isActive ? "Aktif" : "Nonaktif") === statusFilter)
+      && (!fieldFilter || t.majorCode === fieldFilter);
   }), [teachers, query, statusFilter, fieldFilter]);
 
   const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const paged = rows.slice((page - 1) * pageSize, page * pageSize);
 
-  const reset = () => { setQuery(""); setStatusFilter("Semua Status"); setFieldFilter("Semua Bidang"); setPage(1); };
+  const reset = () => { setQuery(""); setStatusFilter(""); setFieldFilter(""); setPage(1); };
 
-  const statusOptions = ["Semua Status", "Aktif", "Nonaktif"];
-  const fieldOptions = ["Semua Bidang", ...new Set(teachers.map((t) => t.majorCode).filter(Boolean))];
+  const statusOptions: JurusanOption[] = [
+    { value: "", label: "Semua Status" },
+    { value: "Aktif", label: "Aktif" },
+    { value: "Nonaktif", label: "Nonaktif" },
+  ];
+  const fieldOptions: JurusanOption[] = [
+    { value: "", label: "Semua Bidang" },
+    ...[...new Set(teachers.map((t) => t.majorCode).filter(Boolean))].map((code) => ({ value: code as string, label: code as string })),
+  ];
 
   return (
     <section className="overflow-hidden rounded-2xl border border-[#e0e2e7] bg-white shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
@@ -74,35 +79,30 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
           <Search className="absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-[#787584]" aria-hidden="true" />
           <input aria-label="Cari guru" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="Cari nama guru, NIP, atau email..." className="h-11 w-full rounded-full bg-[#f1f4f9] pl-10 pr-4 text-sm text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30" />
         </label>
-        <div className="relative shrink-0">
-          <select value={fieldFilter} onChange={(e) => { setFieldFilter(e.target.value); setPage(1); }} className="h-11 appearance-none rounded-full bg-[#f1f4f9] pl-4 pr-9 text-sm text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
-            {fieldOptions.map((o) => <option key={o}>{o}</option>)}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#787584]" aria-hidden="true" />
+        <div className="w-[200px] shrink-0">
+          <SearchableDropdown value={fieldFilter} onChange={(v) => { setFieldFilter(v); setPage(1); }} options={fieldOptions} label="Semua Bidang" />
         </div>
-        <div className="relative shrink-0">
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="h-11 appearance-none rounded-full bg-[#f1f4f9] pl-4 pr-9 text-sm text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
-            {statusOptions.map((o) => <option key={o}>{o}</option>)}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#787584]" aria-hidden="true" />
+        <div className="w-[200px] shrink-0">
+          <SearchableDropdown value={statusFilter} onChange={(v) => { setStatusFilter(v); setPage(1); }} options={statusOptions} label="Semua Status" />
         </div>
         <button type="button" onClick={reset} aria-label="Reset filter" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] hover:text-[#6c5dd3]"><RefreshCw className="size-[18px]" /></button>
       </div>
       <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-left">
             <thead className="bg-[#f8f9fc] text-[10px] font-semibold uppercase tracking-wide text-[#4e566c]">
-              <tr><th className="px-5 py-3">Guru & Identitas</th><th className="px-5 py-3">Bidang Rumpun & Mapel</th><th className="px-5 py-3">Status & Dapodik</th><th className="px-5 py-3 text-right">Aksi</th></tr>
+              <tr><th className="px-5 py-3">Nama</th><th className="px-5 py-3">Gmail</th><th className="px-5 py-3">NIP</th><th className="px-5 py-3">Jurusan</th><th className="px-5 py-3">Status</th></tr>
             </thead>
             <tbody className="divide-y divide-[#eceef3]">
               {paged.map((teacher, index) => (
                 <tr key={teacher.id} className="align-middle hover:bg-[#fbfcfd]">
-                  <td className="px-5 py-4"><div className="flex items-center gap-3"><span className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold bg-[#f0edff] text-[#6c5dd3]`}>{teacher.fullName?.charAt(0)??"?"}</span><div className="min-w-0"><p className="font-semibold text-[#181c20]">{teacher.fullName}</p><p className="mt-0.5 text-[11px] text-[#787584]">{teacher.nomorInduk ?? "—"}</p><p className="mt-1 text-[11px] text-[#787584]">{teacher.email ?? "—"}</p></div></div></td>
-                  <td className="px-5 py-4"><span className="inline-block rounded-md px-2 py-1 text-[10px] font-medium bg-[#f0edff] text-[#6c5dd3]">Guru</span><p className="mt-2 max-w-[240px] text-xs leading-5 text-[#181c20]">{teacher.majorName ?? "—"}</p><p className="mt-1 max-w-[240px] text-[10px] text-[#787584]">{teacher.subjects ?? "Belum ada penempatan mapel"}</p></td>
-                  <td className="px-5 py-4"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium ${teacher.isActive ? "bg-[#ecfdf5] text-[#047857]" : "bg-[#fff7ed] text-[#b45309]"}`}><span className="size-1.5 rounded-full bg-current" />{teacher.isActive ? "Aktif" : "Nonaktif"}</span><p className="mt-2 flex items-center gap-1 text-[10px] text-[#6c5dd3]"><BadgeCheck className="size-3.5" /> Dapodik Valid</p></td>
-                  <td className="px-5 py-4 text-right"><button type="button" aria-label={`Aksi untuk ${teacher.fullName}`} onClick={() => window.alert(`Aksi guru: ${teacher.fullName}`)} className="rounded-lg p-2 text-[#787584] hover:bg-[#f1f4f9] hover:text-[#6c5dd3]"><MoreHorizontal className="size-5" /></button></td>
+                  <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.fullName}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.email ?? "—"}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.nomorInduk ?? "—"}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.majorName ?? "—"}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-[#181c20]"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium ${teacher.isActive ? "bg-[#ecfdf5] text-[#047857]" : "bg-[#fff7ed] text-[#b45309]"}`}><span className="size-1.5 rounded-full bg-current" />{teacher.isActive ? "Aktif" : "Nonaktif"}</span></td>
                 </tr>
               ))}
-              {!paged.length && <tr><td colSpan={4} className="px-5 py-12 text-center text-sm text-[#787584]">Tidak ada guru yang cocok dengan filter.</td></tr>}
+              {!paged.length && <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-[#787584]">Tidak ada guru yang cocok dengan filter.</td></tr>}
             </tbody>
           </table>
         </div>
