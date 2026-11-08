@@ -68,6 +68,8 @@ export interface TeacherSubjectAssignment {
   subjectId: string;
   subjectName: string | null;
   subjectCode: string | null;
+  gradeLevelId?: string | null;
+  section?: string | null;
   assignedAt: string;
 }
 
@@ -346,7 +348,7 @@ export const masterDataApi = {
       }),
   },
   teacherAssignments: {
-    listSubjects: (filters: { teacherId?: string; subjectId?: string } = {}) =>
+    listSubjects: (filters: { teacherId?: string; subjectId?: string; section?: string } = {}) =>
       apiFetch<ApiSuccess<TeacherSubjectAssignment[]>>(
         `/api/v1/teacher-assignments/subjects${queryString(filters)}`
       ),
@@ -359,6 +361,11 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<unknown>>(
         `/api/v1/teacher-assignments/subjects/${id}`,
         { method: "DELETE" }
+      ),
+    updateSubject: (id: string, body: { teacherId: string; subjectId: string }) =>
+      apiFetch<ApiSuccess<{ id: string }>>(
+        `/api/v1/teacher-assignments/subjects/${id}`,
+        { method: "PUT", body: JSON.stringify(body) }
       ),
     listClasses: (filters: { teacherId?: string; classId?: string } = {}) =>
       apiFetch<ApiSuccess<TeacherClassroomAssignment[]>>(
