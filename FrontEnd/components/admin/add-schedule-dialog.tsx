@@ -252,7 +252,14 @@ export function AddScheduleDialog({
     (filterSesi === "Semua Sesi" || s.sesi === Number(filterSesi))
   );
   const editScheduleOptions: JurusanOption[] = [...new Set(filteredSchedules.map((s) => s.subjectName))].map((subjectName) => ({ value: subjectName, label: subjectName }));
-  const deleteScheduleOptions: JurusanOption[] = scheduleList.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
+  const deleteScheduleOptions: JurusanOption[] = filteredSchedules.map((s) => ({ value: s.id, label: scheduleLabel(s) }));
+
+  // Wrapper filter untuk mode hapus: reset deletingId saat filter berubah
+  const handleFilterTingkatChange = (v: string) => { setFilterTingkat(v); if (mode === "delete") setDeletingId(""); };
+  const handleFilterJurusanChange = (v: string) => { setFilterJurusan(v); if (mode === "delete") setDeletingId(""); };
+  const handleFilterSubGradeChange = (v: string) => { setFilterSubGrade(v); if (mode === "delete") setDeletingId(""); };
+  const handleFilterHariChange = (v: string) => { setFilterHari(v); if (mode === "delete") setDeletingId(""); };
+  const handleFilterSesiChange = (v: string) => { setFilterSesi(v); if (mode === "delete") setDeletingId(""); };
 
   const summary = useMemo(() => {
     if (!selectedClass || !selectedSubject) return "Alokasikan jam belajar mengajar, rombel kelas, dan mata pelajaran.";
@@ -401,16 +408,64 @@ export function AddScheduleDialog({
             {mode === "delete" ? (
               <div className="mt-2 rounded-2xl border border-red-200/70 bg-white p-3">
                 <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
+                  <SearchableDropdown value={filterTingkat === "Semua Tingkat" ? "" : filterTingkat} onChange={handleFilterTingkatChange} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
+                  <SearchableDropdown value={filterJurusan === "Semua Jurusan" ? "" : filterJurusan} onChange={handleFilterJurusanChange} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterTingkat === "Semua Tingkat" ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={loadingSchedules || !tingkatChosen} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
+                  <SearchableDropdown value={filterSubGrade === "Semua Sub Grade" ? "" : filterSubGrade} onChange={handleFilterSubGradeChange} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterJurusan === "Semua Jurusan" ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={loadingSchedules || !jurusanChosen} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
+                    <SearchableDropdown value={filterHari === "Semua Hari" ? "" : filterHari} onChange={handleFilterHariChange} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterSubGrade === "Semua Sub Grade" ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={loadingSchedules || !subGradeChosen} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
+                    <SearchableDropdown value={filterSesi === "Semua Sesi" ? "" : filterSesi} onChange={handleFilterSesiChange} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterHari === "Semua Hari" ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={loadingSchedules || !hariChosen} />
+                  </div>
+                </div>
+                <div className="mt-1 flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Jadwal yang akan dihapus <span className="text-[#c0262d]">*</span></label>
                   <SearchableDropdown
-                    value={deletingId}
+                    value={deletingId === "" || !filteredSchedules.some((s) => s.id === deletingId) ? "" : deletingId}
                     onChange={setDeletingId}
                     options={deleteScheduleOptions}
-                    label={loadingSchedules ? "Memuat data jadwal..." : scheduleList.length ? "Pilih jadwal yang akan dihapus" : "Belum ada data jadwal"}
-                    disabled={submitting || loadingSchedules || !scheduleList.length}
+                    label={loadingSchedules ? "Memuat data jadwal..." : !sesiChosen ? "Pilih sesi terlebih dahulu" : deleteScheduleOptions.length ? "Pilih jadwal yang akan dihapus" : "Tidak ada jadwal yang cocok"}
+                    disabled={submitting || loadingSchedules || !sesiChosen || !deleteScheduleOptions.length}
                   />
-                  <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#ba1a1a]"><Info className="size-3.5" /> Mode Aktif: menghapus sesi jadwal dari Timetable Master. Tindakan ini tidak bisa dibatalkan.</p>
                 </div>
+                {deletingId && (
+                  <div className="mt-2 rounded-xl border border-[#d9d3f0] bg-[#faf8ff] p-3 max-h-60 overflow-y-auto">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#e5deff] text-xs font-bold text-[#5343b9]"><Trash2 className="size-3.5" /></span>
+                      <p className="text-xs font-bold text-[#181c20]">Data yang akan dihapus</p>
+                    </div>
+                    <div className="text-[11px] leading-5 text-[#787584]">
+                      {(() => {
+                        const s = filteredSchedules.find((item) => item.id === deletingId);
+                        if (!s) return <p className="text-[#ba1a1a]">Pilih jadwal terlebih dahulu</p>;
+                        return (
+                          <>
+                            <p><span className="font-semibold text-[#181c20]">Tingkat:</span> {s.gradeLevelId}</p>
+                            <p><span className="font-semibold text-[#181c20]">Jurusan:</span> {s.majorId}</p>
+                            <p><span className="font-semibold text-[#181c20]">Sub Grade:</span> {s.classSection || "-"}</p>
+                            <p><span className="font-semibold text-[#181c20]">Hari:</span> {s.hari}</p>
+                            <p><span className="font-semibold text-[#181c20]">Sesi:</span> {s.sesi}</p>
+                            <p><span className="font-semibold text-[#181c20]">Waktu:</span> {String(s.waktuMulai ?? "").slice(0, 5)} - {String(s.waktuSelesai ?? "").slice(0, 5)} WIB</p>
+                            <p><span className="font-semibold text-[#181c20]">Mapel:</span> {s.subjectName}</p>
+                            <p><span className="font-semibold text-[#181c20]">Durasi:</span> {s.durasi} menit</p>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#ba1a1a]"><Info className="size-3.5" /> Mode Aktif: menghapus sesi jadwal dari Timetable Master. Tindakan ini tidak bisa dibatalkan.</p>
               </div>
             ) : mode === "edit" ? (
               <p className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white px-2.5 py-1.5 text-[11px] text-[#4e566c]"><Info className="size-3.5 shrink-0 text-[#5343b9]" /><span><strong>Mode Aktif:</strong> {editingId ? "ubah detail jadwal terpilih lalu simpan ke Timetable Master." : "pilih jadwal pada panel kanan untuk mulai mengubah."}</span></p>
@@ -422,13 +477,7 @@ export function AddScheduleDialog({
 
         <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row">
           <form id="add-schedule-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-6 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
-          {mode === "delete" ? (
-            <section className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/50 px-6 py-16 text-center">
-              <span className="flex size-14 items-center justify-center rounded-full bg-red-100 text-[#ba1a1a]"><Trash2 className="size-7" /></span>
-              <h3 className="mt-4 text-sm font-bold text-[#181c20]">Hapus Sesi Jadwal Pelajaran</h3>
-              <p className="mt-1 max-w-md text-[11px] leading-5 text-[#787584]">Pilih jadwal pada dropdown di atas untuk menghapusnya dari Timetable Master. Konten form tidak ditampilkan pada mode ini.</p>
-            </section>
-          ) : (
+          {mode === "delete" ? null : (
             <>
           {mode === "edit" && !editingId ? (
             <section className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#c9c4d5] bg-[#f8f9fc] px-6 py-16 text-center">
