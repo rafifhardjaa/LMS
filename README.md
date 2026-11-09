@@ -388,10 +388,13 @@ Folder `BackEnd/backups/` tidak ikut di-commit.
 | `bun run db:push` | Push schema langsung tanpa file migrasi (dev cepat) |
 | `bun run db:sync-curriculum` | Sinkronkan jurusan dan mapel dari referensi kurikulum (idempotent) |
 | `bun run seed` | Isi data awal ke database |
+| `bun run db:import-jadwal` | Import jadwal, guru, dan penugasan guru+mapel+kelas dari `Jadwal_Pelajaran_SMK.xlsx` |
 
-> Jalankan semua perintah database dari folder `BackEnd`.
+> Jalankan semua perintah database dari folder `BackEnd`. Sebelum `db:import-jadwal`, jalankan `bun run db:backup` untuk cadangkan database.
 
 `db:sync-curriculum` aman dijalankan berulang: hanya menambahkan jurusan/mapel yang belum ada tanpa menghapus data yang sudah terlanjur dibuat.
+
+`db:import-jadwal` bersifat destructive: seluruh user guru, subject, dan jadwal lama akan diganti dengan data dari Excel. Uji dulu dengan `--dry-run` untuk memvalidasi mapping tanpa menulis database.
 
 ### FrontEnd
 
