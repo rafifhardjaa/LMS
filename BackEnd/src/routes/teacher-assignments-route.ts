@@ -3,10 +3,13 @@ import { authMiddleware, requireRole } from "../middleware/auth-middleware";
 import {
   assignTeacherClassroom,
   assignTeacherSubject,
+  assignTeachingAssignment,
   listTeacherClassrooms,
   listTeacherSubjects,
+  listTeachingAssignments,
   removeTeacherClassroom,
   removeTeacherSubject,
+  removeTeachingAssignment,
   updateTeacherSubject,
 } from "../services/master-data-service";
 import { handleError } from "../utils/response";
@@ -219,6 +222,97 @@ export const teacherAssignmentsRoute = new Elysia({
       detail: {
         tags: ["Teacher Assignments"],
         summary: "Hapus penugasan kelas guru (admin)",
+        security: [{ BearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+    }
+  )
+  .get(
+    "/",
+    async ({ query, user, status }: any) => {
+      try {
+        const data = await listTeachingAssignments({
+          teacherId:
+            user?.role === "guru"
+              ? user.id
+              : query.teacherId || query.teacher_id,
+          subjectId: query.subjectId || query.subject_id,
+          classId: query.classId || query.class_id,
+        });
+        return status(200, {
+          success: true,
+          message: "Teaching assignments retrieved",
+          data,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru"]),
+      detail: {
+        tags: ["Teacher Assignments"],
+        summary: "List penugasan guru per mapel dan kelas",
+        security: [{ BearerAuth: [] }],
+      },
+    }
+  )
+  .post(
+    "/",
+    async ({ body, status }: any) => {
+      try {
+        const created = await assignTeachingAssignment({
+          teacherId: body.teacherId ?? body.teacher_id,
+          subjectId: body.subjectId ?? body.subject_id,
+          classId: body.classId ?? body.class_id,
+        });
+        return status(201, {
+          success: true,
+          message: "Teaching assignment created",
+          data: created,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin"]),
+      detail: {
+        tags: ["Teacher Assignments"],
+        summary: "Tugaskan guru ke mapel dan kelas (admin)",
+        security: [{ BearerAuth: [] }],
+      },
+      body: t.Object({
+        teacherId: t.Optional(t.String()),
+        teacher_id: t.Optional(t.String()),
+        subjectId: t.Optional(t.String()),
+        subject_id: t.Optional(t.String()),
+        classId: t.Optional(t.String()),
+        class_id: t.Optional(t.String()),
+      }),
+    }
+  )
+  .delete(
+    "/:id",
+    async ({ params, status }: any) => {
+      try {
+        await removeTeachingAssignment(params.id);
+        return status(200, {
+          success: true,
+          message: "Teaching assignment removed",
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin"]),
+      detail: {
+        tags: ["Teacher Assignments"],
+        summary: "Hapus penugasan guru per mapel dan kelas (admin)",
         security: [{ BearerAuth: [] }],
       },
       params: t.Object({ id: t.String() }),
