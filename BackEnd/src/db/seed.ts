@@ -19,9 +19,19 @@ import {
   majorsData,
   gradeLevelsData,
   classesData,
-  teachersData,
-  subjectsData,
 } from "./seed-data";
+
+const MAJOR_LABELS: Record<string, string> = {
+  TJKT: "TJKT",
+  PPLG: "PPLG",
+  DKV: "DKV",
+  AKL: "AKL",
+  BDG: "Bisnis Digital",
+  TKR: "TKR",
+  HTL: "Perhotelan",
+  KUL: "Kuliner",
+  TKI: "TKI",
+};
 
 async function seed() {
   console.log("🌱 Starting database seeding...");
@@ -189,7 +199,7 @@ async function seed() {
       .insert(classes)
       .values(
         classesData.map((c) => ({
-          name: c.name,
+          name: `${c.gradeCode} ${MAJOR_LABELS[c.majorCode] ?? c.majorCode} ${c.section}`,
           section: c.section,
           majorId: majorByCode.get(c.majorCode)!,
           gradeLevelId: gradeByCode.get(c.gradeCode)!,
@@ -197,118 +207,26 @@ async function seed() {
       )
       .returning({ id: classes.id, name: classes.name });
     const classByName = new Map(classesInserted.map((c) => [c.name, c.id]));
-    const classMeta = new Map(classesData.map((c) => [c.name, c]));
 
     console.log("Linking demo students to classes...");
     await db
       .update(users)
-      .set({ classId: classByName.get("X RPL A") ?? null })
+      .set({ classId: classByName.get("X PPLG A") ?? null })
       .where(eq(users.id, siswaUser.id));
     await db
       .update(users)
-      .set({ classId: classByName.get("X RPL A") ?? null })
+      .set({ classId: classByName.get("X PPLG A") ?? null })
       .where(eq(users.id, siswa2User.id));
     await db
       .update(users)
-      .set({ classId: classByName.get("X RPL B") ?? null })
+      .set({ classId: classByName.get("X PPLG B") ?? null })
       .where(eq(users.id, siswa3User.id));
     await db
       .update(users)
-      .set({ classId: classByName.get("X RPL B") ?? null })
+      .set({ classId: classByName.get("X PPLG B") ?? null })
       .where(eq(users.id, siswa4User.id));
 
-    console.log(`Inserting ${teachersData.length} teachers...`);
-    const teacherUsers = await db
-      .insert(users)
-      .values(
-        teachersData.map((t) => ({
-          fullName: t.fullName,
-          email: t.email,
-          nomorInduk: t.nomorInduk,
-          passwordHash,
-          passwordChangedAt: new Date(),
-          isActive: true,
-        }))
-      )
-      .returning({ id: users.id, email: users.email });
-    const teacherByEmail = new Map(teacherUsers.map((u) => [u.email, u.id]));
-
-    if (teacherByEmail.size !== teachersData.length) {
-      throw new Error("Failed to create all teacher accounts");
-    }
-
-    console.log("Assigning guru role to teachers...");
-    await db.insert(userRoles).values(
-      teachersData.map((t) => ({
-        userId: teacherByEmail.get(t.email)!,
-        roleId: guruRole.id,
-      }))
-    );
-
-    console.log("Assigning teachers to classrooms...");
-    const teacherClassroomRows: { teacherId: string; classId: string }[] = [];
-    for (const teacher of teachersData) {
-      const teacherId = teacherByEmail.get(teacher.email);
-      if (!teacherId) continue;
-      for (const className of teacher.classNames) {
-        const classId = classByName.get(className);
-        if (!classId) continue;
-        teacherClassroomRows.push({ teacherId, classId });
-      }
-    }
-    await db.insert(teacherClassrooms).values(teacherClassroomRows);
-
-    console.log("Inserting subjects...");
-    const subjectData = await db
-      .insert(subjects)
-      .values(
-        subjectsData.map((s) => ({
-          name: s.name,
-          code: s.code,
-          majorId: s.majorCode ? (majorByCode.get(s.majorCode) ?? null) : null,
-          gradeLevelId: gradeByCode.get(s.gradeCode)!,
-          semester: s.semester,
-          createdBy: adminUser.id,
-        }))
-      )
-      .returning({
-        id: subjects.id,
-        code: subjects.code,
-        majorId: subjects.majorId,
-        gradeLevelId: subjects.gradeLevelId,
-      });
-
-    const subjectIdsByMajorGrade = new Map<string, string[]>();
-    for (const s of subjectData) {
-      if (!s.majorId || !s.gradeLevelId) continue;
-      const key = `${s.majorId}|${s.gradeLevelId}`;
-      const list = subjectIdsByMajorGrade.get(key) ?? [];
-      list.push(s.id);
-      subjectIdsByMajorGrade.set(key, list);
-    }
-
-    console.log("Assigning subjects to teachers...");
-    const teacherSubjectRows: { teacherId: string; subjectId: string }[] = [];
-    const assignedSubjectPairs = new Set<string>();
-    for (const teacher of teachersData) {
-      const teacherId = teacherByEmail.get(teacher.email);
-      if (!teacherId) continue;
-      for (const className of teacher.classNames) {
-        const meta = classMeta.get(className);
-        if (!meta) continue;
-        const majorId = majorByCode.get(meta.majorCode);
-        const gradeLevelId = gradeByCode.get(meta.gradeCode);
-        if (!majorId || !gradeLevelId) continue;
-        const subjectIds = subjectIdsByMajorGrade.get(`${majorId}|${gradeLevelId}`) ?? [];
-        for (const subjectId of subjectIds) {
-          const pairKey = `${teacherId}|${subjectId}`;
-          if (assignedSubjectPairs.has(pairKey)) continue;
-          assignedSubjectPairs.add(pairKey);
-          teacherSubjectRows.push({ teacherId, subjectId });
-        }
-      }
-    }
-    await db.insert(teacherSubjects).values(teacherSubjectRows);
+    console.log("Guru, mapel, dan penugasan diisi lewat db:import-jadwal.");
 
     console.log("Inserting demo subjects...");
     const demosubjectData = await db
@@ -429,7 +347,7 @@ async function seed() {
     ]);
 
     console.log(
-      `✅ Seeding complete: ${majorsInserted.length} majors, ${gradesInserted.length} grade levels, ${classesInserted.length} classes, ${teacherUsers.length} teachers, ${subjectData.length} subjects.`
+      `✅ Seeding complete: ${majorsInserted.length} majors, ${gradesInserted.length} grade levels, ${classesInserted.length} classes.`
     );
     process.exit(0);
   } catch (error) {
