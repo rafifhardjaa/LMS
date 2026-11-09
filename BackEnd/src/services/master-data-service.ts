@@ -8,6 +8,7 @@ import {
   subjects,
   teacherClassrooms,
   teacherSubjects,
+  teachingAssignments,
   userRoles,
   jadwalPelajaran,
   users,
@@ -485,7 +486,7 @@ export async function listTeachers(
   // Filter berdasarkan query pencarian
   if (q?.trim()) {
     const pattern = `%${q.trim()}%`;
-    const search = sql`(${users.fullName} ilike ${pattern} or ${users.nomorInduk} ilike ${pattern})`;
+    const search = sql`(${users.fullName} ilike ${pattern} or ${users.nomorInduk} ilike ${pattern} or ${users.kodeGuru} ilike ${pattern})`;
     conditions.push(search);
   }
 
@@ -500,6 +501,7 @@ export async function listTeachers(
       id: users.id,
       fullName: users.fullName,
       nomorInduk: users.nomorInduk,
+      kodeGuru: users.kodeGuru,
       email: users.email,
       isActive: users.isActive,
       subjectCount: sql<number>`(select count(*)::int from teacher_subjects ts where ts.teacher_id = ${users.id})`,
@@ -526,9 +528,76 @@ const SESI_JAM: Record<number, { mulai: string; selesai: string }> = {
 };
 const HARI_VALID = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
 
+async function assertTeacherAssignedToSubjectClass(
+  teacherId: string,
+  subjectId: string,
+  classId: string
+) {
+  assertUuid(teacherId);
+  const rows = await db
+    .select({ id: teachingAssignments.id })
+    .from(teachingAssignments)
+    .where(
+      and(
+        eq(teachingAssignments.teacherId, teacherId),
+        eq(teachingAssignments.subjectId, subjectId),
+        eq(teachingAssignments.classId, classId)
+      )
+    )
+    .limit(1);
+  if (rows.length === 0) {
+    throw new BadRequestError(
+      "Guru tidak ditugaskan pada mata pelajaran dan kelas tersebut"
+    );
+  }
+}
+
+/** Ambil guru dari penugasan bila pasangan kelas+mapel hanya punya satu guru. */
+async function findAssignedTeacher(
+  subjectId: string,
+  classId: string
+): Promise<string | null> {
+  const rows = await db
+    .select({ teacherId: teachingAssignments.teacherId })
+    .from(teachingAssignments)
+    .where(
+      and(
+        eq(teachingAssignments.subjectId, subjectId),
+        eq(teachingAssignments.classId, classId)
+      )
+    );
+  return rows.length === 1 ? rows[0]!.teacherId : null;
+}
+
+async function assertTeacherSlotAvailable(
+  teacherId: string,
+  hari: string,
+  sesi: number,
+  exceptId?: string
+) {
+  assertUuid(teacherId);
+  const clash = await db
+    .select({ id: jadwalPelajaran.id })
+    .from(jadwalPelajaran)
+    .where(
+      and(
+        eq(jadwalPelajaran.teacherId, teacherId),
+        eq(jadwalPelajaran.hari, hari),
+        eq(jadwalPelajaran.sesi, sesi)
+      )
+    )
+    .limit(2);
+  if (clash.some((row) => row.id !== exceptId)) {
+    throw new BadRequestError(
+      "Guru sudah mengajar di kelas lain pada hari dan sesi tersebut (bentrok guru)."
+    );
+  }
+}
+
 export async function createJadwalPelajaran(input: {
   classId: string;
   subjectId: string;
+  teacherId?: string | null;
   hari: string;
   sesi: number;
   durasi?: number;
@@ -565,6 +634,16 @@ export async function createJadwalPelajaran(input: {
     .limit(1);
   if (existing[0]) throw new BadRequestError("Slot jadwal sudah terisi untuk kelas, hari, dan sesi tersebut (bentrok kelas).");
 
+  let teacherId = input.teacherId ?? null;
+  if (teacherId) {
+    await assertTeacherAssignedToSubjectClass(teacherId, input.subjectId, input.classId);
+  } else {
+    teacherId = await findAssignedTeacher(input.subjectId, input.classId);
+  }
+  if (teacherId) {
+    await assertTeacherSlotAvailable(teacherId, input.hari, sesi);
+  }
+
   const { mulai, selesai } = SESI_JAM[sesi]!;
   const [hourM = 0, minM = 0] = mulai.split(":").map(Number);
   const [hourS = 0, minS = 0] = selesai.split(":").map(Number);
@@ -576,6 +655,7 @@ export async function createJadwalPelajaran(input: {
     .values({
       classId: input.classId,
       subjectId: input.subjectId,
+      teacherId,
       gradeLevelId: classRow.gradeLevelId,
       majorId: classRow.majorId,
       hari: input.hari,
@@ -606,11 +686,18 @@ export async function removeJadwalPelajaran(id: string) {
 
 export async function updateJadwalPelajaran(
   id: string,
-  input: { classId?: string; subjectId?: string; hari?: string; sesi?: number; durasi?: number }
+  input: {
+    classId?: string;
+    subjectId?: string;
+    teacherId?: string | null;
+    hari?: string;
+    sesi?: number;
+    durasi?: number;
+  }
 ) {
   assertUuid(id);
   const [existing] = await db
-    .select({ id: jadwalPelajaran.id, classId: jadwalPelajaran.classId, subjectId: jadwalPelajaran.subjectId, hari: jadwalPelajaran.hari, sesi: jadwalPelajaran.sesi, durasi: jadwalPelajaran.durasi })
+    .select({ id: jadwalPelajaran.id, classId: jadwalPelajaran.classId, subjectId: jadwalPelajaran.subjectId, teacherId: jadwalPelajaran.teacherId, hari: jadwalPelajaran.hari, sesi: jadwalPelajaran.sesi, durasi: jadwalPelajaran.durasi })
     .from(jadwalPelajaran)
     .where(eq(jadwalPelajaran.id, id))
     .limit(1);
@@ -621,6 +708,33 @@ export async function updateJadwalPelajaran(
   const nextSubjectId = input.subjectId ?? existing.subjectId;
   const nextHari = input.hari ?? existing.hari;
   const nextSesi = input.sesi ?? existing.sesi;
+  const slotChanged =
+    input.classId !== undefined ||
+    input.subjectId !== undefined ||
+    input.hari !== undefined ||
+    input.sesi !== undefined;
+
+  let nextTeacherId: string | null = existing.teacherId ?? null;
+  if (input.teacherId !== undefined) {
+    nextTeacherId = input.teacherId;
+    if (nextTeacherId) {
+      await assertTeacherAssignedToSubjectClass(
+        nextTeacherId,
+        nextSubjectId,
+        nextClassId
+      );
+    }
+  } else if (input.classId !== undefined || input.subjectId !== undefined) {
+    nextTeacherId = await findAssignedTeacher(nextSubjectId, nextClassId);
+  }
+  if (nextTeacherId && (slotChanged || input.teacherId !== undefined)) {
+    await assertTeacherSlotAvailable(nextTeacherId, nextHari, nextSesi, id);
+  }
+  if (input.teacherId !== undefined) {
+    values.teacherId = nextTeacherId;
+  } else if (input.classId !== undefined || input.subjectId !== undefined) {
+    values.teacherId = nextTeacherId;
+  }
   if (input.classId) { assertUuid(input.classId); values.classId = input.classId; }
   if (input.subjectId) { assertUuid(input.subjectId); values.subjectId = input.subjectId; }
   if (input.hari !== undefined) {
@@ -689,6 +803,9 @@ export async function listJadwalPelajaran(filters: {
       subjectId: jadwalPelajaran.subjectId,
       subjectName: subjects.name,
       subjectCode: subjects.code,
+      teacherId: jadwalPelajaran.teacherId,
+      teacherName: users.fullName,
+      teacherCode: users.kodeGuru,
       gradeLevelId: jadwalPelajaran.gradeLevelId,
       gradeCode: gradeLevels.code,
       majorId: jadwalPelajaran.majorId,
@@ -711,6 +828,7 @@ export async function listJadwalPelajaran(filters: {
     .innerJoin(subjects, eq(jadwalPelajaran.subjectId, subjects.id))
     .innerJoin(gradeLevels, eq(jadwalPelajaran.gradeLevelId, gradeLevels.id))
     .innerJoin(majors, eq(jadwalPelajaran.majorId, majors.id))
+    .leftJoin(users, eq(jadwalPelajaran.teacherId, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(classes.name, jadwalPelajaran.hari, jadwalPelajaran.sesi);
 }
@@ -1020,4 +1138,162 @@ export async function removeTeacherClassroom(id: string) {
   if (rows.length === 0) {
     throw new NotFoundError("Penugasan kelas tidak ditemukan");
   }
+}
+
+// ── Penugasan guru per mapel + kelas (teaching_assignments) ─────────────
+
+/** Selaraskan tabel turunan lama dari teaching_assignments. */
+export async function rebuildDerivedAssignments() {
+  await db.transaction(async (tx) => {
+    await tx.delete(teacherSubjects);
+    await tx.delete(teacherClassrooms);
+
+    const assignments = await tx
+      .select({
+        teacherId: teachingAssignments.teacherId,
+        subjectId: teachingAssignments.subjectId,
+        classId: teachingAssignments.classId,
+      })
+      .from(teachingAssignments);
+
+    const subjectPairs = new Map<string, { teacherId: string; subjectId: string }>();
+    const classPairs = new Map<string, { teacherId: string; classId: string }>();
+    for (const item of assignments) {
+      subjectPairs.set(`${item.teacherId}|${item.subjectId}`, {
+        teacherId: item.teacherId,
+        subjectId: item.subjectId,
+      });
+      classPairs.set(`${item.teacherId}|${item.classId}`, {
+        teacherId: item.teacherId,
+        classId: item.classId,
+      });
+    }
+
+    if (subjectPairs.size > 0) {
+      await tx.insert(teacherSubjects).values([...subjectPairs.values()]);
+    }
+    if (classPairs.size > 0) {
+      await tx.insert(teacherClassrooms).values([...classPairs.values()]);
+    }
+  });
+}
+
+export type TeachingAssignmentFilters = {
+  teacherId?: string;
+  subjectId?: string;
+  classId?: string;
+};
+
+export async function listTeachingAssignments(
+  filters: TeachingAssignmentFilters = {}
+) {
+  const conditions: SQL[] = [];
+  if (filters.teacherId) {
+    conditions.push(eq(teachingAssignments.teacherId, filters.teacherId));
+  }
+  if (filters.subjectId) {
+    conditions.push(eq(teachingAssignments.subjectId, filters.subjectId));
+  }
+  if (filters.classId) {
+    conditions.push(eq(teachingAssignments.classId, filters.classId));
+  }
+
+  return db
+    .select({
+      id: teachingAssignments.id,
+      teacherId: teachingAssignments.teacherId,
+      teacherName: users.fullName,
+      teacherCode: users.kodeGuru,
+      teacherNip: users.nomorInduk,
+      subjectId: teachingAssignments.subjectId,
+      subjectName: subjects.name,
+      subjectCode: subjects.code,
+      classId: teachingAssignments.classId,
+      className: classes.name,
+      classSection: classes.section,
+      majorCode: majors.code,
+      gradeCode: gradeLevels.code,
+      assignedAt: teachingAssignments.assignedAt,
+    })
+    .from(teachingAssignments)
+    .leftJoin(users, eq(teachingAssignments.teacherId, users.id))
+    .leftJoin(subjects, eq(teachingAssignments.subjectId, subjects.id))
+    .leftJoin(classes, eq(teachingAssignments.classId, classes.id))
+    .leftJoin(majors, eq(classes.majorId, majors.id))
+    .leftJoin(gradeLevels, eq(classes.gradeLevelId, gradeLevels.id))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(users.fullName, classes.name, subjects.name);
+}
+
+export async function assignTeachingAssignment(input: {
+  teacherId: string;
+  subjectId: string;
+  classId: string;
+}) {
+  await assertTeacher(input.teacherId);
+  assertUuid(input.subjectId);
+  assertUuid(input.classId);
+
+  const [classRow] = await db
+    .select({
+      id: classes.id,
+      majorId: classes.majorId,
+      gradeLevelId: classes.gradeLevelId,
+    })
+    .from(classes)
+    .where(eq(classes.id, input.classId))
+    .limit(1);
+  if (!classRow) throw new NotFoundError("Kelas tidak ditemukan");
+
+  const [subjectRow] = await db
+    .select({
+      id: subjects.id,
+      majorId: subjects.majorId,
+      gradeLevelId: subjects.gradeLevelId,
+    })
+    .from(subjects)
+    .where(eq(subjects.id, input.subjectId))
+    .limit(1);
+  if (!subjectRow) throw new NotFoundError("Mata pelajaran tidak ditemukan");
+  if (subjectRow.gradeLevelId !== classRow.gradeLevelId) {
+    throw new BadRequestError("Mata pelajaran tidak sesuai tingkatan kelas");
+  }
+  if (subjectRow.majorId && subjectRow.majorId !== classRow.majorId) {
+    throw new BadRequestError("Mata pelajaran tidak sesuai jurusan kelas");
+  }
+
+  try {
+    const rows = await db
+      .insert(teachingAssignments)
+      .values({
+        teacherId: input.teacherId,
+        subjectId: input.subjectId,
+        classId: input.classId,
+      })
+      .returning({ id: teachingAssignments.id });
+    await rebuildDerivedAssignments();
+    return rows[0];
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new BadRequestError(
+        "Guru sudah ditugaskan pada mata pelajaran dan kelas ini"
+      );
+    }
+    if (isForeignKeyViolation(err)) {
+      throw new BadRequestError("Guru, mata pelajaran, atau kelas tidak ditemukan");
+    }
+    throw err;
+  }
+}
+
+export async function removeTeachingAssignment(id: string) {
+  assertUuid(id);
+  const rows = await db
+    .delete(teachingAssignments)
+    .where(eq(teachingAssignments.id, id))
+    .returning({ id: teachingAssignments.id });
+  if (rows.length === 0) {
+    throw new NotFoundError("Penugasan guru tidak ditemukan");
+  }
+  await rebuildDerivedAssignments();
 }
