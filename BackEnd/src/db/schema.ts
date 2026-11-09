@@ -26,6 +26,9 @@ export const users = pgTable("users", {
   // NIS untuk siswa, NIP untuk guru. Dipakai sebagai identitas login
   // alternatif email dan sebagai bahan password default.
   nomorInduk: varchar("nomor_induk", { length: 50 }).unique(),
+  // Kode guru dari data sekolah/import (mis. "G-PJK-01"). Terpisah dari
+  // nomor induk agar identitas internal dan kode eksternal tidak tercampur.
+  kodeGuru: varchar("kode_guru", { length: 50 }).unique(),
   tanggalLahir: date("tanggal_lahir", { mode: "string" }),
   kelas: varchar("kelas", { length: 50 }),
   classId: uuid("class_id").references(() => classes.id, {
@@ -352,6 +355,33 @@ export const teacherClassrooms = pgTable(
   })
 );
 
+export const teachingAssignments = pgTable(
+  "teaching_assignments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    teacherId: uuid("teacher_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    teacherIdx: index("teaching_assignments_teacher_idx").on(table.teacherId),
+    subjectIdx: index("teaching_assignments_subject_idx").on(table.subjectId),
+    classIdx: index("teaching_assignments_class_idx").on(table.classId),
+    uniqueTriple: uniqueIndex("teaching_assignments_unique_idx").on(
+      table.teacherId,
+      table.subjectId,
+      table.classId
+    ),
+  })
+);
+
 export const jadwalPelajaran = pgTable(
   "jadwal_pelajaran",
   {
@@ -362,6 +392,9 @@ export const jadwalPelajaran = pgTable(
     subjectId: uuid("subject_id")
       .notNull()
       .references(() => subjects.id, { onDelete: "cascade" }),
+    teacherId: uuid("teacher_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     gradeLevelId: uuid("grade_level_id")
       .notNull()
       .references(() => gradeLevels.id, { onDelete: "cascade" }),
@@ -388,6 +421,11 @@ export const jadwalPelajaran = pgTable(
     ),
     subjectIdx: index("jadwal_pelajaran_subject_idx").on(table.subjectId),
     majorIdx: index("jadwal_pelajaran_major_idx").on(table.majorId),
+    teacherHariSesiIdx: index("jadwal_pelajaran_teacher_hari_sesi_idx").on(
+      table.teacherId,
+      table.hari,
+      table.sesi
+    ),
   })
 );
 
@@ -406,6 +444,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   teacherSubjects: many(teacherSubjects),
   teacherClassrooms: many(teacherClassrooms),
+  teachingAssignments: many(teachingAssignments),
+  jadwalMengajar: many(jadwalPelajaran),
 }));
 
 export const authTokensRelations = relations(authTokens, ({ one }) => ({
@@ -445,6 +485,7 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
   }),
   modules: many(modules),
   teacherSubjects: many(teacherSubjects),
+  teachingAssignments: many(teachingAssignments),
 }));
 
 export const modulesRelations = relations(modules, ({ one, many }) => ({
@@ -559,6 +600,8 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
   }),
   students: many(users),
   teachers: many(teacherClassrooms),
+  teachingAssignments: many(teachingAssignments),
+  jadwalPelajaran: many(jadwalPelajaran),
 }));
 
 export const teacherSubjectsRelations = relations(teacherSubjects, ({ one }) => ({
@@ -580,5 +623,38 @@ export const teacherClassroomsRelations = relations(teacherClassrooms, ({ one })
   class: one(classes, {
     fields: [teacherClassrooms.classId],
     references: [classes.id],
+  }),
+}));
+
+export const teachingAssignmentsRelations = relations(
+  teachingAssignments,
+  ({ one }) => ({
+    teacher: one(users, {
+      fields: [teachingAssignments.teacherId],
+      references: [users.id],
+    }),
+    subject: one(subjects, {
+      fields: [teachingAssignments.subjectId],
+      references: [subjects.id],
+    }),
+    class: one(classes, {
+      fields: [teachingAssignments.classId],
+      references: [classes.id],
+    }),
+  })
+);
+
+export const jadwalPelajaranRelations = relations(jadwalPelajaran, ({ one }) => ({
+  class: one(classes, {
+    fields: [jadwalPelajaran.classId],
+    references: [classes.id],
+  }),
+  subject: one(subjects, {
+    fields: [jadwalPelajaran.subjectId],
+    references: [subjects.id],
+  }),
+  teacher: one(users, {
+    fields: [jadwalPelajaran.teacherId],
+    references: [users.id],
   }),
 }));
