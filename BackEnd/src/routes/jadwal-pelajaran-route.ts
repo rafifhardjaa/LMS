@@ -57,6 +57,7 @@ export const jadwalPelajaranRoute = new Elysia({ prefix: "/api/v1/jadwal-pelajar
       body: t.Object({
         classId: t.String(),
         subjectId: t.String(),
+        teacherId: t.Optional(t.String()),
         hari: t.String(),
         sesi: t.Number(),
         durasi: t.Optional(t.Number()),
@@ -85,6 +86,7 @@ export const jadwalPelajaranRoute = new Elysia({ prefix: "/api/v1/jadwal-pelajar
       body: t.Object({
         classId: t.Optional(t.String()),
         subjectId: t.Optional(t.String()),
+        teacherId: t.Optional(t.String()),
         hari: t.Optional(t.String()),
         sesi: t.Optional(t.Number()),
         durasi: t.Optional(t.Number()),
