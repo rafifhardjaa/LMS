@@ -18,6 +18,27 @@ const statusStyle: Record<string, string> = {
   Cuti: "bg-[#fff7ed] text-[#b45309]",
 };
 
+function SubjectChips({ subjects }: { subjects: string | null }) {
+  const list = (subjects ?? "")
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
+  if (list.length === 0) return <span className="text-[#787584]">—</span>;
+  const shown = list.slice(0, 2);
+  return (
+    <div className="flex flex-wrap items-center gap-1" title={list.join(", ")}>
+      {shown.map((name) => (
+        <span key={name} className="max-w-[170px] truncate rounded-full bg-[#f1f4f9] px-2 py-0.5 text-[10px] font-medium text-[#4e566c]">
+          {name}
+        </span>
+      ))}
+      {list.length > 2 ? (
+        <span className="text-[10px] font-semibold text-[#787584]">+{list.length - 2}</span>
+      ) : null}
+    </div>
+  );
+}
+
 export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; onTeacherAdded?: () => void }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -45,7 +66,7 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
 
   const rows = useMemo(() => teachers.filter((t) => {
     const q = query.trim().toLowerCase();
-    return (!q || [t.fullName, t.nomorInduk, t.email].some((v) => (v ?? "").toLowerCase().includes(q)))
+    return (!q || [t.fullName, t.nomorInduk, t.kodeGuru, t.email].some((v) => (v ?? "").toLowerCase().includes(q)))
       && (!statusFilter || (t.isActive ? "Aktif" : "Nonaktif") === statusFilter)
       && (!fieldFilter || t.majorCode === fieldFilter);
   }), [teachers, query, statusFilter, fieldFilter]);
@@ -77,7 +98,7 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
       <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 md:flex-row md:items-center">
         <label className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-[#787584]" aria-hidden="true" />
-          <input aria-label="Cari guru" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="Cari nama guru, NIP, atau email..." className="h-11 w-full rounded-full bg-[#f1f4f9] pl-10 pr-4 text-sm text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30" />
+          <input aria-label="Cari guru" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="Cari nama guru, kode guru, NIP, atau email..." className="h-11 w-full rounded-full bg-[#f1f4f9] pl-10 pr-4 text-sm text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30" />
         </label>
         <div className="w-[200px] shrink-0">
           <SearchableDropdown value={fieldFilter} onChange={(v) => { setFieldFilter(v); setPage(1); }} options={fieldOptions} label="Semua Bidang" />
@@ -88,21 +109,31 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
         <button type="button" onClick={reset} aria-label="Reset filter" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] hover:text-[#6c5dd3]"><RefreshCw className="size-[18px]" /></button>
       </div>
       <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left">
+          <table className="w-full min-w-[1240px] text-left">
             <thead className="bg-[#f8f9fc] text-[10px] font-semibold uppercase tracking-wide text-[#4e566c]">
-              <tr><th className="px-5 py-3">Nama</th><th className="px-5 py-3">Gmail</th><th className="px-5 py-3">NIP</th><th className="px-5 py-3">Jurusan</th><th className="px-5 py-3">Status</th></tr>
+              <tr><th className="px-5 py-3">Nama</th><th className="px-5 py-3">Kode Guru</th><th className="px-5 py-3">Email</th><th className="px-5 py-3">NIP</th><th className="px-5 py-3">Jurusan</th><th className="px-5 py-3">Mapel Diampu</th><th className="px-5 py-3">Kelas</th><th className="px-5 py-3">Jam/Mgg</th><th className="px-5 py-3">Status</th></tr>
             </thead>
             <tbody className="divide-y divide-[#eceef3]">
-              {paged.map((teacher, index) => (
+              {paged.map((teacher) => (
                 <tr key={teacher.id} className="align-middle hover:bg-[#fbfcfd]">
                   <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.fullName}</td>
+                  <td className="px-5 py-4 text-xs font-semibold tracking-wide text-[#4331a8]">{teacher.kodeGuru ?? "—"}</td>
                   <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.email ?? "—"}</td>
                   <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.nomorInduk ?? "—"}</td>
                   <td className="px-5 py-4 text-sm font-medium text-[#181c20]">{teacher.majorName ?? "—"}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-[#181c20]"><SubjectChips subjects={teacher.subjects} /></td>
+                  <td className="px-5 py-4" title={teacher.classrooms ?? undefined}>
+                    <span className="text-sm font-semibold text-[#181c20]">{teacher.classCount}</span>
+                    <span className="ml-1 text-[10px] text-[#787584]">kelas</span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className="text-sm font-semibold text-[#181c20]">{teacher.scheduleCount}</span>
+                    <span className="ml-1 text-[10px] text-[#787584]">sesi</span>
+                  </td>
                   <td className="px-5 py-4 text-sm font-medium text-[#181c20]"><span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium ${teacher.isActive ? "bg-[#ecfdf5] text-[#047857]" : "bg-[#fff7ed] text-[#b45309]"}`}><span className="size-1.5 rounded-full bg-current" />{teacher.isActive ? "Aktif" : "Nonaktif"}</span></td>
                 </tr>
               ))}
-              {!paged.length && <tr><td colSpan={5} className="px-5 py-12 text-center text-sm text-[#787584]">Tidak ada guru yang cocok dengan filter.</td></tr>}
+              {!paged.length && <tr><td colSpan={9} className="px-5 py-12 text-center text-sm text-[#787584]">Tidak ada guru yang cocok dengan filter.</td></tr>}
             </tbody>
           </table>
         </div>
