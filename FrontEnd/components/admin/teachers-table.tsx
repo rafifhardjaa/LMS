@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { masterDataApi } from "@/lib/api/master-data";
-import { TeacherSummary } from "@/lib/api/master-data";
+import { Subject, TeacherSummary } from "@/lib/api/master-data";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
 import {
@@ -46,6 +46,24 @@ function matchesLoadFilter(scheduleCount: number, filter: string): boolean {
   }
 }
 
+function teacherMajors(
+  classrooms: string | null,
+  majorNameToCode: Record<string, string>
+): string[] {
+  const majors = new Set<string>();
+  for (const name of (classrooms ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)) {
+    const parts = name.split(" ");
+    const majorLabel =
+      parts.length >= 3 ? parts.slice(1, -1).join(" ") : parts.slice(1).join(" ");
+    if (!majorLabel) continue;
+    majors.add(majorNameToCode[majorLabel] ?? majorLabel);
+  }
+  return [...majors];
+}
+
 export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; onTeacherAdded?: () => void }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -55,6 +73,8 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
   const [subjectFilter, setSubjectFilter] = useState("");
   const [page, setPage] = useState(1);
   const [teachers, setTeachers] = useState<TeacherSummary[]>([]);
+  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
+  const subjectsLoadedRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +85,13 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
       const res = await masterDataApi.teachers.list(query || undefined, statusFilter || undefined);
       if (res.error) throw new Error((res.error as { message?: string }).message ?? "Gagal memuat guru");
       setTeachers(res.data?.data ?? []);
+      if (!subjectsLoadedRef.current) {
+        const subjectRes = await masterDataApi.subjects.list();
+        if (!subjectRes.error) {
+          subjectsLoadedRef.current = true;
+          setAllSubjects(subjectRes.data?.data ?? []);
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal memuat guru");
     } finally {
@@ -74,16 +101,49 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
 
   useEffect(() => { load(); }, [query, statusFilter]);
 
+  const majorNameToCode = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const subject of allSubjects) {
+      if (subject.majorCode && subject.majorName) {
+        map[subject.majorName] = subject.majorCode;
+      }
+    }
+    return map;
+  }, [allSubjects]);
+
+  const subjectOptions: JurusanOption[] = useMemo(() => {
+    const names = allSubjects.length
+      ? allSubjects
+          .filter(
+            (s) =>
+              (!fieldFilter || s.majorCode === fieldFilter || s.majorCode === null) &&
+              (!gradeFilter || s.gradeCode === gradeFilter)
+          )
+          .map((s) => s.name)
+      : teachers
+          .flatMap((t) => (t.subjects ?? "").split(","))
+          .map((name) => name.trim())
+          .filter(Boolean);
+    return [
+      { value: "", label: "Semua Mapel" },
+      ...[...new Set(names)].filter(Boolean).sort().map((name) => ({ value: name, label: name })),
+    ];
+  }, [allSubjects, teachers, fieldFilter, gradeFilter]);
+
+  const effectiveSubjectFilter = subjectOptions.some((option) => option.value === subjectFilter)
+    ? subjectFilter
+    : "";
+
   const rows = useMemo(() => teachers.filter((t) => {
     const q = query.trim().toLowerCase();
-    const subjectQuery = subjectFilter.trim().toLowerCase();
+    const subjectQuery = effectiveSubjectFilter.trim().toLowerCase();
     return (!q || [t.fullName, t.nomorInduk, t.kodeGuru, t.email].some((v) => (v ?? "").toLowerCase().includes(q)))
       && (!statusFilter || (t.isActive ? "Aktif" : "Nonaktif") === statusFilter)
-      && (!fieldFilter || t.majorCode === fieldFilter)
+      && (!fieldFilter || teacherMajors(t.classrooms, majorNameToCode).includes(fieldFilter))
       && (!gradeFilter || teacherGrades(t.classrooms).includes(gradeFilter))
       && matchesLoadFilter(t.scheduleCount, loadFilter)
       && (!subjectQuery || (t.subjects ?? "").toLowerCase().includes(subjectQuery));
-  }), [teachers, query, statusFilter, fieldFilter, gradeFilter, loadFilter, subjectFilter]);
+  }), [teachers, query, statusFilter, fieldFilter, gradeFilter, loadFilter, effectiveSubjectFilter, majorNameToCode]);
 
   const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -120,19 +180,6 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
     { value: "11-20", label: "11–20 sesi/mgg" },
     { value: "21-30", label: "21–30 sesi/mgg" },
     { value: "gt30", label: "> 30 sesi/mgg" },
-  ];
-  const subjectOptions: JurusanOption[] = [
-    { value: "", label: "Semua Mapel" },
-    ...[
-      ...new Set(
-        teachers
-          .flatMap((t) => (t.subjects ?? "").split(","))
-          .map((name) => name.trim())
-          .filter(Boolean)
-      ),
-    ]
-      .sort()
-      .map((name) => ({ value: name, label: name })),
   ];
 
   return (
