@@ -506,9 +506,11 @@ export async function listTeachers(
       isActive: users.isActive,
       subjectCount: sql<number>`(select count(*)::int from teacher_subjects ts where ts.teacher_id = ${users.id})`,
       classCount: sql<number>`(select count(*)::int from teacher_classrooms tc where tc.teacher_id = ${users.id})`,
+      scheduleCount: sql<number>`(select count(*)::int from jadwal_pelajaran jp where jp.teacher_id = ${users.id})`,
       majorCode: sql<string>`(select m.code from teacher_classrooms tc join classes c on tc.class_id = c.id join majors m on m.id = c.major_id where tc.teacher_id = ${users.id} limit 1)`,
       majorName: sql<string>`(select m.name from teacher_classrooms tc join classes c on tc.class_id = c.id join majors m on m.id = c.major_id where tc.teacher_id = ${users.id} limit 1)`,
       subjects: sql<string>`(select string_agg(s.name, ', ' order by s.name) from teacher_subjects ts join subjects s on s.id = ts.subject_id where ts.teacher_id = ${users.id})`,
+      classrooms: sql<string>`(select string_agg(c.name, ', ' order by c.name) from teacher_classrooms tc join classes c on tc.class_id = c.id where tc.teacher_id = ${users.id})`,
     })
     .from(users)
     .innerJoin(userRoles, eq(userRoles.userId, users.id))
