@@ -90,13 +90,16 @@ export interface TeacherSummary {
   id: string;
   fullName: string;
   nomorInduk: string | null;
+  kodeGuru: string | null;
   email: string | null;
   isActive: boolean;
   subjectCount: number;
   classCount: number;
+  scheduleCount: number;
   majorCode: string | null;
   majorName: string | null;
   subjects: string | null;
+  classrooms: string | null;
 }
 
 export interface StudentSummary {
