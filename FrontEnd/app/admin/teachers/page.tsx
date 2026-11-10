@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Download, UserPlus, UserRoundCheck } from "lucide-react";
 import { motion } from "framer-motion";
-import { TeachersSidePanels } from "@/components/admin/teachers-side-panels";
 import { TeachersTable } from "@/components/admin/teachers-table";
 import { AddTeacherDialog } from "@/components/admin/add-teacher-dialog";
 import { AddPlacementDialog } from "@/components/admin/add-placement-dialog";
@@ -70,10 +69,7 @@ export default function TeachersPage() {
       </FadeIn>
 
       <FadeIn>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <TeachersTable key={refreshKey} isAdmin={isAdmin} onTeacherAdded={() => setRefreshKey(k => k + 1)} />
-          <TeachersSidePanels />
-        </div>
+        <TeachersTable key={refreshKey} isAdmin={isAdmin} onTeacherAdded={() => setRefreshKey(k => k + 1)} />
       </FadeIn>
 
       <AddTeacherDialog open={addTeacherOpen} onOpenChange={setAddTeacherOpen} onSuccess={() => setRefreshKey(k => k + 1)} />
