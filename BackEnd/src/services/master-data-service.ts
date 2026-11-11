@@ -1227,14 +1227,10 @@ export async function listTeachingAssignments(
     .orderBy(users.fullName, classes.name, subjects.name);
 }
 
-export async function assignTeachingAssignment(input: {
-  teacherId: string;
-  subjectId: string;
-  classId: string;
-}) {
-  await assertTeacher(input.teacherId);
-  assertUuid(input.subjectId);
-  assertUuid(input.classId);
+/** Validasi mapel dan kelas ada serta saling cocok (tingkat & jurusan). */
+async function assertSubjectClassMatch(subjectId: string, classId: string) {
+  assertUuid(subjectId);
+  assertUuid(classId);
 
   const [classRow] = await db
     .select({
@@ -1243,7 +1239,7 @@ export async function assignTeachingAssignment(input: {
       gradeLevelId: classes.gradeLevelId,
     })
     .from(classes)
-    .where(eq(classes.id, input.classId))
+    .where(eq(classes.id, classId))
     .limit(1);
   if (!classRow) throw new NotFoundError("Kelas tidak ditemukan");
 
@@ -1254,7 +1250,7 @@ export async function assignTeachingAssignment(input: {
       gradeLevelId: subjects.gradeLevelId,
     })
     .from(subjects)
-    .where(eq(subjects.id, input.subjectId))
+    .where(eq(subjects.id, subjectId))
     .limit(1);
   if (!subjectRow) throw new NotFoundError("Mata pelajaran tidak ditemukan");
   if (subjectRow.gradeLevelId !== classRow.gradeLevelId) {
@@ -1263,6 +1259,27 @@ export async function assignTeachingAssignment(input: {
   if (subjectRow.majorId && subjectRow.majorId !== classRow.majorId) {
     throw new BadRequestError("Mata pelajaran tidak sesuai jurusan kelas");
   }
+}
+
+function mapAssignmentWriteError(err: unknown): never {
+  if (isUniqueViolation(err)) {
+    throw new BadRequestError(
+      "Guru sudah ditugaskan pada mata pelajaran dan kelas ini"
+    );
+  }
+  if (isForeignKeyViolation(err)) {
+    throw new BadRequestError("Guru, mata pelajaran, atau kelas tidak ditemukan");
+  }
+  throw err;
+}
+
+export async function assignTeachingAssignment(input: {
+  teacherId: string;
+  subjectId: string;
+  classId: string;
+}) {
+  await assertTeacher(input.teacherId);
+  await assertSubjectClassMatch(input.subjectId, input.classId);
 
   try {
     const rows = await db
@@ -1276,15 +1293,36 @@ export async function assignTeachingAssignment(input: {
     await rebuildDerivedAssignments();
     return rows[0];
   } catch (err) {
-    if (isUniqueViolation(err)) {
-      throw new BadRequestError(
-        "Guru sudah ditugaskan pada mata pelajaran dan kelas ini"
-      );
+    mapAssignmentWriteError(err);
+  }
+}
+
+export async function updateTeachingAssignment(
+  id: string,
+  input: { teacherId: string; subjectId: string; classId: string }
+) {
+  assertUuid(id);
+  await assertTeacher(input.teacherId);
+  await assertSubjectClassMatch(input.subjectId, input.classId);
+
+  try {
+    const rows = await db
+      .update(teachingAssignments)
+      .set({
+        teacherId: input.teacherId,
+        subjectId: input.subjectId,
+        classId: input.classId,
+      })
+      .where(eq(teachingAssignments.id, id))
+      .returning({ id: teachingAssignments.id });
+    if (rows.length === 0) {
+      throw new NotFoundError("Penugasan guru tidak ditemukan");
     }
-    if (isForeignKeyViolation(err)) {
-      throw new BadRequestError("Guru, mata pelajaran, atau kelas tidak ditemukan");
-    }
-    throw err;
+    await rebuildDerivedAssignments();
+    return rows[0];
+  } catch (err) {
+    if (err instanceof NotFoundError) throw err;
+    mapAssignmentWriteError(err);
   }
 }
 

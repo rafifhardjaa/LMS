@@ -86,6 +86,23 @@ export interface TeacherClassroomAssignment {
   assignedAt: string;
 }
 
+export interface TeachingAssignment {
+  id: string;
+  teacherId: string;
+  teacherName: string | null;
+  teacherCode: string | null;
+  teacherNip: string | null;
+  subjectId: string;
+  subjectName: string | null;
+  subjectCode: string | null;
+  classId: string;
+  className: string | null;
+  classSection: string | null;
+  majorCode: string | null;
+  gradeCode: string | null;
+  assignedAt: string;
+}
+
 export interface TeacherSummary {
   id: string;
   fullName: string;
@@ -382,6 +399,25 @@ export const masterDataApi = {
     removeClass: (id: string) =>
       apiFetch<ApiSuccess<unknown>>(
         `/api/v1/teacher-assignments/classes/${id}`,
+        { method: "DELETE" }
+      ),
+    list: (filters: { teacherId?: string; subjectId?: string; classId?: string } = {}) =>
+      apiFetch<ApiSuccess<TeachingAssignment[]>>(
+        `/api/v1/teacher-assignments${queryString(filters)}`
+      ),
+    assign: (body: { teacherId: string; subjectId: string; classId: string }) =>
+      apiFetch<ApiSuccess<{ id: string }>>(
+        "/api/v1/teacher-assignments",
+        { method: "POST", body: JSON.stringify(body) }
+      ),
+    update: (id: string, body: { teacherId: string; subjectId: string; classId: string }) =>
+      apiFetch<ApiSuccess<{ id: string }>>(
+        `/api/v1/teacher-assignments/${id}`,
+        { method: "PUT", body: JSON.stringify(body) }
+      ),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<unknown>>(
+        `/api/v1/teacher-assignments/${id}`,
         { method: "DELETE" }
       ),
   },
