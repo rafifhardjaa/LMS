@@ -1,16 +1,18 @@
-// Import jadwal pelajaran, guru, mapel, dan penugasan guru-mapel-kelas dari
+// Import jadwal pelajaran, mapel, dan penugasan guru-mapel-kelas dari
 // Jadwal_Pelajaran_SMK.xlsx (sheet "Data Jadwal").
 //
-// Script ini bersifat destructive: seluruh guru lama, subject lama, dan jadwal
-// lama diganti dengan data dari Excel. Jalankan dengan --dry-run terlebih
-// dahulu untuk memvalidasi mapping tanpa menulis ke database.
+// Guru TIDAK dibuat ulang: kode_guru pada Excel dicocokkan dengan user guru
+// yang sudah ada di database (hasil import Data_User_Guru.xlsx). Script ini
+// bersifat destructive untuk subject lama dan jadwal lama: keduanya diganti
+// total dengan data dari Excel. Jalankan dengan --dry-run terlebih dahulu
+// untuk memvalidasi mapping tanpa menulis ke database.
 //
 // Pemakaian:
 //   bun run db:import-jadwal --dry-run
 //   bun run db:import-jadwal
 
 import ExcelJS from "exceljs";
-import { eq, inArray } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { join } from "node:path";
 import { db } from "../src/db/index";
 import {
@@ -29,7 +31,6 @@ import {
 
 const XLSX_PATH = join(import.meta.dir, "..", "..", "Jadwal_Pelajaran_SMK.xlsx");
 const SHEET_NAME = "Data Jadwal";
-const DEFAULT_PASSWORD = "password123";
 const DRY_RUN = process.argv.includes("--dry-run");
 
 // Jurusan pada Excel -> kode jurusan di database.
@@ -105,14 +106,6 @@ function cellTime(value: CellValue): string {
 function timeToMinutes(time: string): number {
   const [hours = 0, minutes = 0] = time.split(":").map(Number);
   return hours * 60 + minutes;
-}
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/^\.+|\.+$/g, "");
 }
 
 function abbreviation(value: string): string {
@@ -354,67 +347,44 @@ async function main() {
   const adminId = adminRows[0]?.id;
   if (!adminId) throw new Error("User admin tidak ditemukan");
 
-  const guruRoleRows = await db
-    .select({ id: roles.id })
-    .from(roles)
-    .where(eq(roles.name, "guru"))
-    .limit(1);
-  const guruRoleId = guruRoleRows[0]?.id;
-  if (!guruRoleId) throw new Error("Role guru tidak ditemukan");
-
-  const passwordHash = await Bun.password.hash(DEFAULT_PASSWORD, {
-    algorithm: "argon2id",
-  });
-
-  const existingNomorInduk = new Set(
-    (
-      await db.select({ nomorInduk: users.nomorInduk }).from(users)
-    )
-      .map((row) => row.nomorInduk)
-      .filter((value): value is string => Boolean(value))
+  // Guru TIDAK dibuat ulang: cocokkan kode_guru Excel dengan user guru yang
+  // sudah ada di database (hasil import Data_User_Guru.xlsx).
+  const guruRows = await db
+    .select({
+      id: users.id,
+      kodeGuru: users.kodeGuru,
+      fullName: users.fullName,
+    })
+    .from(users)
+    .where(isNotNull(users.kodeGuru));
+  const teacherIdByCode = new Map(
+    guruRows.map((row) => [row.kodeGuru ?? "", row.id])
   );
-  let nomorIndukCounter = 0;
-  const nextNomorInduk = (): string => {
-    do {
-      nomorIndukCounter += 1;
-      const candidate = `G${String(nomorIndukCounter).padStart(5, "0")}`;
-      if (!existingNomorInduk.has(candidate)) {
-        existingNomorInduk.add(candidate);
-        return candidate;
-      }
-    } while (nomorIndukCounter < 99999);
-    throw new Error("Gagal membuat nomor induk guru");
-  };
 
-  const usedEmails = new Set(
-    (
-      await db.select({ email: users.email }).from(users)
-    )
-      .map((row) => row.email)
-      .filter((value): value is string => Boolean(value))
+  const missingTeachers = [...teacherByCode.keys()].filter(
+    (kodeGuru) => !teacherIdByCode.has(kodeGuru)
   );
-  const nextEmail = (fullName: string, kodeGuru: string): string => {
-    const base = slugify(fullName) || slugify(kodeGuru) || "guru";
-    let candidate = `${base}@simanis.com`;
-    let suffix = 2;
-    while (usedEmails.has(candidate)) {
-      candidate = `${base}.${suffix}@simanis.com`;
-      suffix += 1;
+  if (missingTeachers.length > 0) {
+    throw new Error(
+      `Kode guru di Excel tidak ada di database: ${missingTeachers.join(", ")}`
+    );
+  }
+
+  const nameMismatches = [...teacherByCode.entries()].filter(
+    ([kodeGuru, namaGuru]) =>
+      (guruRows.find((row) => row.kodeGuru === kodeGuru)?.fullName ?? "") !==
+      namaGuru
+  );
+  if (nameMismatches.length > 0) {
+    console.warn(
+      `\nPeringatan: ${nameMismatches.length} nama guru beda dengan database:`
+    );
+    for (const [kodeGuru, namaGuru] of nameMismatches) {
+      const dbName =
+        guruRows.find((row) => row.kodeGuru === kodeGuru)?.fullName ?? "-";
+      console.warn(`  ${kodeGuru}: Excel="${namaGuru}" vs DB="${dbName}"`);
     }
-    usedEmails.add(candidate);
-    return candidate;
-  };
-
-  const teacherEntries = [...teacherByCode.entries()].sort(([a], [b]) => a.localeCompare(b));
-  const teacherValues = teacherEntries.map(([kodeGuru, fullName]) => ({
-    fullName,
-    kodeGuru,
-    nomorInduk: nextNomorInduk(),
-    email: nextEmail(fullName, kodeGuru),
-    passwordHash,
-    passwordChangedAt: null,
-    isActive: true,
-  }));
+  }
 
   const usedSubjectCodes = new Set<string>();
   const subjectEntries = [...subjectEntities.entries()];
@@ -439,7 +409,6 @@ async function main() {
     };
   });
 
-  let insertedTeachers = 0;
   let insertedSubjects = 0;
   let insertedAssignments = 0;
   let insertedSchedules = 0;
@@ -450,22 +419,7 @@ async function main() {
     await tx.delete(teachingAssignments);
     await tx.delete(teacherSubjects);
     await tx.delete(teacherClassrooms);
-
-    const guruIds = await tx
-      .select({ id: userRoles.userId })
-      .from(userRoles)
-      .innerJoin(roles, eq(roles.id, userRoles.roleId))
-      .where(eq(roles.name, "guru"));
-    if (guruIds.length > 0) {
-      await tx.delete(users).where(
-        inArray(
-          users.id,
-          guruIds.map((row) => row.id)
-        )
-      );
-    }
     await tx.delete(subjects);
-    console.log(`  Guru dihapus: ${guruIds.length}`);
 
     console.log("Menyesuaikan nama kelas dengan Excel...");
     for (const [key, excelName] of excelClassNameByKey) {
@@ -475,19 +429,6 @@ async function main() {
         await tx.update(classes).set({ name: excelName }).where(eq(classes.id, classRow.id));
       }
     }
-
-    console.log(`Menyisipkan ${teacherValues.length} guru...`);
-    const insertedTeacherRows = await tx
-      .insert(users)
-      .values(teacherValues)
-      .returning({ id: users.id, kodeGuru: users.kodeGuru });
-    insertedTeachers = insertedTeacherRows.length;
-    const teacherIdByCode = new Map(
-      insertedTeacherRows.map((row) => [row.kodeGuru ?? "", row.id])
-    );
-    await tx.insert(userRoles).values(
-      insertedTeacherRows.map((row) => ({ userId: row.id, roleId: guruRoleId }))
-    );
 
     console.log(`Menyisipkan ${subjectValues.length} subject...`);
     const insertedSubjectRows = await tx
@@ -602,7 +543,6 @@ async function main() {
   });
 
   console.log("\nImport selesai:");
-  console.log(`  Guru       : ${insertedTeachers}`);
   console.log(`  Subject    : ${insertedSubjects}`);
   console.log(`  Penugasan  : ${insertedAssignments}`);
   console.log(`  Jadwal     : ${insertedSchedules}`);

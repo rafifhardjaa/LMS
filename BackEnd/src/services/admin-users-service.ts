@@ -307,7 +307,7 @@ export async function importStudents(input: {
       seen.add(nomorInduk);
 
 const fullName = cleanName(row.full_name ?? "", "Nama");
-      const tanggalLahir = normalizeTanggalLahir(row.tanggalahir ?? "");
+      const tanggalLahir = normalizeTanggalLahir(row.tanggal_lahir ?? "");
       const kelas = row.kelas?.trim() || null;
       const email = row.email ? normalizeEmail(row.email) : undefined;
       const classRow = kelas ? await resolveClassByName(kelas) : null;
