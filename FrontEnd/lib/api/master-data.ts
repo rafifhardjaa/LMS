@@ -108,6 +108,7 @@ export interface TeacherSummary {
   fullName: string;
   nomorInduk: string | null;
   kodeGuru: string | null;
+  tanggalLahir: string | null;
   email: string | null;
   isActive: boolean;
   subjectCount: number;
@@ -306,6 +307,36 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<TeacherSummary[]>>(
         `/api/v1/teachers${queryString({ q, statusFilter })}`
       ),
+    create: (body: {
+      fullName: string;
+      nomorInduk: string;
+      tanggalLahir: string;
+      email?: string | null;
+      majorId?: string | null;
+    }) =>
+      apiFetch<ApiSuccess<{ id: string; defaultPassword: string; kodeGuru: string | null }>>(
+        "/api/v1/teachers",
+        { method: "POST", body: JSON.stringify(body) }
+      ),
+    update: (
+      id: string,
+      body: {
+        fullName: string;
+        nomorInduk: string;
+        tanggalLahir: string;
+        email?: string | null;
+        isActive?: boolean;
+        majorId?: string | null;
+      }
+    ) =>
+      apiFetch<ApiSuccess<{ id: string; defaultPassword: string; kodeGuru: string | null }>>(
+        `/api/v1/teachers/${id}`,
+        { method: "PUT", body: JSON.stringify(body) }
+      ),
+    remove: (id: string) =>
+      apiFetch<ApiSuccess<{ id: string }>>(`/api/v1/teachers/${id}`, {
+        method: "DELETE",
+      }),
   },
   students: {
     list: (filters: {
