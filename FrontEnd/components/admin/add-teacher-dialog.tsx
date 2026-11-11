@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   BadgeCheck,
   Briefcase,
   CalendarDays,
@@ -92,6 +93,21 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
   const [filterTeacherQuery, setFilterTeacherQuery] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const confirmResolveRef = useRef<(ok: boolean) => void>(() => {});
+
+  const askConfirm = (message: string) =>
+    new Promise<boolean>((resolve) => {
+      confirmResolveRef.current = resolve;
+      setConfirmMessage(message);
+      setConfirmOpen(true);
+    });
+
+  const respondConfirm = (ok: boolean) => {
+    confirmResolveRef.current(ok);
+    confirmResolveRef.current = () => {};
+  };
 
   const selectedTeacher = teachers.find((t) => t.id === editingId);
   const majorOptions: JurusanOption[] = useMemo(
@@ -134,6 +150,8 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
       baseline &&
       Object.keys(EMPTY_FORM).some((k) => form[k as keyof TeacherForm] !== baseline[k as keyof TeacherForm])
   );
+
+  const dirtyConfirm = async (message: string) => !isDirty || (await askConfirm(message));
 
   const resetState = () => {
     setForm(EMPTY_FORM);
@@ -246,18 +264,19 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (submitting) return;
+    const ok = await dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?");
+    setConfirmOpen(false);
+    if (!ok) return;
     resetState();
     onOpenChange(false);
   };
 
   const switchMode = async (nextMode: TeacherMode) => {
     if (submitting || nextMode === mode) return;
-    const ok = await new Promise<boolean>((resolve) => {
-      // reuse inline confirm via toast-free simple confirm
-      resolve(window.confirm("Perubahan belum disimpan. Ganti mode dan buang perubahan?"));
-    });
+    const ok = await dirtyConfirm("Perubahan belum disimpan. Ganti mode dan buang perubahan?");
+    setConfirmOpen(false);
     if (!ok) return;
     setMode(nextMode);
     setEditingId(null);
@@ -335,11 +354,19 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     "h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/20";
 
   return (
+    <>
     <Dialog
       open={open}
-      onOpenChange={(next) => {
-        if (!next) resetState();
-        onOpenChange(next);
+      onOpenChange={async (next) => {
+        if (next) {
+          onOpenChange(true);
+          return;
+        }
+        const ok = await dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?");
+        setConfirmOpen(false);
+        if (!ok) return;
+        resetState();
+        onOpenChange(false);
       }}
     >
       <DialogContent
@@ -804,6 +831,25 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={confirmOpen} onOpenChange={(next) => { if (!next) respondConfirm(false); }}>
+      <DialogContent className="bg-[#f8f9fc] border border-[#c9c4d5]/60">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#ffe5e5] text-[#ba1a1a]">
+            <AlertTriangle className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-sm font-bold text-[#181c20] tracking-tight">Konfirmasi Tindakan</DialogTitle>
+            <DialogDescription className="mt-1 text-sm leading-6 text-[#787584]">{confirmMessage}</DialogDescription>
+          </div>
+        </div>
+        <DialogFooter className="border-t border-[#c9c4d5]/60 bg-[#f8f9fc] px-6 py-4 flex justify-end gap-2">
+          <button type="button" onClick={() => respondConfirm(false)} className="flex items-center justify-center gap-1.5 rounded-xl border border-[#c9c4d5]/60 bg-white px-4 py-2.5 text-sm font-semibold text-[#4e566c] transition-all hover:bg-[#eceef3] active:bg-[#d9d3f0]">Batal</button>
+          <button type="button" onClick={() => respondConfirm(true)} className="flex items-center justify-center gap-1.5 rounded-xl bg-[#ba1a1a] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-900/20 transition-all hover:bg-[#93000a] active:bg-[#7a0008]">Ya, Lanjutkan</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
