@@ -116,6 +116,7 @@ export interface TeacherSummary {
   scheduleCount: number;
   majorCode: string | null;
   majorName: string | null;
+  majorCodes: string[] | null;
   subjects: string | null;
   classrooms: string | null;
 }

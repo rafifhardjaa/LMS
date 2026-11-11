@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   BadgeCheck,
   Briefcase,
   CalendarDays,
@@ -67,6 +68,24 @@ function buildDefaultPassword(tanggalLahir: string, nomorInduk: string) {
   return `${day}${month}${year}${digits.slice(-3)}`;
 }
 
+function matchesTeacherQuery(teacher: TeacherSummary, query: string) {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return [teacher.fullName, teacher.nomorInduk, teacher.kodeGuru, teacher.email]
+    .map((v) => (v ?? "").toLowerCase())
+    .some((v) => v.includes(q));
+}
+
+function matchesTeacherMajor(
+  teacher: TeacherSummary,
+  majorId: string,
+  majors: Major[]
+) {
+  if (!majorId) return true;
+  const code = majors.find((m) => m.id === majorId)?.code;
+  return Boolean(code && (teacher.majorCodes ?? []).includes(code));
+}
+
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="mb-1.5 block text-xs font-semibold text-[#4e566c]">
@@ -92,6 +111,21 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
   const [filterTeacherQuery, setFilterTeacherQuery] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const confirmResolveRef = useRef<(ok: boolean) => void>(() => {});
+
+  const askConfirm = (message: string) =>
+    new Promise<boolean>((resolve) => {
+      confirmResolveRef.current = resolve;
+      setConfirmMessage(message);
+      setConfirmOpen(true);
+    });
+
+  const respondConfirm = (ok: boolean) => {
+    confirmResolveRef.current(ok);
+    confirmResolveRef.current = () => {};
+  };
 
   const selectedTeacher = teachers.find((t) => t.id === editingId);
   const majorOptions: JurusanOption[] = useMemo(
@@ -105,20 +139,12 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
   ];
 
   const filteredTeachers = useMemo(() => {
-    const q = filterTeacherQuery.trim().toLowerCase();
-    return teachers.filter((t) => {
-      const matchesQuery =
-        !q ||
-        [t.fullName, t.nomorInduk, t.kodeGuru, t.email]
-          .map((v) => (v ?? "").toLowerCase())
-          .some((v) => v.includes(q));
-      const matchesMajor =
-        !filterMajorId ||
-        t.majorCode === filterMajorId ||
-        t.majorName === filterMajorId;
-      return matchesQuery && matchesMajor;
-    });
-  }, [teachers, filterTeacherQuery, filterMajorId]);
+    return teachers.filter(
+      (t) =>
+        matchesTeacherQuery(t, filterTeacherQuery) &&
+        matchesTeacherMajor(t, filterMajorId, majors)
+    );
+  }, [teachers, filterTeacherQuery, filterMajorId, majors]);
 
   const teacherOptions: JurusanOption[] = useMemo(
     () =>
@@ -134,6 +160,8 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
       baseline &&
       Object.keys(EMPTY_FORM).some((k) => form[k as keyof TeacherForm] !== baseline[k as keyof TeacherForm])
   );
+
+  const dirtyConfirm = async (message: string) => !isDirty || (await askConfirm(message));
 
   const resetState = () => {
     setForm(EMPTY_FORM);
@@ -190,6 +218,11 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
         });
         return;
       }
+      const ok = await askConfirm(
+        `Hapus ${selectedTeacher.fullName} beserta seluruh penugasan (mapel, kelas, dan jadwal mengajar)? Slot jadwal pelajaran menjadi tanpa guru. Tindakan ini tidak bisa dibatalkan.`
+      );
+      setConfirmOpen(false);
+      if (!ok) return;
       setSubmitting(true);
       try {
         const res = await masterDataApi.teachers.remove(editingId);
@@ -246,18 +279,19 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (submitting) return;
+    const ok = await dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?");
+    setConfirmOpen(false);
+    if (!ok) return;
     resetState();
     onOpenChange(false);
   };
 
   const switchMode = async (nextMode: TeacherMode) => {
     if (submitting || nextMode === mode) return;
-    const ok = await new Promise<boolean>((resolve) => {
-      // reuse inline confirm via toast-free simple confirm
-      resolve(window.confirm("Perubahan belum disimpan. Ganti mode dan buang perubahan?"));
-    });
+    const ok = await dirtyConfirm("Perubahan belum disimpan. Ganti mode dan buang perubahan?");
+    setConfirmOpen(false);
     if (!ok) return;
     setMode(nextMode);
     setEditingId(null);
@@ -317,8 +351,12 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     setFilterMajorId(majorId);
     if (mode === "edit" || mode === "delete") setEditingId((prev) => {
       if (!prev) return prev;
-      const still = filteredTeachers.some((t) => t.id === prev);
-      return still ? prev : null;
+      const teacher = teachers.find((item) => item.id === prev);
+      return teacher &&
+        matchesTeacherQuery(teacher, filterTeacherQuery) &&
+        matchesTeacherMajor(teacher, majorId, majors)
+        ? prev
+        : null;
     });
   };
 
@@ -326,8 +364,12 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     setFilterTeacherQuery(value);
     if (mode === "edit" || mode === "delete") setEditingId((prev) => {
       if (!prev) return prev;
-      const still = filteredTeachers.some((t) => t.id === prev);
-      return still ? prev : null;
+      const teacher = teachers.find((item) => item.id === prev);
+      return teacher &&
+        matchesTeacherQuery(teacher, value) &&
+        matchesTeacherMajor(teacher, filterMajorId, majors)
+        ? prev
+        : null;
     });
   };
 
@@ -335,11 +377,19 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
     "h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/20";
 
   return (
+    <>
     <Dialog
       open={open}
-      onOpenChange={(next) => {
-        if (!next) resetState();
-        onOpenChange(next);
+      onOpenChange={async (next) => {
+        if (next) {
+          onOpenChange(true);
+          return;
+        }
+        const ok = await dirtyConfirm("Perubahan belum disimpan. Tutup dan buang perubahan?");
+        setConfirmOpen(false);
+        if (!ok) return;
+        resetState();
+        onOpenChange(false);
       }}
     >
       <DialogContent
@@ -439,47 +489,36 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
           </div>
 
           {mode === "delete" && (
-            <div className="mt-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-3.5">
-                <div className="relative">
-                  <div className="flex size-11 items-center justify-center rounded-full border-2 border-[#c9c4d5]/60 bg-[#e5deff] text-sm font-bold text-[#4331a8] shadow-sm">
-                    {selectedTeacher ? buildInitials(selectedTeacher.fullName) : "?"}
-                  </div>
-                  <span
-                    className={`absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-white ${
-                      selectedTeacher?.isActive ? "bg-emerald-500" : "bg-slate-300"
-                    }`}
-                  />
+            <div className="mt-4 flex items-center gap-3.5">
+              <div className="relative">
+                <div className="flex size-11 items-center justify-center rounded-full border-2 border-[#c9c4d5]/60 bg-[#e5deff] text-sm font-bold text-[#4331a8] shadow-sm">
+                  {selectedTeacher ? buildInitials(selectedTeacher.fullName) : "?"}
                 </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-bold text-slate-800">
-                      {selectedTeacher?.fullName ?? "Pilih guru terlebih dahulu"}
-                    </h3>
-                    {selectedTeacher ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                        <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-                        {selectedTeacher.isActive ? "Aktif" : "Nonaktif"}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    {selectedTeacher
-                      ? `NIP: ${selectedTeacher.nomorInduk ?? "-"}${
-                          selectedTeacher.email ? ` • ${selectedTeacher.email}` : ""
-                        }`
-                      : "Pilih guru dari daftar untuk menghapus."}
-                  </p>
-                </div>
-              </div>
-              <div className="min-w-[260px] flex-1 sm:max-w-[320px]">
-                <SearchableDropdown
-                  value={form.majorId === "" ? filterMajorId : form.majorId}
-                  onChange={handleMajorChange}
-                  options={majorOptions}
-                  label={majors.length ? "Filter jurusan" : "Belum ada data jurusan"}
-                  disabled={!majors.length}
+                <span
+                  className={`absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-white ${
+                    selectedTeacher?.isActive ? "bg-emerald-500" : "bg-slate-300"
+                  }`}
                 />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    {selectedTeacher?.fullName ?? "Pilih guru terlebih dahulu"}
+                  </h3>
+                  {selectedTeacher ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+                      {selectedTeacher.isActive ? "Aktif" : "Nonaktif"}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  {selectedTeacher
+                    ? `NIP: ${selectedTeacher.nomorInduk ?? "-"}${
+                        selectedTeacher.email ? ` • ${selectedTeacher.email}` : ""
+                      }`
+                    : "Pilih guru dari daftar untuk menghapus."}
+                </p>
               </div>
             </div>
           )}
@@ -519,7 +558,8 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                       </p>
                     </div>
                     <p className="mt-3 rounded-xl bg-white px-3 py-2 text-[11px] leading-5 text-[#787584]">
-                      Setelah dihapus, data guru dan penugasan terkait akan dihapus. Tindakan ini tidak
+                      Akun guru beserta seluruh penugasan (mapel, kelas, dan jadwal mengajar) akan
+                      dihapus permanen. Slot jadwal pelajaran menjadi tanpa guru. Tindakan ini tidak
                       bisa dibatalkan.
                     </p>
                   </div>
@@ -804,6 +844,25 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={confirmOpen} onOpenChange={(next) => { if (!next) respondConfirm(false); }}>
+      <DialogContent className="bg-[#f8f9fc] border border-[#c9c4d5]/60">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#ffe5e5] text-[#ba1a1a]">
+            <AlertTriangle className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <DialogTitle className="text-sm font-bold text-[#181c20] tracking-tight">Konfirmasi Tindakan</DialogTitle>
+            <DialogDescription className="mt-1 text-sm leading-6 text-[#787584]">{confirmMessage}</DialogDescription>
+          </div>
+        </div>
+        <DialogFooter className="border-t border-[#c9c4d5]/60 bg-[#f8f9fc] px-6 py-4 flex justify-end gap-2">
+          <button type="button" onClick={() => respondConfirm(false)} className="flex items-center justify-center gap-1.5 rounded-xl border border-[#c9c4d5]/60 bg-white px-4 py-2.5 text-sm font-semibold text-[#4e566c] transition-all hover:bg-[#eceef3] active:bg-[#d9d3f0]">Batal</button>
+          <button type="button" onClick={() => respondConfirm(true)} className="flex items-center justify-center gap-1.5 rounded-xl bg-[#ba1a1a] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-900/20 transition-all hover:bg-[#93000a] active:bg-[#7a0008]">Ya, Lanjutkan</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
