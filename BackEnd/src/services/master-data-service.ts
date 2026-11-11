@@ -502,6 +502,7 @@ export async function listTeachers(
       fullName: users.fullName,
       nomorInduk: users.nomorInduk,
       kodeGuru: users.kodeGuru,
+      tanggalLahir: users.tanggalLahir,
       email: users.email,
       isActive: users.isActive,
       subjectCount: sql<number>`(select count(*)::int from teacher_subjects ts where ts.teacher_id = ${users.id})`,
