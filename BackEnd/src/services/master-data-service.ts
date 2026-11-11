@@ -837,6 +837,51 @@ export async function listJadwalPelajaran(filters: {
 
 // ── Buat guru baru ───────────────────────────────────────────────────
 
+/**
+ * Kode guru berformat `G-<KODE JURUSAN>-NN` dengan NN berurutan per jurusan
+ * (polanya sama dengan data hasil impor Excel: G-AKL-01, G-TKR-02, ...).
+ */
+async function generateTeacherKode(majorId: string): Promise<string> {
+  assertUuid(majorId);
+
+  const majorRows = await db
+    .select({ code: majors.code })
+    .from(majors)
+    .where(eq(majors.id, majorId))
+    .limit(1);
+  const major = majorRows[0];
+  if (!major) throw new NotFoundError("Jurusan tidak ditemukan");
+
+  const rows = await db
+    .select({ kode: users.kodeGuru })
+    .from(users)
+    .where(sql`${users.kodeGuru} like ${`G-${major.code}-%`}`);
+
+  let max = 0;
+  for (const row of rows) {
+    const match = /-(\d+)$/.exec(row.kode ?? "");
+    if (match) {
+      const n = Number(match[1]);
+      if (Number.isFinite(n) && n > max) max = n;
+    }
+  }
+
+  const next = max + 1;
+  return `G-${major.code}-${String(next).padStart(next > 99 ? 3 : 2, "0")}`;
+}
+
+/** Pastikan user ada dan memegang peran guru (tolak admin/siswa). */
+async function assertGuruRole(userId: string) {
+  const rows = await db
+    .select({ id: users.id })
+    .from(users)
+    .innerJoin(userRoles, eq(userRoles.userId, users.id))
+    .innerJoin(roles, eq(roles.id, userRoles.roleId))
+    .where(and(eq(users.id, userId), eq(roles.name, "guru")))
+    .limit(1);
+  if (!rows[0]) throw new NotFoundError("Guru tidak ditemukan");
+}
+
 export async function createTeacher(input: {
   fullName: string;
   nomorInduk: string;
@@ -910,59 +955,202 @@ export async function createTeacher(input: {
   const email = input.email?.toLowerCase() || null;
   const defaultPassword = buildDefaultPassword(tanggalLahir, nomorInduk);
   const passwordHash = await hashPassword(defaultPassword);
+  const kodeGuru = input.majorId ? await generateTeacherKode(input.majorId) : null;
 
-  const created = await db.transaction(async (tx) => {
-    const rows = await tx
-      .insert(users)
-      .values({
+  let created: {
+    id: string;
+    fullName: string;
+    nomorInduk: string | null;
+    email: string | null;
+    kodeGuru: string | null;
+  };
+  try {
+    created = await db.transaction(async (tx) => {
+      const rows = await tx
+        .insert(users)
+        .values({
+          fullName,
+          nomorInduk,
+          tanggalLahir,
+          email,
+          kodeGuru,
+          passwordHash,
+          passwordChangedAt: null,
+          isActive: true,
+        })
+        .returning({
+          id: users.id,
+          fullName: users.fullName,
+          nomorInduk: users.nomorInduk,
+          email: users.email,
+          kodeGuru: users.kodeGuru,
+        });
+
+      const teacher = rows[0];
+      if (!teacher) {
+        throw new BadRequestError("Gagal membuat guru");
+      }
+
+      const roleId = await tx
+        .select({ id: roles.id })
+        .from(roles)
+        .where(eq(roles.name, "guru"))
+        .limit(1)
+        .then((roleRows) => roleRows[0]?.id);
+
+      if (!roleId) {
+        throw new BadRequestError("Peran guru tidak ditemukan");
+      }
+
+      await tx.insert(userRoles).values({
+        userId: teacher.id,
+        roleId,
+        assignedAt: new Date(),
+      });
+
+      if (input.subjectId) {
+        await tx.insert(teacherSubjects).values({
+          teacherId: teacher.id,
+          subjectId: input.subjectId,
+        });
+      }
+
+      return teacher;
+    });
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new BadRequestError(
+        "Nomor induk, email, atau kode guru sudah terpakai"
+      );
+    }
+    throw err;
+  }
+
+  return { ...created, defaultPassword };
+}
+
+export async function updateTeacher(
+  id: string,
+  input: {
+    fullName: string;
+    nomorInduk: string;
+    tanggalLahir: string;
+    email?: string | null;
+    isActive?: boolean;
+    majorId?: string | null;
+  }
+) {
+  assertUuid(id);
+  await assertGuruRole(id);
+
+  const fullName = input.fullName?.trim();
+  if (!fullName) {
+    throw new BadRequestError("Nama lengkap wajib diisi");
+  }
+
+  const nomorInduk = normalizeNomorInduk(input.nomorInduk);
+  const tanggalLahir = normalizeTanggalLahir(input.tanggalLahir);
+  if (!nomorInduk) {
+    throw new BadRequestError("Nomor induk wajib diisi");
+  }
+  if (input.majorId) assertUuid(input.majorId);
+
+  const currentRows = await db
+    .select({
+      id: users.id,
+      kodeGuru: users.kodeGuru,
+      passwordChangedAt: users.passwordChangedAt,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+  const current = currentRows[0];
+  if (!current) {
+    throw new NotFoundError("Guru tidak ditemukan");
+  }
+
+  const nomorDup = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.nomorInduk, nomorInduk))
+    .limit(1);
+  if (nomorDup[0] && nomorDup[0].id !== id) {
+    throw new BadRequestError("Nomor induk sudah terdaftar di sekolah.");
+  }
+
+  const email = input.email?.trim().toLowerCase() || null;
+  if (email) {
+    const emailDup = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    if (emailDup[0] && emailDup[0].id !== id) {
+      throw new BadRequestError("Email sudah terdaftar");
+    }
+  }
+
+  // Bila password belum pernah diganti, hitung ulang agar tetap konsisten
+  // dengan NIP/tanggal lahir terbaru (semantik sama dengan reset password).
+  const needsPasswordRecompute = current.passwordChangedAt === null;
+  const defaultPassword = needsPasswordRecompute
+    ? buildDefaultPassword(tanggalLahir, nomorInduk)
+    : null;
+
+  const kodeGuru =
+    !current.kodeGuru && input.majorId
+      ? await generateTeacherKode(input.majorId)
+      : current.kodeGuru;
+
+  try {
+    const rows = await db
+      .update(users)
+      .set({
         fullName,
         nomorInduk,
         tanggalLahir,
         email,
-        passwordHash,
-        passwordChangedAt: null,
-        isActive: true,
+        isActive: input.isActive,
+        kodeGuru,
+        ...(needsPasswordRecompute
+          ? { passwordHash: await hashPassword(defaultPassword as string) }
+          : {}),
       })
+      .where(eq(users.id, id))
       .returning({
         id: users.id,
         fullName: users.fullName,
         nomorInduk: users.nomorInduk,
         email: users.email,
+        isActive: users.isActive,
+        kodeGuru: users.kodeGuru,
       });
-
-    const teacher = rows[0];
-    if (!teacher) {
-      throw new BadRequestError("Gagal membuat guru");
+    const updated = rows[0];
+    if (!updated) {
+      throw new NotFoundError("Guru tidak ditemukan");
     }
-
-    const roleId = await tx
-      .select({ id: roles.id })
-      .from(roles)
-      .where(eq(roles.name, "guru"))
-      .limit(1)
-      .then((roleRows) => roleRows[0]?.id);
-
-    if (!roleId) {
-      throw new BadRequestError("Peran guru tidak ditemukan");
+    return { ...updated, defaultPassword };
+  } catch (err) {
+    if (err instanceof NotFoundError) throw err;
+    if (isUniqueViolation(err)) {
+      throw new BadRequestError("Nomor induk, email, atau kode guru sudah terpakai");
     }
+    throw err;
+  }
+}
 
-    await tx.insert(userRoles).values({
-      userId: teacher.id,
-      roleId,
-      assignedAt: new Date(),
-    });
+export async function removeTeacher(id: string) {
+  assertUuid(id);
+  await assertGuruRole(id);
 
-    if (input.subjectId) {
-      await tx.insert(teacherSubjects).values({
-        teacherId: teacher.id,
-        subjectId: input.subjectId,
-      });
-    }
-
-    return teacher;
-  });
-
-  return created;
+  const deleted = await db
+    .delete(users)
+    .where(eq(users.id, id))
+    .returning({ id: users.id });
+  if (!deleted[0]) {
+    throw new NotFoundError("Guru tidak ditemukan");
+  }
+  return deleted[0];
 }
 
 // ── Penugasan Guru (mapel & kelas) ───────────────────────────────────
