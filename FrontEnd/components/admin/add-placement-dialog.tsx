@@ -23,8 +23,9 @@ import { masterDataApi } from "@/lib/api/master-data";
 import type {
   GradeLevel,
   Major,
+  SchoolClass,
   Subject,
-  TeacherSubjectAssignment,
+  TeachingAssignment,
   TeacherSummary,
 } from "@/lib/api/master-data";
 import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
@@ -57,6 +58,7 @@ const EMPTY_STATE = {
   majorId: "",
   gradeLevelId: "",
   subjectId: "",
+  classId: "",
 };
 
 export function AddPlacementDialog({
@@ -68,12 +70,14 @@ export function AddPlacementDialog({
   const [majors, setMajors] = useState<Major[]>([]);
   const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [loadingClasses, setLoadingClasses] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState(EMPTY_STATE);
   const [mode, setMode] = useState<"add" | "edit" | "delete">("add");
-  const [assignments, setAssignments] = useState<TeacherSubjectAssignment[]>([]);
+  const [assignments, setAssignments] = useState<TeachingAssignment[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [baseline, setBaseline] = useState<typeof EMPTY_STATE | null>(null);
   const [filterTingkat, setFilterTingkat] = useState("Semua Tingkat");
@@ -106,7 +110,7 @@ export function AddPlacementDialog({
   const filterTingkatOptions: JurusanOption[] = useMemo(
     () => [
       { value: "Semua Tingkat", label: "Semua Tingkat" },
-      ...gradeLevels.map((g) => ({ value: g.id, label: `Kelas ${g.code} (${gradePhase(g.code)})` })),
+      ...gradeLevels.map((g) => ({ value: g.code, label: `Kelas ${g.code} (${gradePhase(g.code)})` })),
     ],
     [gradeLevels]
   );
@@ -118,14 +122,11 @@ export function AddPlacementDialog({
     []
   );
 
-  // Filter sisi klien: tingkat (gradeLevelId dari DB per assignment) + sub grade (section dari DB per assignment)
+  // Filter sisi klien: tingkat (gradeCode) + sub grade (classSection) per penugasan triple
   const filteredAssignments = useMemo(() => {
     return assignments.filter((a) => {
-      if (filterTingkat !== "Semua Tingkat" && (a.gradeLevelId ?? "") !== filterTingkat) return false;
-      if (filterSubGrade !== "Semua Sub Grade") {
-        const sections = (a.section ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-        if (!sections.includes(filterSubGrade)) return false;
-      }
+      if (filterTingkat !== "Semua Tingkat" && (a.gradeCode ?? "") !== filterTingkat) return false;
+      if (filterSubGrade !== "Semua Sub Grade" && (a.classSection ?? "") !== filterSubGrade) return false;
       // Guru diurut dari field "Pilih guru" (bar atas) — sembunyikan guru lain; bila belum ada guru dipilih, tampil semua.
       if (form.teacherId && a.teacherId !== form.teacherId) return false;
       return true;
@@ -136,7 +137,7 @@ export function AddPlacementDialog({
     () =>
       filteredAssignments.map((a) => ({
         value: a.id,
-        label: `${a.teacherName ?? "-"} • ${a.subjectName ?? "-"}${a.subjectCode ? ` (${a.subjectCode})` : ""}`,
+        label: `${a.teacherName ?? "-"} • ${a.subjectName ?? "-"} • ${a.className ?? "-"}`,
       })),
     [filteredAssignments]
   );
@@ -154,7 +155,7 @@ export function AddPlacementDialog({
     setFilterSubGrade(v);
     setEditingId((prev) => {
       if (!prev) return prev;
-      const still = assignments.some((a) => a.id === prev && (filterTingkat === "Semua Tingkat" || (a.gradeLevelId ?? "") === filterTingkat) && (v === "Semua Sub Grade" || (a.section ?? "").split(",").map((s) => s.trim()).includes(v)));
+      const still = assignments.some((a) => a.id === prev && (filterTingkat === "Semua Tingkat" || (a.gradeCode ?? "") === filterTingkat) && (v === "Semua Sub Grade" || (a.classSection ?? "") === v));
       return still ? prev : null;
     });
   };
@@ -162,7 +163,9 @@ export function AddPlacementDialog({
   const resetState = () => {
     setForm(EMPTY_STATE);
     setSubjects([]);
+    setClasses([]);
     setLoadingSubjects(false);
+    setLoadingClasses(false);
     setSubmitting(false);
     setMode("add");
     setEditingId(null);
@@ -171,16 +174,16 @@ export function AddPlacementDialog({
     setFilterSubGrade("Semua Sub Grade");
   };
 
-  const handleSelectEdit = (assignmentId: string) => {
+  const handleSelectAssignment = (assignmentId: string) => {
     const a = assignments.find((item) => item.id === assignmentId);
     if (!a) return;
-    const subject = subjects.find((s) => s.id === a.subjectId);
-    // DB adalah sumber kebenaran: gradeLevelId dari assignment (subjects.gradeLevelId), bukan lookup yang belum dimuat
+    // DB adalah sumber kebenaran: jurusan/tingkat diturunkan dari kelas pada penugasan
     const next = {
       teacherId: a.teacherId ?? "",
-      majorId: subject?.majorId ?? "",
-      gradeLevelId: a.gradeLevelId ?? subject?.gradeLevelId ?? "",
+      majorId: majors.find((m) => m.code === a.majorCode)?.id ?? "",
+      gradeLevelId: gradeLevels.find((g) => g.code === a.gradeCode)?.id ?? "",
       subjectId: a.subjectId ?? "",
+      classId: a.classId ?? "",
     };
     setEditingId(a.id);
     setForm(next);
@@ -197,7 +200,7 @@ export function AddPlacementDialog({
           masterDataApi.teachers.list(),
           masterDataApi.majors.list(),
           masterDataApi.gradeLevels.list(),
-          masterDataApi.teacherAssignments.listSubjects(),
+          masterDataApi.teacherAssignments.list(),
         ]);
         if (!active) return;
         if (teachersRes.error || majorsRes.error || gradeRes.error) {
@@ -267,6 +270,43 @@ export function AddPlacementDialog({
     };
   }, [open, form.gradeLevelId]);
 
+  // Daftar kelas (rombel) untuk jurusan + tingkat terpilih — sumber pemilih rombel & mode edit/hapus
+  useEffect(() => {
+    if (!open || !form.majorId || !form.gradeLevelId) return;
+
+    let active = true;
+    const fetchClasses = async () => {
+      setLoadingClasses(true);
+      try {
+        const res = await masterDataApi.classes.list({
+          majorId: form.majorId,
+          gradeLevelId: form.gradeLevelId,
+        });
+        if (!active) return;
+        if (res.error) {
+          const message = res.error.message || res.error.error || `HTTP ${res.status}`;
+          setClasses([]);
+          toast.error("Gagal memuat daftar kelas", { description: message });
+          return;
+        }
+        setClasses(res.data?.data ?? []);
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+        if (!active) return;
+        setClasses([]);
+        toast.error("Gagal memuat daftar kelas", {
+          description: error instanceof Error ? error.message : "Kesalahan tidak diketahui",
+        });
+      } finally {
+        if (active) setLoadingClasses(false);
+      }
+    };
+    void fetchClasses();
+    return () => {
+      active = false;
+    };
+  }, [open, form.majorId, form.gradeLevelId]);
+
   const subjectOptions = useMemo(() => {
     const relevant = form.majorId
       ? subjects.filter((subject) => !subject.majorId || subject.majorId === form.majorId)
@@ -287,9 +327,40 @@ export function AddPlacementDialog({
       return;
     }
 
-    if (!form.teacherId || !form.majorId || !form.gradeLevelId || !form.subjectId) {
+    if (mode === "delete") {
+      if (!editingId) {
+        toast.error("Penempatan belum dipilih", {
+          description: "Pilih penempatan pada panel kanan untuk menghapus.",
+        });
+        return;
+      }
+      setSubmitting(true);
+      try {
+        const res = await masterDataApi.teacherAssignments.remove(editingId);
+        if (res.error) {
+          throw new Error(res.error.message || res.error.error || `HTTP ${res.status}`);
+        }
+        toast.success("Penempatan dihapus", {
+          description: `${selectedTeacher?.fullName ?? "Guru"} tidak lagi mengampu ${
+            selectedSubject?.name ?? "mata pelajaran"
+          } di ${selectedAssignment?.className ?? "kelas terpilih"}.`,
+        });
+        onSuccess?.();
+        resetState();
+        onOpenChange(false);
+      } catch (error) {
+        toast.error("Gagal menghapus penempatan", {
+          description: error instanceof Error ? error.message : "Kesalahan tidak diketahui",
+        });
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    if (!form.teacherId || !form.majorId || !form.gradeLevelId || !form.subjectId || !form.classId) {
       toast.error("Penempatan belum lengkap", {
-        description: "Pilih guru, konsentrasi keahlian, tingkat kelas, dan mata pelajaran.",
+        description: "Pilih guru, konsentrasi keahlian, tingkat kelas, mata pelajaran, dan rombel.",
       });
       return;
     }
@@ -297,22 +368,26 @@ export function AddPlacementDialog({
     setSubmitting(true);
     try {
       const res = mode === "edit" && editingId
-        ? await masterDataApi.teacherAssignments.updateSubject(editingId, {
+        ? await masterDataApi.teacherAssignments.update(editingId, {
             teacherId: form.teacherId,
             subjectId: form.subjectId,
+            classId: form.classId,
           })
-        : await masterDataApi.teacherAssignments.assignSubject({
+        : await masterDataApi.teacherAssignments.assign({
             teacherId: form.teacherId,
             subjectId: form.subjectId,
+            classId: form.classId,
           });
       if (res.error) {
         throw new Error(res.error.message || res.error.error || `HTTP ${res.status}`);
       }
 
+      const selectedClassName =
+        classes.find((c) => c.id === form.classId)?.name ?? "kelas terpilih";
       toast.success(mode === "edit" ? "Penempatan diperbarui" : "Penempatan tersimpan", {
         description: `${selectedTeacher?.fullName ?? "Guru"} ditempatkan pada ${
           selectedSubject?.name ?? "mata pelajaran"
-        }.`,
+        } — ${selectedClassName}.`,
       });
       onSuccess?.();
       resetState();
@@ -333,8 +408,9 @@ export function AddPlacementDialog({
   };
 
   const handleGradeLevelChange = (gradeLevelId: string) => {
-    setForm((prev) => ({ ...prev, gradeLevelId, subjectId: "" }));
+    setForm((prev) => ({ ...prev, gradeLevelId, subjectId: "", classId: "" }));
     setSubjects([]);
+    setClasses([]);
   };
 
   return (
@@ -452,7 +528,34 @@ export function AddPlacementDialog({
           onSubmit={handleSubmit}
           className="min-h-0 flex-1 space-y-5 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
         >
-          {mode === "edit" && !editingId ? (
+          {mode === "delete" ? (
+            editingId && selectedAssignment ? (
+              <section className="space-y-4">
+                <div className="rounded-2xl border border-[#f3c9c4] bg-[#fef6f5] p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-[#fde8e6] text-[#ba1a1a]"><Trash2 className="size-4" /></span>
+                    <h3 className="text-sm font-bold text-[#ba1a1a]">Penempatan yang Akan Dihapus</h3>
+                  </div>
+                  <div className="mt-3 grid gap-1.5 text-xs leading-5 text-[#4e566c]">
+                    <p><span className="font-semibold text-[#181c20]">Guru:</span> {selectedAssignment.teacherName ?? "-"} ({selectedAssignment.teacherNip ?? "-"})</p>
+                    <p><span className="font-semibold text-[#181c20]">Kode Guru:</span> {selectedAssignment.teacherCode ?? "-"}</p>
+                    <p><span className="font-semibold text-[#181c20]">Mapel:</span> {selectedAssignment.subjectName ?? "-"}{selectedAssignment.subjectCode ? ` (${selectedAssignment.subjectCode})` : ""}</p>
+                    <p><span className="font-semibold text-[#181c20]">Kelas:</span> {selectedAssignment.className ?? "-"}</p>
+                    <p><span className="font-semibold text-[#181c20]">Tingkat:</span> {selectedAssignment.gradeCode ? `Kelas ${selectedAssignment.gradeCode} (${gradePhase(selectedAssignment.gradeCode)})` : "-"}</p>
+                  </div>
+                  <p className="mt-3 rounded-xl bg-white px-3 py-2 text-[11px] leading-5 text-[#787584]">
+                    Setelah dihapus, guru tidak lagi dihitung mengampu mapel ini di kelas ini. Tabel turunan (mapel diampu &amp; kelas guru) disinkronkan otomatis.
+                  </p>
+                </div>
+              </section>
+            ) : (
+              <section className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#efc9c4] bg-[#fef6f5] px-6 py-16 text-center">
+                <span className="flex size-14 items-center justify-center rounded-full bg-[#fde8e6] text-[#ba1a1a]"><Trash2 className="size-7" /></span>
+                <h3 className="mt-4 text-sm font-bold text-[#181c20]">Pilih Penempatan yang Akan Dihapus</h3>
+                <p className="mt-1 max-w-md text-[11px] leading-5 text-[#787584]">Pilih penempatan pada panel di sebelah kanan (tingkat, sub grade, lalu penempatan) untuk menghapus.</p>
+              </section>
+            )
+          ) : mode === "edit" && !editingId ? (
             <section className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#c9c4d5] bg-[#f8f9fc] px-6 py-16 text-center">
               <span className="flex size-14 items-center justify-center rounded-full bg-[#e5deff] text-[#5343b9]"><PencilLine className="size-7" /></span>
               <h3 className="mt-4 text-sm font-bold text-[#181c20]">Pilih Penempatan Terlebih Dahulu</h3>
@@ -477,7 +580,9 @@ export function AddPlacementDialog({
                     ...prev,
                     majorId: value,
                     subjectId: "",
+                    classId: "",
                   }));
+                  setClasses([]);
                 }}
                 options={majorOptions}
                 label={majors.length ? "Pilih konsentrasi keahlian" : "Belum ada data konsentrasi keahlian"}
@@ -487,7 +592,7 @@ export function AddPlacementDialog({
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-12">
-            <div className="space-y-2 md:col-span-6">
+            <div className="space-y-2 md:col-span-4">
               <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                 Tingkat &amp; Fase Kelas <span className="text-rose-500">*</span>
               </label>
@@ -516,7 +621,7 @@ export function AddPlacementDialog({
               </div>
             </div>
 
-            <div className="space-y-2 md:col-span-6">
+            <div className="space-y-2 md:col-span-4">
               <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                 Mata Pelajaran Diampu <span className="text-rose-500">*</span>
               </label>
@@ -545,11 +650,46 @@ export function AddPlacementDialog({
                 </p>
               ) : null}
             </div>
+
+            <div className="space-y-2 md:col-span-4">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                Rombel <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {classes.map((cls) => {
+                  const selected = form.classId === cls.id;
+                  return (
+                    <button
+                      key={cls.id}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, classId: cls.id }))}
+                      className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition-all ${
+                        selected
+                          ? "border-2 border-[#6c5dd3] bg-[#f5f3ff]/60"
+                          : "border border-slate-200 bg-white hover:border-[#c9c4d5]"
+                      }`}
+                    >
+                      <span className={`text-xs font-bold ${selected ? "text-[#4331a8]" : "text-slate-700"}`}>{cls.section}</span>
+                      <span className={`text-[10px] font-medium ${selected ? "text-[#6c5dd3]" : "text-slate-400"}`}>{cls.name}</span>
+                    </button>
+                  );
+                })}
+                {!classes.length ? (
+                  <p className="col-span-full rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-[11px] text-slate-400">
+                    {loadingClasses
+                      ? "Memuat rombel..."
+                      : !form.majorId || !form.gradeLevelId
+                        ? "Pilih konsentrasi dan tingkat dulu."
+                        : "Belum ada kelas untuk kombinasi ini."}
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </div>
             </>
           )}
         </form>
-        {mode === "edit" ? (
+        {mode === "edit" || mode === "delete" ? (
           <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:flex-none lg:border-l lg:border-t-0">
             <div className="flex flex-col gap-2">
               <div className="grid grid-cols-1 gap-2">
@@ -563,15 +703,15 @@ export function AddPlacementDialog({
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#181c20]">Penempatan yang akan diperbarui <span className="text-[#c0262d]">*</span></label>
+                <label className="text-[11px] font-bold text-[#181c20]">{mode === "delete" ? "Penempatan yang akan dihapus" : "Penempatan yang akan diperbarui"} <span className="text-[#c0262d]">*</span></label>
                 <SearchableDropdown
                   value={editingId ?? ""}
-                  onChange={handleSelectEdit}
+                  onChange={handleSelectAssignment}
                   options={assignmentOptions}
                   label={loadingAssignments ? "Memuat data penempatan..." : !tingkatChosen ? "Pilih tingkat terlebih dahulu" : !subGradeChosen ? "Pilih sub grade terlebih dahulu" : assignmentOptions.length ? "Pilih penempatan" : "Tidak ada penempatan yang cocok"}
                   disabled={submitting || loadingAssignments || !subGradeChosen || !assignmentOptions.length}
                 />
-                <p className="text-[11px] text-[#787584]">Isi form di sebelah kiri akan mengikuti penempatan yang dipilih.</p>
+                <p className="text-[11px] text-[#787584]">{mode === "delete" ? "Panel konfirmasi di sebelah kiri akan menampilkan penempatan yang dipilih." : "Isi form di sebelah kiri akan mengikuti penempatan yang dipilih."}</p>
               </div>
               {/* Isi form penempatan yang dipilih — ringkasan live dari form (DB) */}
               <div className="rounded-xl border border-[#d9d3f0] bg-white p-3">
@@ -587,7 +727,7 @@ export function AddPlacementDialog({
                   <p><span className="font-semibold text-[#181c20]">NIP:</span> {selectedTeacher?.nomorInduk ?? "-"}</p>
                   <p><span className="font-semibold text-[#181c20]">Tingkat:</span> {selectedGrade ? `Kelas ${selectedGrade.code} (${gradePhase(selectedGrade.code)})` : "-"}</p>
                   <p><span className="font-semibold text-[#181c20]">Mapel:</span> {selectedSubject ? `${selectedSubject.name}${selectedSubject.code ? ` (${selectedSubject.code})` : ""}` : "-"}</p>
-                  <p><span className="font-semibold text-[#181c20]">Sub Grade:</span> {filterSubGrade !== "Semua Sub Grade" ? filterSubGrade : selectedAssignment?.section ? selectedAssignment.section.split(",").map((s) => s.trim()).filter(Boolean).join(", ") : "-"}</p>
+                  <p><span className="font-semibold text-[#181c20]">Sub Grade:</span> {filterSubGrade !== "Semua Sub Grade" ? filterSubGrade : (selectedAssignment?.classSection ?? "-")}</p>
                 </div>
                 {!editingId ? (
                   <p className="mt-2 rounded-lg bg-[#f8f9fc] px-2.5 py-2 text-[10px] leading-4 text-[#787584]">Belum ada penempatan dipilih. Pilih tingkat, sub grade, lalu penempatan di atas.</p>
@@ -595,118 +735,7 @@ export function AddPlacementDialog({
               </div>
             </div>
           </aside>
-        ) : (
-          <form
-            id="add-placement-form"
-            onSubmit={handleSubmit}
-            className="min-h-0 flex-1 space-y-5 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-          >
-            <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                  Konsentrasi Keahlian <span className="text-rose-500">*</span>
-                </label>
-                <span className="text-[11px] font-medium text-slate-400">
-                  Pilih kompetensi keahlian sasaran pengajaran kurikulum.
-                </span>
-              </div>
-              <div className="mt-2">
-                <SearchableDropdown
-                  value={form.majorId}
-                  onChange={(value) => {
-                    setForm((prev) => ({
-                      ...prev,
-                      majorId: value,
-                      subjectId: "",
-                    }));
-                  }}
-                  options={majorOptions}
-                  label={
-                    majors.length ? "Pilih konsentrasi keahlian" : "Belum ada data konsentrasi keahlian"
-                  }
-                  disabled={!majors.length}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-12">
-              <div className="space-y-2 md:col-span-6">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                  Tingkat &amp; Fase Kelas <span className="text-rose-500">*</span>
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {gradeLevels.map((grade) => {
-                    const selected = form.gradeLevelId === grade.id;
-                    return (
-                      <button
-                        key={grade.id}
-                        type="button"
-                        onClick={() => handleGradeLevelChange(grade.id)}
-                        className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition-all ${
-                          selected
-                            ? "border-2 border-[#6c5dd3] bg-[#f5f3ff]/60"
-                            : "border border-slate-200 bg-white hover:border-[#c9c4d5]"
-                        }`}
-                      >
-                        <span
-                          className={`text-xs font-bold ${
-                            selected ? "text-[#4331a8]" : "text-slate-700"
-                          }`}
-                        >
-                          {grade.name}
-                        </span>
-                        <span
-                          className={`text-[10px] font-medium ${
-                            selected ? "text-[#6c5dd3]" : "text-slate-400"
-                          }`}
-                        >
-                          {gradePhase(grade.code)}
-                        </span>
-                      </button>
-                    );
-                  })}
-                  {!gradeLevels.length ? (
-                    <p className="col-span-full rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-[11px] text-slate-400">
-                      Belum ada data tingkat kelas.
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="space-y-2 md:col-span-6">
-                <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                  Mata Pelajaran Diampu <span className="text-rose-500">*</span>
-                </label>
-                <SearchableDropdown
-                  value={form.subjectId}
-                  onChange={(value) => setForm((prev) => ({ ...prev, subjectId: value }))}
-                  options={subjectOptions}
-                  label={
-                    !form.majorId
-                      ? "Pilih konsentrasi dulu"
-                      : !form.gradeLevelId
-                        ? "Pilih tingkat dulu"
-                        : loadingSubjects
-                          ? "Memuat..."
-                          : subjectOptions.length
-                            ? "Pilih mata pelajaran"
-                            : "Tidak ada mata pelajaran"
-                  }
-                  disabled={!form.majorId || !form.gradeLevelId || loadingSubjects}
-                />
-                {selectedSubject ? (
-                  <p className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                    <CheckCircle2 className="size-3.5 text-[#6c5dd3]" />
-                    {selectedSubject.semester
-                      ? `Semester ${selectedSubject.semester} • `
-                      : ""}
-                    Kurikulum Merdeka
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </form>
-        )}
+        ) : null}
         </div>
 
         <DialogFooter className="mx-0 mb-0 flex flex-row shrink-0 items-center justify-between gap-3 border-t border-slate-200/80 bg-slate-50 px-7 py-4">
@@ -725,11 +754,17 @@ export function AddPlacementDialog({
             <button
               type="submit"
               form="add-placement-form"
-              disabled={submitting || (mode === "edit" && (!editingId || !isDirty))}
-              className="flex items-center gap-1.5 rounded-xl bg-[#6c5dd3] px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-[#6c5dd3]/30 transition-all hover:bg-[#5343b9] disabled:opacity-60"
+              disabled={submitting || (mode === "edit" && (!editingId || !isDirty)) || (mode === "delete" && !editingId)}
+              className={`flex items-center gap-1.5 rounded-xl px-6 py-2.5 text-xs font-semibold text-white shadow-md transition-all disabled:opacity-60 ${
+                mode === "delete"
+                  ? "bg-[#ba1a1a] shadow-[#ba1a1a]/30 hover:bg-[#8f1515]"
+                  : "bg-[#6c5dd3] shadow-[#6c5dd3]/30 hover:bg-[#5343b9]"
+              }`}
             >
-              <CheckCircle2 className="size-4" />
-              {submitting ? "Menyimpan..." : mode === "edit" ? "Simpan Perubahan" : "Simpan Penempatan Guru"}
+              {mode === "delete" ? <Trash2 className="size-4" /> : <CheckCircle2 className="size-4" />}
+              {submitting
+                ? mode === "delete" ? "Menghapus..." : "Menyimpan..."
+                : mode === "delete" ? "Hapus Penempatan" : mode === "edit" ? "Simpan Perubahan" : "Simpan Penempatan Guru"}
             </button>
           </div>
         </DialogFooter>
