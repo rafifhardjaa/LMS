@@ -29,6 +29,13 @@ export const users = pgTable("users", {
   // Kode guru dari data sekolah/import (mis. "G-PJK-01"). Terpisah dari
   // nomor induk agar identitas internal dan kode eksternal tidak tercampur.
   kodeGuru: varchar("kode_guru", { length: 50 }).unique(),
+  // NISN (siswa). Null untuk guru/admin; NULL ganda diperbolehkan oleh unique index PG.
+  nisn: varchar("nisn", { length: 10 }).unique(),
+  // "L" atau "P" (siswa). Null untuk guru/admin.
+  jenisKelamin: varchar("jenis_kelamin", { length: 1 }),
+  tempatLahir: varchar("tempat_lahir", { length: 255 }),
+  // Angkatan masuk (siswa, mis. 2026). Null untuk guru/admin.
+  angkatan: integer("angkatan"),
   tanggalLahir: date("tanggal_lahir", { mode: "string" }),
   kelas: varchar("kelas", { length: 50 }),
   classId: uuid("class_id").references(() => classes.id, {

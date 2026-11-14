@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, RefreshCw, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { StudentStats } from "@/components/admin/student-stats";
@@ -8,10 +8,25 @@ import { StudentsSidePanels } from "@/components/admin/students-side-panels";
 import { StudentsTable } from "@/components/admin/students-table";
 import { AddStudentDialog } from "@/components/admin/add-student-dialog";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import { masterDataApi } from "@/lib/api/master-data";
 
 export default function StudentsPage() {
   const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [totalStudents, setTotalStudents] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    masterDataApi.students
+      .stats()
+      .then((res) => {
+        if (active) setTotalStudents(res.data?.data?.total ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
 
   return (
     <div className="flex w-full flex-col gap-7 pt-4">
@@ -24,7 +39,7 @@ export default function StudentsPage() {
                 <span>• Tahun Ajaran 2026/2027 Ganjil (Fase E &amp; F)</span>
               </div>
               <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Siswa &amp; Peserta Didik</h1>
-              <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data 1.842 siswa aktif, distribusi rombel kelas, status aktivasi akun SSO Dapodik, dan rekap kelengkapan administrasi peserta didik SMK Mataram.</p>
+              <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data {totalStudents !== null ? totalStudents.toLocaleString("id-ID") : "…"} siswa aktif, distribusi rombel kelas, status aktivasi akun SSO Dapodik, dan rekap kelengkapan administrasi peserta didik SMK Mataram.</p>
             </div>
           </SlideIn>
           <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-3">

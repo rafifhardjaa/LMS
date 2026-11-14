@@ -129,7 +129,7 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-[#181c20]">{s.fullName}</p>
                           <p className="mt-0.5 flex items-center gap-2 text-[11px] leading-4 text-[#4e566c]">
-                            <span>NISN:<br />{s.nomorInduk ?? "—"}</span>
+                            <span>NISN:<br />{s.nisn ?? "—"}</span>
                           </p>
                         </div>
                       </div>
