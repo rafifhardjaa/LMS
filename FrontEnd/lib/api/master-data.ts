@@ -125,6 +125,10 @@ export interface StudentSummary {
   id: string;
   fullName: string;
   nomorInduk: string | null;
+  nisn: string | null;
+  jenisKelamin: string | null;
+  tempatLahir: string | null;
+  angkatan: number | null;
   email: string | null;
   kelas: string | null;
   isActive: boolean;
@@ -133,6 +137,14 @@ export interface StudentSummary {
   majorName: string | null;
   gradeCode: string | null;
   gradeName: string | null;
+}
+
+export interface StudentStats {
+  total: number;
+  active: number;
+  inactive: number;
+  needActivation: number;
+  filledClasses: number;
 }
 
 export interface JadwalPelajaran {
@@ -353,6 +365,10 @@ export const masterDataApi = {
     create: (body: {
       fullName: string;
       nomorInduk?: string;
+      nisn?: string;
+      jenisKelamin?: string;
+      tempatLahir?: string;
+      angkatan?: number;
       tanggalLahir?: string;
       email?: string | null;
       classId?: string | null;
@@ -365,6 +381,10 @@ export const masterDataApi = {
     update: (id: string, body: Partial<{
       fullName: string;
       nomorInduk?: string;
+      nisn?: string;
+      jenisKelamin?: string;
+      tempatLahir?: string;
+      angkatan?: number;
       tanggalLahir?: string;
       email?: string | null;
       classId?: string | null;
@@ -374,6 +394,8 @@ export const masterDataApi = {
         method: "PUT",
         body: JSON.stringify(body),
       }),
+    stats: () =>
+      apiFetch<ApiSuccess<StudentStats>>("/api/v1/students/stats"),
     remove: (id: string) =>
       apiFetch<ApiSuccess<unknown>>(`/api/v1/students/${id}`, {
         method: "DELETE",
