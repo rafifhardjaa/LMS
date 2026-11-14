@@ -13,6 +13,7 @@
     "db:backup": "bash scripts/db-backup.sh",
     "db:import-jadwal": "bun run scripts/import-jadwal-xlsx.ts",
     "db:import-guru": "bun run scripts/import-users-guru-xlsx.ts",
+    "db:import-siswa": "bun run scripts/import-siswa-xlsx.ts",
     "db:push": "drizzle-kit push",
     "db:sync-curriculum": "bun run scripts/sync-curriculum.ts",
     "seed": "bun run src/db/seed.ts"
