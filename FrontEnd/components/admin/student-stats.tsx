@@ -1,49 +1,72 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { DoorClosed, KeyRound, TrendingUp, UserCheck, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { CountUp, StaggerChildren, StaggerItem } from "@/components/ui/animations";
-
-const stats = [
-  {
-    label: <>Total Siswa<br />Aktif</>,
-    value: 1842,
-    suffix: " Siswa",
-    icon: Users,
-    tone: "bg-[#e5deff] text-[#6c5dd3]",
-    footer: <span className="rounded-full bg-[#ecfdf5] px-2 py-1 text-[#047857]">● 100% Terverifikasi Dapodik</span>,
-  },
-  {
-    label: <>Distribusi<br />Rombel</>,
-    value: 54,
-    suffix: " Rombel Aktif",
-    icon: DoorClosed,
-    tone: "bg-[#dbeafe] text-[#4e566c]",
-    footer: <><span className="rounded-full bg-[#eceef3] px-2 py-1 text-[#4e566c]">4<br />Konsentrasi</span><span className="text-[#787584]">Fase E (18) &amp; F<br />(36)</span></>,
-  },
-  {
-    label: <>Status Akun<br />SSO</>,
-    value: 1815,
-    suffix: " Aktif",
-    icon: KeyRound,
-    tone: "bg-[#d1fae5] text-[#065f46]",
-    footer: <><span className="rounded-full bg-[#e5deff] px-2 py-1 text-[#4331a8]">98.5%<br />Onboarded</span><span className="text-[#dc2626]">27 Belum<br />Aktivasi</span></>,
-  },
-  {
-    label: <>Presensi &amp;<br />Disiplin</>,
-    value: 96.2,
-    suffix: "% Kehadiran",
-    decimals: 1,
-    icon: UserCheck,
-    tone: "bg-[#ecfdf5] text-[#059669]",
-    footer: <><span className="flex items-center gap-1 rounded-full bg-[#ecfdf5] px-2 py-1 text-[#047857]"><TrendingUp className="size-3.5 shrink-0" /> Status<br />Prima</span><span className="text-[#787584]">(Target Min.<br />85%)</span></>,
-  },
-];
+import { masterDataApi } from "@/lib/api/master-data";
+import type { StudentStats } from "@/lib/api/master-data";
 
 export function StudentStats() {
+  const [stats, setStats] = useState<StudentStats | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    masterDataApi.students
+      .stats()
+      .then((res) => {
+        if (active) setStats(res.data?.data ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const total = stats?.total ?? 0;
+  const activeCount = stats?.active ?? 0;
+  const needActivation = stats?.needActivation ?? 0;
+  const onboardedPct = total > 0 ? Math.round((activeCount / total) * 100) : 0;
+
+  const cards = [
+    {
+      label: <>Total Siswa<br />Aktif</>,
+      value: total,
+      suffix: " Siswa",
+      icon: Users,
+      tone: "bg-[#e5deff] text-[#6c5dd3]",
+      footer: <span className="rounded-full bg-[#ecfdf5] px-2 py-1 text-[#047857]">● 100% Terverifikasi Dapodik</span>,
+    },
+    {
+      label: <>Distribusi<br />Rombel</>,
+      value: stats?.filledClasses ?? 0,
+      suffix: " Rombel Aktif",
+      icon: DoorClosed,
+      tone: "bg-[#dbeafe] text-[#4e566c]",
+      footer: <><span className="rounded-full bg-[#eceef3] px-2 py-1 text-[#4e566c]">4<br />Konsentrasi</span><span className="text-[#787584]">Fase E (18) &amp; F<br />(36)</span></>,
+    },
+    {
+      label: <>Status Akun<br />SSO</>,
+      value: activeCount,
+      suffix: " Aktif",
+      icon: KeyRound,
+      tone: "bg-[#d1fae5] text-[#065f46]",
+      footer: <><span className="rounded-full bg-[#e5deff] px-2 py-1 text-[#4331a8]">{onboardedPct}%<br />Onboarded</span><span className="text-[#dc2626]">{needActivation} Belum<br />Aktivasi</span></>,
+    },
+    {
+      label: <>Presensi &amp;<br />Disiplin</>,
+      value: 96.2,
+      suffix: "% Kehadiran",
+      decimals: 1,
+      icon: UserCheck,
+      tone: "bg-[#ecfdf5] text-[#059669]",
+      footer: <><span className="flex items-center gap-1 rounded-full bg-[#ecfdf5] px-2 py-1 text-[#047857]"><TrendingUp className="size-3.5 shrink-0" /> Status<br />Prima</span><span className="text-[#787584]">(Target Min.<br />85%)</span></>,
+    },
+  ];
+
   return (
     <StaggerChildren className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" staggerDelay={0.06}>
-      {stats.map(({ label, value, suffix, decimals, icon: Icon, tone, footer }, index) => (
+      {cards.map(({ label, value, suffix, decimals, icon: Icon, tone, footer }, index) => (
         <StaggerItem key={index}>
           <motion.div
             className="flex h-[160px] flex-col rounded-2xl border border-[#eef0f5] bg-white p-5 shadow-[0_8px_24px_rgba(32,44,90,0.04)]"

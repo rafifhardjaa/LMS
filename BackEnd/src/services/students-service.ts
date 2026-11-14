@@ -47,6 +47,10 @@ export type StudentFilters = {
 export type StudentInput = {
   fullName: string;
   nomorInduk?: string;
+  nisn?: string;
+  jenisKelamin?: string;
+  tempatLahir?: string;
+  angkatan?: number;
   tanggalLahir?: string;
   email?: string | null;
   classId?: string | null;
@@ -60,6 +64,10 @@ const studentColumns = {
   id: users.id,
   fullName: users.fullName,
   nomorInduk: users.nomorInduk,
+  nisn: users.nisn,
+  jenisKelamin: users.jenisKelamin,
+  tempatLahir: users.tempatLahir,
+  angkatan: users.angkatan,
   email: users.email,
   tanggalLahir: users.tanggalLahir,
   kelas: users.kelas,
@@ -106,6 +114,7 @@ export async function listStudents(
     const search = or(
       ilike(users.fullName, pattern),
       ilike(users.nomorInduk, pattern),
+      ilike(users.nisn, pattern),
       ilike(users.email, pattern)
     );
     if (search) conditions.push(search);
@@ -172,6 +181,19 @@ export async function createStudent(input: StudentInput) {
 
   const tanggalLahir = normalizeTanggalLahir(input.tanggalLahir);
   const email = input.email?.trim().toLowerCase() || null;
+  const nisn = input.nisn?.trim() || null;
+  const jenisKelamin = input.jenisKelamin?.trim().toUpperCase() || null;
+  if (jenisKelamin && jenisKelamin !== "L" && jenisKelamin !== "P") {
+    throw new BadRequestError("Jenis kelamin harus L atau P");
+  }
+  const tempatLahir = input.tempatLahir?.trim() || null;
+  const angkatan =
+    input.angkatan === undefined || input.angkatan === null
+      ? null
+      : Number(input.angkatan);
+  if (angkatan !== null && !Number.isInteger(angkatan)) {
+    throw new BadRequestError("Angkatan harus berupa angka bulat");
+  }
   const classRow = await resolveClass(input.classId);
   const plainPassword =
     input.password?.trim() ||
@@ -193,6 +215,10 @@ export async function createStudent(input: StudentInput) {
         .values({
           fullName,
           nomorInduk,
+          nisn,
+          jenisKelamin,
+          tempatLahir,
+          angkatan,
           email,
           tanggalLahir,
           kelas: classRow?.name ?? null,
@@ -229,6 +255,26 @@ export async function updateStudent(id: string, patch: StudentInput) {
     const fullName = patch.fullName.trim();
     if (!fullName) throw new BadRequestError("Nama siswa wajib diisi");
     values.fullName = fullName;
+  }
+  if (patch.nisn !== undefined) {
+    values.nisn = patch.nisn?.trim() || null;
+  }
+  if (patch.jenisKelamin !== undefined) {
+    const jk = patch.jenisKelamin?.trim().toUpperCase() || null;
+    if (jk && jk !== "L" && jk !== "P") {
+      throw new BadRequestError("Jenis kelamin harus L atau P");
+    }
+    values.jenisKelamin = jk;
+  }
+  if (patch.tempatLahir !== undefined) {
+    values.tempatLahir = patch.tempatLahir?.trim() || null;
+  }
+  if (patch.angkatan !== undefined) {
+    const angkatan = patch.angkatan === null ? null : Number(patch.angkatan);
+    if (angkatan !== null && !Number.isInteger(angkatan)) {
+      throw new BadRequestError("Angkatan harus berupa angka bulat");
+    }
+    values.angkatan = angkatan;
   }
   if (patch.email !== undefined) {
     values.email = patch.email?.trim().toLowerCase() || null;
