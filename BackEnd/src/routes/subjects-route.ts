@@ -4,6 +4,7 @@ import {
   createSubject,
   deleteSubject,
   getSubject,
+  getSubjectStats,
   listSubjects,
   updateSubject,
 } from "../services/subjects-services";
@@ -37,6 +38,26 @@ export const subjectsRoute = new Elysia({ prefix: "/api/v1/subjects" })
       detail: {
         tags: ["Subjects"],
         summary: "List mata pelajaran (terfilter sesuai peran)",
+        security: [{ BearerAuth: [] }],
+      },
+    }
+  )
+  .get(
+    "/stats",
+    async ({ status }: any) => {
+      try {
+        const data = await getSubjectStats();
+        return status(200, { success: true, message: "Subject stats", data });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru"]),
+      detail: {
+        tags: ["Subjects"],
+        summary: "Statistik mata pelajaran (total, aktif, kejuruan & umum)",
         security: [{ BearerAuth: [] }],
       },
     }
