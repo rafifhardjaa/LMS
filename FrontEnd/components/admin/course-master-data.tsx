@@ -1,15 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  BookOpen,
-  Building2,
-  GraduationCap,
-  Layers,
-  Loader2,
-  RefreshCw,
-  Users,
-} from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { masterDataApi } from "@/lib/api/master-data";
 import type {
   GradeLevel,
@@ -39,10 +31,8 @@ type TabId = (typeof tabs)[number]["id"];
 
 export function CourseMasterData({
   refreshKey = 0,
-  onSubjectAction,
 }: {
   refreshKey?: number;
-  onSubjectAction?: (mode: "edit" | "delete", subjectId: string) => void;
 } = {}) {
   const role = useAuthStore((state) => state.user?.role ?? "admin");
   const isAdmin = role === "admin";
@@ -117,17 +107,6 @@ export function CourseMasterData({
     return () => clearTimeout(timer);
   }, [load, refreshKey]);
 
-  const stats = useMemo(() => {
-    const activeSubjects = subjects.filter((s) => s.isActive);
-    return {
-      subjects: activeSubjects.length,
-      vocational: activeSubjects.filter((s) => s.majorId).length,
-      majors: majors.filter((m) => m.isActive).length,
-      classes: classes.filter((c) => c.isActive).length,
-      teachers: teachers.length,
-    };
-  }, [subjects, majors, classes, teachers]);
-
   const visibleTabs = useMemo(
     () => tabs.filter((item) => canSeeAssignments || item.id !== "assignments"),
     [canSeeAssignments]
@@ -135,34 +114,6 @@ export function CourseMasterData({
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <StatCard
-          icon={<BookOpen className="size-5" />}
-          label="Mapel Aktif"
-          value={stats.subjects}
-        />
-        <StatCard
-          icon={<Layers className="size-5" />}
-          label="Mapel Kejuruan"
-          value={stats.vocational}
-        />
-        <StatCard
-          icon={<Building2 className="size-5" />}
-          label="Jurusan"
-          value={stats.majors}
-        />
-        <StatCard
-          icon={<GraduationCap className="size-5" />}
-          label="Kelas"
-          value={stats.classes}
-        />
-        <StatCard
-          icon={<Users className="size-5" />}
-          label="Guru"
-          value={stats.teachers}
-        />
-      </section>
-
       <section className="overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
         <div className="flex flex-col justify-between gap-3 border-b border-[#eceef3] px-4 py-3 sm:flex-row sm:items-center">
           <div className="flex flex-wrap gap-1 rounded-full bg-[#f1f4f9] p-1">
@@ -214,9 +165,6 @@ export function CourseMasterData({
                   subjects={subjects}
                   majors={majors}
                   gradeLevels={gradeLevels}
-                  isAdmin={isAdmin}
-                  onChanged={load}
-                  onRequestDialog={onSubjectAction}
                 />
               ) : null}
               {tab === "majors" ? (
@@ -257,30 +205,6 @@ export function CourseMasterData({
           )}
         </div>
       </section>
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="rounded-2xl border border-[#eef0f5] bg-white p-4 shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#4e566c]">
-          {label}
-        </p>
-        <span className="flex size-8 items-center justify-center rounded-xl bg-[#f4f2ff] text-[#6c5dd3]">
-          {icon}
-        </span>
-      </div>
-      <p className="mt-2 text-2xl font-bold text-[#181c20]">{value}</p>
     </div>
   );
 }
