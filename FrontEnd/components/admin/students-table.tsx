@@ -1,21 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { masterDataApi } from "@/lib/api/master-data";
+import type { StudentSummary } from "@/lib/api/master-data";
 import {
-  EmptyRow,
-  PanelCard,
-  PanelHeader,
-  RowActions,
-  StatusBadge,
-  thClass,
-  tdClass,
-} from "@/components/admin/master-data/panel-ui";
-import {
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Columns3,
   FileSpreadsheet,
   History,
   IdCard,
@@ -23,16 +13,15 @@ import {
   MoreVertical,
   RefreshCw,
   Search,
-  SlidersHorizontal,
 } from "lucide-react";
 
-export function StudentsTable({ aside }: { aside: ReactNode }) {
+export function StudentsTable() {
   const [query, setQuery] = useState("");
   const [jurusan, setJurusan] = useState("Semua Jurusan");
   const [tingkat, setTingkat] = useState("Semua Tingkat");
   const [sso, setSso] = useState("Semua Status SSO");
   const [page, setPage] = useState(1);
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +29,12 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const filters: any = {};
+      const filters: {
+        q?: string;
+        majorId?: string;
+        gradeLevelId?: string;
+        status?: "active" | "inactive" | "all";
+      } = {};
       if (query) filters.q = query;
       if (jurusan !== "Semua Jurusan") filters.majorId = jurusan;
       if (tingkat !== "Semua Tingkat") filters.gradeLevelId = tingkat;
@@ -62,12 +56,12 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
 
   const rows = useMemo(() => students, [students]);
 
-  const allSelected = rows.length > 0 && rows.every((r) => selected.includes(r.nomorInduk));
+  const allSelected = rows.length > 0 && rows.every((r) => selected.includes(r.id));
   const toggle = (id: string) => setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  const toggleAll = () => setSelected(allSelected ? [] : rows.map((r) => r.nomorInduk));
+  const toggleAll = () => setSelected(allSelected ? [] : rows.map((r) => r.id));
   const reset = () => { setQuery(""); setJurusan("Semua Jurusan"); setTingkat("Semua Tingkat"); setSso("Semua Status SSO"); setSelected([]); };
 
-  const jurusanOptions = ["Semua Jurusan", ...new Set(students.map((s: any) => s.majorName).filter(Boolean))];
+  const jurusanOptions = ["Semua Jurusan", ...new Set(students.map((s) => s.majorName).filter((name): name is string => Boolean(name)))];
   const tingkatOptions = ["Semua Tingkat", "Kelas X", "Kelas XI", "Kelas XII"];
   const ssoOptions = ["Semua Status SSO", "Aktif", "Butuh Aktivasi"];
 
@@ -76,8 +70,12 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 gap-3 rounded-2xl border border-[#eef0f5] bg-white p-4 shadow-[0_8px_24px_rgba(32,44,90,0.04)] md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_0.8fr_0.7fr_auto]">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
+      <div className="flex flex-wrap items-center gap-2 px-6 pt-5 pb-4">
+        <h2 className="text-lg font-bold text-[#181c20]">Daftar Siswa & Peserta Didik</h2>
+        <span className="rounded-full bg-[#e5deff] px-2 py-0.5 text-[11px] font-semibold text-[#4331a8]">{rows.length} Total</span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 border-b border-[#eceef3] px-6 pb-5 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_0.8fr_0.7fr_auto]">
         <label className="relative">
           <span className="sr-only">Cari siswa</span>
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
@@ -95,19 +93,7 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
         <button type="button" onClick={reset} aria-label="Reset filter" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] hover:text-[#6c5dd3]"><RefreshCw className="size-[18px]" /></button>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[1fr_320px]">
-        <section className="min-w-0 overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
-          <div className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-bold text-[#181c20]">Daftar Siswa & Peserta Didik</h2>
-              <span className="rounded-full bg-[#e5deff] px-2 py-0.5 text-[11px] font-semibold text-[#4331a8]">{rows.length} Total</span>
-            </div>
-            <div className="flex items-center gap-2 max-lg:flex-wrap">
-              <button type="button" onClick={() => window.alert("Filter Lanjutan")} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#eceef3] px-3 text-[11px] font-medium text-[#4e566c] hover:bg-[#e0e2e7]"><SlidersHorizontal className="size-3.5" /> Filter Lanjutan</button>
-              <button type="button" onClick={() => window.alert("Kolom Tampilan")} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#eceef3] px-3 text-[11px] font-medium text-[#4e566c] hover:bg-[#e0e2e7]"><Columns3 className="size-3.5" /> Kolom Tampilan</button>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
+      <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left">
               <thead className="bg-[#f1f4f9] text-xs font-semibold text-[#181c20]">
                 <tr>
@@ -121,8 +107,8 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
               </thead>
               <tbody className="divide-y divide-[#eceef3]">
                 {rows.map((s) => (
-                  <tr key={s.id} className={`align-middle ${selected.includes(s.nomorInduk) ? "bg-[#f8f6ff]" : "hover:bg-[#fbfcfd]"}`}>
-                    <td className="py-5 pl-6"><input type="checkbox" aria-label={`Pilih ${s.fullName}`} checked={selected.includes(s.nomorInduk)} onChange={() => toggle(s.nomorInduk)} className="size-4 accent-[#6c5dd3]" /></td>
+                  <tr key={s.id} className={`align-middle ${selected.includes(s.id) ? "bg-[#f8f6ff]" : "hover:bg-[#fbfcfd]"}`}>
+                    <td className="py-5 pl-6"><input type="checkbox" aria-label={`Pilih ${s.fullName}`} checked={selected.includes(s.id)} onChange={() => toggle(s.id)} className="size-4 accent-[#6c5dd3]" /></td>
                     <td className="px-3 py-5">
                       <div className="flex items-center gap-3">
                         <span className={`flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold bg-[#f0edff] text-[#6c5dd3]`}>{s.fullName?.charAt(0) ?? "?"}</span>
@@ -173,9 +159,6 @@ export function StudentsTable({ aside }: { aside: ReactNode }) {
               <button type="button" aria-label="Halaman berikutnya" disabled={page >= 999} onClick={() => setPage(page + 1)} className="flex size-8 items-center justify-center rounded-full text-[#181c20] hover:bg-[#eceef3] disabled:opacity-40"><ChevronRight className="size-4" /></button>
             </nav>
           </div>
-        </section>
-        {aside}
-      </div>
-    </>
+    </section>
   );
 }
