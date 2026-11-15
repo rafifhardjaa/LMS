@@ -70,12 +70,12 @@ export function SearchableDropdown({
         aria-expanded={open}
         onClick={() => { if (!disabled) toggle(); }}
         disabled={disabled}
-        className={`flex h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
+        className={`flex min-h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 py-2 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
           open ? "shadow-[0_2px_10px_-2px_rgba(32,44,90,0.12)]" : ""
         }`}
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="truncate font-semibold text-slate-800">{selected?.label}</span>
+          <span className="break-words font-semibold text-slate-800" title={selected.label}>{selected.label}</span>
         </div>
         <ChevronDown
           className={`size-5 shrink-0 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
@@ -118,9 +118,9 @@ export function SearchableDropdown({
                       : "font-medium text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  <div className="flex items-center gap-2 truncate">
+                  <div className="flex items-center gap-2">
                     <span className={`size-2 rounded-full ${active ? "bg-[#6C5DD3]" : "bg-slate-300"}`} />
-                    <span className="truncate">{option.label}</span>
+                    <span className="break-words" title={option.label}>{option.label}</span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {active && <Check className="size-4 text-[#6C5DD3]" />}
