@@ -178,13 +178,14 @@ export function StudentsTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left">
+        <table className="w-full min-w-[820px] text-left">
           <thead className="bg-[#f1f4f9] text-xs font-semibold text-[#181c20]">
             <tr>
               <th className="px-6 py-3.5">Siswa</th>
               <th className="w-[150px] px-3 py-3.5">NISN</th>
               <th className="w-[220px] px-3 py-3.5">Jurusan</th>
               <th className="w-[130px] px-3 py-3.5">Kelas</th>
+              <th className="w-[130px] px-3 py-3.5">Status</th>
               <th className="px-3 py-3.5 pr-6">Email</th>
             </tr>
           </thead>
@@ -200,10 +201,21 @@ export function StudentsTable() {
                 <td className="px-3 py-4 text-xs text-[#181c20]">{s.nisn ?? "—"}</td>
                 <td className="px-3 py-4 text-xs text-[#181c20]">{s.majorName ?? "—"}</td>
                 <td className="px-3 py-4 text-xs text-[#181c20]">{s.className ?? "—"}</td>
+                <td className="px-3 py-4 text-xs">
+                  {s.isActive ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" /> Aktif
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                      Butuh Aktivasi
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-4 pr-6 text-xs text-[#4e566c]">{s.email ?? "—"}</td>
               </tr>
             ))}
-            {!pageRows.length && <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-[#787584]">{error ?? "Tidak ada siswa yang cocok dengan filter."}</td></tr>}
+            {!pageRows.length && <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-[#787584]">{error ?? "Tidak ada siswa yang cocok dengan filter."}</td></tr>}
           </tbody>
         </table>
       </div>
