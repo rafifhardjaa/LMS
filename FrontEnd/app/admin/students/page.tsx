@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { Download, RefreshCw, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
-import { StudentStats } from "@/components/admin/student-stats";
-import { StudentsSidePanels } from "@/components/admin/students-side-panels";
 import { StudentsTable } from "@/components/admin/students-table";
 import { AddStudentDialog } from "@/components/admin/add-student-dialog";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
@@ -79,9 +77,8 @@ export default function StudentsPage() {
           </StaggerChildren>
         </div>
       </FadeIn>
-      <StudentStats />
       <FadeIn>
-        <StudentsTable key={refreshKey} aside={<StudentsSidePanels />} />
+        <StudentsTable key={refreshKey} />
       </FadeIn>
 
       <AddStudentDialog
