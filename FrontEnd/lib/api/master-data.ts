@@ -132,6 +132,7 @@ export interface StudentSummary {
   tanggalLahir: string | null;
   email: string | null;
   kelas: string | null;
+  classId: string | null;
   isActive: boolean;
   className: string | null;
   majorCode: string | null;
