@@ -165,10 +165,10 @@ export function StudentsTable() {
         <div className="w-[220px] shrink-0">
           <SearchableDropdown value={jurusan} onChange={(v) => { setJurusan(v); setRombel(""); setPage(1); }} options={jurusanOptions} label="Semua Jurusan" />
         </div>
-        <div className="w-[130px] shrink-0">
+        <div className="w-[200px] shrink-0">
           <SearchableDropdown value={tingkat} onChange={(v) => { setTingkat(v); setRombel(""); setPage(1); }} options={tingkatOptions} label="Semua Tingkat" />
         </div>
-        <div className="w-[130px] shrink-0">
+        <div className="w-[150px] shrink-0">
           <SearchableDropdown value={rombel} onChange={(v) => { setRombel(v); setPage(1); }} options={rombelOptions} label="Semua Kelas" disabled={loadingFilters} />
         </div>
         <div className="w-[150px] shrink-0">

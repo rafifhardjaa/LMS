@@ -13,6 +13,7 @@ import { teacherAssignmentsRoute } from "./routes/teacher-assignments-route";
 import { teachersRoute } from "./routes/teachers-route";
 import { studentsRoute } from "./routes/students-route";
 import { jadwalPelajaranRoute } from "./routes/jadwal-pelajaran-route";
+import { dashboardRoute } from "./routes/dashboard-route";
 import { modulesRoute } from "./routes/modules-route";
 import { discussionsRoute } from "./routes/discussions-route";
 import { lessonsRoute } from "./routes/lessons-route";
@@ -81,6 +82,7 @@ Akun guru dibuat oleh admin melalui \`POST /api/v1/admin/users\`.
     },
     { name: "Teachers", description: "Daftar guru dan beban mengajar" },
     { name: "Students", description: "Manajemen data siswa dan kelas" },
+    { name: "Dashboard", description: "Statistik grafik dashboard admin" },
     { name: "Modules", description: "Manajemen modul dalam mata pelajaran" },
     { name: "Lessons", description: "Manajemen lesson dalam modul" },
     { name: "Enrollments", description: "Pendaftaran siswa ke mata pelajaran" },
@@ -132,6 +134,7 @@ const app = new Elysia()
   .use(teacherAssignmentsRoute)
   .use(teachersRoute)
   .use(jadwalPelajaranRoute)
+  .use(dashboardRoute)
   .use(studentsRoute)
   .use(modulesRoute)
   .use(discussionsRoute)
