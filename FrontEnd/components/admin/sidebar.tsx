@@ -10,7 +10,9 @@ import {
   Users,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { useLogout } from "@/hooks/use-logout";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 const mainMenu = [
   { label: "Dashboard", icon: LayoutGrid, href: "/admin/dashboard" },
@@ -20,9 +22,34 @@ const mainMenu = [
   { label: "Jadwal Pelajaran", icon: CalendarDays, href: "/admin/schedule" },
 ];
 
+function roleLabel(role: string | undefined): string {
+  switch (role) {
+    case "admin":
+      return "Administrator";
+    case "guru":
+    case "teacher":
+      return "Guru";
+    case "siswa":
+    case "student":
+      return "Siswa";
+    default:
+      return "Pengguna";
+  }
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const handleLogout = useLogout();
+  const user = useAuthStore((state) => state.user);
+  const fullName = user?.full_name?.trim() || "Pengguna";
+  const avatarUrl = user?.avatar_url ?? null;
   return (
     <aside
       className="fixed left-0 top-0 z-[70] flex h-screen w-64 flex-col justify-between bg-white shadow-[0_1px_12px_rgba(0,0,0,0.03)]"
@@ -77,13 +104,24 @@ export function Sidebar() {
 
       {/* User profile */}
       <div className="p-4 border-t border-[#eceef3] flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-[#e5deff] flex items-center justify-center shrink-0 font-bold text-[#180065] text-xs">
-            PW
-          </div>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {avatarUrl ? (
+            <Image
+              src={avatarUrl}
+              alt={fullName}
+              width={36}
+              height={36}
+              unoptimized
+              className="rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-[#e5deff] flex items-center justify-center shrink-0 font-bold text-[#180065] text-xs">
+              {initials(fullName)}
+            </div>
+          )}
           <div className="flex flex-col truncate">
-            <span className="text-sm text-[#181c20] font-bold truncate">Pawell</span>
-            <span className="text-xs text-[#787584] truncate">Super Admin SMK</span>
+            <span className="text-sm text-[#181c20] font-bold truncate">{fullName}</span>
+            <span className="text-xs text-[#787584] truncate">{roleLabel(user?.role)}</span>
           </div>
         </div>
         <button

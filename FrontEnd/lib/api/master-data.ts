@@ -149,6 +149,30 @@ export interface StudentStats {
   filledClasses: number;
 }
 
+export interface TeacherStats {
+  total: number;
+  active: number;
+  inactive: number;
+  subjectsTaught: number;
+  classesAssigned: number;
+}
+
+export interface SubjectStats {
+  total: number;
+  active: number;
+  inactive: number;
+  kejuruan: number;
+  umum: number;
+}
+
+export interface JadwalStats {
+  totalSesi: number;
+  bentrok: number;
+  kelasTerisi: number;
+  durasiLebihDari90: number;
+  diLuarJamKerja: number;
+}
+
 export interface JadwalPelajaran {
   id: string;
   classId: string;
@@ -316,6 +340,8 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<unknown>>(`/api/v1/subjects/${id}`, {
         method: "DELETE",
       }),
+    stats: () =>
+      apiFetch<ApiSuccess<SubjectStats>>("/api/v1/subjects/stats"),
   },
   teachers: {
     list: (q?: string, statusFilter?: string) =>
@@ -352,6 +378,8 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<{ id: string }>>(`/api/v1/teachers/${id}`, {
         method: "DELETE",
       }),
+    stats: () =>
+      apiFetch<ApiSuccess<TeacherStats>>("/api/v1/teachers/stats"),
   },
   students: {
     list: (filters: {
@@ -422,6 +450,8 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<unknown>>(`/api/v1/jadwal-pelajaran/${id}`, {
         method: "DELETE",
       }),
+    stats: () =>
+      apiFetch<ApiSuccess<JadwalStats>>("/api/v1/jadwal-pelajaran/stats"),
   },
   teacherAssignments: {
     listSubjects: (filters: { teacherId?: string; subjectId?: string; section?: string } = {}) =>
