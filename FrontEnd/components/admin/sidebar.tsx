@@ -3,14 +3,9 @@
 import {
   BookOpen,
   CalendarDays,
-  Folder,
   LayoutGrid,
-  LifeBuoy,
   LogOut,
-  MessageCircle,
-  ReceiptText,
   School,
-  Settings,
   User,
   Users,
 } from "lucide-react";
@@ -22,15 +17,7 @@ const mainMenu = [
   { label: "Teachers (Guru)", icon: User, href: "/admin/teachers" },
   { label: "Students (Siswa)", icon: Users, href: "/admin/students" },
   { label: "Course (Mapel)", icon: BookOpen, href: "/admin/course" },
-  { label: "Resource (Modul)", icon: Folder, href: "/admin/resource" },
   { label: "Jadwal Pelajaran", icon: CalendarDays, href: "/admin/schedule" },
-  { label: "Chat Konseling", icon: MessageCircle, href: "/admin/chatkonseling" },
-  { label: "Transaction", icon: ReceiptText, href: "/admin/transaksi" },
-];
-
-const helpMenu = [
-  { label: "Settings", icon: Settings, href: "/admin/settings" },
-  { label: "Support & Log", icon: LifeBuoy, href: "/admin/support" },
 ];
 
 interface SidebarProps {
@@ -90,36 +77,6 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 <Icon className="size-5" />
                 <span className="text-sm font-semibold">{label}</span>
               </a>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Help */}
-        <div className="flex flex-col gap-1">
-          <div className="px-2.5 py-1">
-            <span className="text-[11px] text-[#787584] uppercase tracking-wider font-semibold">
-              Help
-            </span>
-          </div>
-          <nav className="space-y-1">
-            {helpMenu.map(({ label, icon: Icon, href }) => {
-              const active = pathname === href;
-              return (
-                <a
-                  key={label}
-                  href={href}
-                  onClick={onClose}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
-                    active
-                      ? "bg-[#6c5dd3] text-white font-semibold shadow-[0_4px_12px_-2px_rgba(108,93,211,0.35)]"
-                      : "text-[#4e566c] hover:bg-[#eceef3] hover:text-[#181c20]"
-                  }`}
-                >
-                  <Icon className="size-5" />
-                  <span className="text-sm font-semibold">{label}</span>
-                </a>
               );
             })}
           </nav>
