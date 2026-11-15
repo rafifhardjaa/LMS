@@ -7,15 +7,9 @@ import { CourseMasterData } from "@/components/admin/course-master-data";
 import { AddSubjectDialog } from "@/components/admin/add-subject-dialog";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
-type SubjectMode = "add" | "edit" | "delete";
-
 export default function CoursePage() {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [dialog, setDialog] = useState<{
-    open: boolean;
-    mode: SubjectMode;
-    subjectId: string | null;
-  }>({ open: false, mode: "add", subjectId: null });
+  const [addOpen, setAddOpen] = useState(false);
 
   return (
     <div className="flex w-full flex-col gap-6 pt-2">
@@ -57,7 +51,7 @@ export default function CoursePage() {
             <StaggerItem>
               <motion.button
                 type="button"
-                onClick={() => setDialog({ open: true, mode: "add", subjectId: null })}
+                onClick={() => setAddOpen(true)}
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-[#5343b9] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -69,20 +63,11 @@ export default function CoursePage() {
         </section>
       </FadeIn>
       <FadeIn>
-        <CourseMasterData
-          refreshKey={refreshKey}
-          onSubjectAction={(mode, subjectId) =>
-            setDialog({ open: true, mode, subjectId })
-          }
-        />
+        <CourseMasterData refreshKey={refreshKey} />
       </FadeIn>
       <AddSubjectDialog
-        open={dialog.open}
-        onOpenChange={(next) => {
-          if (!next) setDialog((prev) => ({ ...prev, open: false }));
-        }}
-        initialMode={dialog.mode}
-        initialSubjectId={dialog.subjectId}
+        open={addOpen}
+        onOpenChange={setAddOpen}
         onSuccess={() => setRefreshKey((key) => key + 1)}
       />
     </div>

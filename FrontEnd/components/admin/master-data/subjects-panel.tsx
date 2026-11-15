@@ -2,32 +2,25 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import { masterDataApi } from "@/lib/api/master-data";
 import type { GradeLevel, Major, Subject } from "@/lib/api/master-data";
 import {
   EmptyRow,
   PanelCard,
   PanelHeader,
-  RowActions,
   StatusBadge,
   tdClass,
   thClass,
 } from "./panel-ui";
+import { SearchableDropdown } from "@/components/admin/searchable-dropdown";
 
 export function SubjectsPanel({
   subjects,
   majors,
   gradeLevels,
-  isAdmin,
-  onChanged,
-  onRequestDialog,
 }: {
   subjects: Subject[];
   majors: Major[];
   gradeLevels: GradeLevel[];
-  isAdmin: boolean;
-  onChanged: () => Promise<void> | void;
-  onRequestDialog?: (mode: "edit" | "delete", subjectId: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [majorId, setMajorId] = useState("");
@@ -51,22 +44,31 @@ export function SubjectsPanel({
     });
   }, [subjects, query, majorId, gradeLevelId, semester]);
 
-  const toggle = async (subject: Subject) => {
-    const result = await masterDataApi.subjects.update(subject.id, {
-      isActive: !subject.isActive,
-    });
-    if (result.error) {
-      window.alert(
-        (result.error as { message?: string }).message ?? "Gagal mengubah status"
-      );
-      return;
-    }
-    await onChanged();
-  };
+  const majorOptions = useMemo(
+    () => [
+      { value: "", label: "Semua jurusan" },
+      ...majors.map((m) => ({ value: m.id, label: `${m.code} - ${m.name}` })),
+    ],
+    [majors]
+  );
+
+  const gradeOptions = useMemo(
+    () => [
+      { value: "", label: "Semua tingkatan" },
+      ...gradeLevels.map((g) => ({ value: g.id, label: `Kelas ${g.code}` })),
+    ],
+    [gradeLevels]
+  );
+
+  const semesterOptions = [
+    { value: "", label: "Semua semester" },
+    { value: "Ganjil", label: "Ganjil" },
+    { value: "Genap", label: "Genap" },
+  ];
 
   return (
     <>
-      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_0.8fr_auto]">
+      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_0.8fr]">
         <label className="relative">
           <span className="sr-only">Cari mata pelajaran</span>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
@@ -74,45 +76,18 @@ export function SubjectsPanel({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari kode atau nama mapel…"
-            className="h-10 w-full rounded-full bg-[#f1f4f9] pl-10 pr-3 text-xs outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30"
+            className="h-11 w-full rounded-full bg-[#f1f4f9] pl-10 pr-3 text-xs outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30"
           />
         </label>
-        <select
-          value={majorId}
-          onChange={(e) => setMajorId(e.target.value)}
-          aria-label="Filter jurusan"
-          className="h-10 rounded-full bg-[#f1f4f9] px-3 text-xs text-[#181c20] outline-none"
-        >
-          <option value="">Semua jurusan</option>
-          {majors.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.code}
-            </option>
-          ))}
-        </select>
-        <select
-          value={gradeLevelId}
-          onChange={(e) => setGradeLevelId(e.target.value)}
-          aria-label="Filter tingkatan"
-          className="h-10 rounded-full bg-[#f1f4f9] px-3 text-xs text-[#181c20] outline-none"
-        >
-          <option value="">Semua tingkatan</option>
-          {gradeLevels.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={semester}
-          onChange={(e) => setSemester(e.target.value)}
-          aria-label="Filter semester"
-          className="h-10 rounded-full bg-[#f1f4f9] px-3 text-xs text-[#181c20] outline-none"
-        >
-          <option value="">Semua semester</option>
-          <option value="Ganjil">Ganjil</option>
-          <option value="Genap">Genap</option>
-        </select>
+        <div className="min-w-0">
+          <SearchableDropdown value={majorId} onChange={setMajorId} options={majorOptions} label="Semua jurusan" />
+        </div>
+        <div className="min-w-0">
+          <SearchableDropdown value={gradeLevelId} onChange={setGradeLevelId} options={gradeOptions} label="Semua tingkatan" />
+        </div>
+        <div className="min-w-0">
+          <SearchableDropdown value={semester} onChange={setSemester} options={semesterOptions} label="Semua semester" />
+        </div>
       </div>
 
       <PanelCard>
@@ -131,7 +106,6 @@ export function SubjectsPanel({
                 <th className={thClass}>Tingkatan</th>
                 <th className={thClass}>Semester / T.A.</th>
                 <th className={thClass}>Status</th>
-                <th className={thClass}>Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eceef3]">
@@ -170,20 +144,11 @@ export function SubjectsPanel({
                   <td className={tdClass}>
                     <StatusBadge active={subject.isActive} />
                   </td>
-                  <td className={tdClass}>
-                    <RowActions
-                      canEdit={isAdmin}
-                      active={subject.isActive}
-                      onEdit={() => onRequestDialog?.("edit", subject.id)}
-                      onDelete={() => onRequestDialog?.("delete", subject.id)}
-                      onToggle={() => void toggle(subject)}
-                    />
-                  </td>
                 </tr>
               ))}
               {rows.length === 0 ? (
                 <EmptyRow
-                  colSpan={7}
+                  colSpan={6}
                   message="Tidak ada mata pelajaran yang cocok dengan filter."
                 />
               ) : null}
