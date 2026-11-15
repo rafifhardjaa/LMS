@@ -2,12 +2,11 @@
 
 import { Download, Route, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
-import { ActivityChart } from "@/components/admin/activity-chart";
-import { AuditLog } from "@/components/admin/audit-log";
+import { DataChangeTrendChart } from "@/components/admin/data-change-trend-chart";
+import { DataReadinessChart } from "@/components/admin/data-readiness-chart";
 import { MetricCards } from "@/components/admin/metric-cards";
-import { PlottingBk } from "@/components/admin/plotting-bk";
-import { QuizStatusChart } from "@/components/admin/quiz-status-chart";
-import { UsersTable } from "@/components/admin/users-table";
+import { ScheduleCoverageChart } from "@/components/admin/schedule-coverage-chart";
+import { TeachingLoadChart } from "@/components/admin/teaching-load-chart";
 import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
 
 export default function DashboardPage() {
@@ -67,23 +66,12 @@ export default function DashboardPage() {
       {/* Row 1: metric cards */}
       <MetricCards />
 
-      {/* Row 2: charts */}
+      {/* Row 2: charts — satu grafik per menu admin */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActivityChart />
-        <QuizStatusChart />
-      </div>
-
-      {/* Row 3: user table */}
-      <UsersTable />
-
-      {/* Row 4: audit log + plotting BK */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-6">
-          <AuditLog />
-        </div>
-        <div className="lg:col-span-6">
-          <PlottingBk />
-        </div>
+        <DataReadinessChart />
+        <TeachingLoadChart />
+        <ScheduleCoverageChart />
+        <DataChangeTrendChart />
       </div>
     </div>
   );
