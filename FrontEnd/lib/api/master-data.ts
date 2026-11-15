@@ -129,6 +129,7 @@ export interface StudentSummary {
   jenisKelamin: string | null;
   tempatLahir: string | null;
   angkatan: number | null;
+  tanggalLahir: string | null;
   email: string | null;
   kelas: string | null;
   isActive: boolean;
