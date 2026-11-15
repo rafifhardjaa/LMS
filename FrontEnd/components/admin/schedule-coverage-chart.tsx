@@ -9,33 +9,46 @@ import {
   YAxis,
 } from "recharts";
 import { FadeIn } from "@/components/ui/animations";
+import type { ScheduleCoverageDatum } from "@/lib/api/dashboard";
 
-type DailyCoverage = {
-  day: string;
-  fullName: string;
-  terisi: number;
-  kosong: number;
-  bentrok: number;
+type Props = {
+  data?: ScheduleCoverageDatum[];
+  loading?: boolean;
 };
 
-/**
- * Tutupan jadwal per hari. Sesi bentrok (guru/kelas dobel) dan slot kosong
- * adalah dua hal yang paling sering dicek admin di halaman Jadwal.
- */
-const coverage: DailyCoverage[] = [
-  { day: "Sen", fullName: "Senin", terisi: 44, kosong: 6, bentrok: 2 },
-  { day: "Sel", fullName: "Selasa", terisi: 46, kosong: 4, bentrok: 2 },
-  { day: "Rab", fullName: "Rabu", terisi: 42, kosong: 8, bentrok: 2 },
-  { day: "Kam", fullName: "Kamis", terisi: 45, kosong: 5, bentrok: 2 },
-  { day: "Jum", fullName: "Jumat", terisi: 30, kosong: 4, bentrok: 1 },
-  { day: "Sab", fullName: "Sabtu", terisi: 28, kosong: 2, bentrok: 0 },
-];
+export function ScheduleCoverageChart({ data, loading = false }: Props) {
+  if (loading || !data) {
+    return (
+      <FadeIn>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col gap-4 max-lg:p-4 animate-pulse">
+          <div className="h-5 w-44 rounded bg-slate-200" />
+          <div className="h-5 w-56 rounded bg-slate-200" />
+          <div className="w-full h-56 rounded-xl bg-slate-200" />
+          <div className="h-3 w-full rounded bg-slate-200" />
+        </div>
+      </FadeIn>
+    );
+  }
 
-const totalTerisi = coverage.reduce((sum, item) => sum + item.terisi, 0);
-const totalKosong = coverage.reduce((sum, item) => sum + item.kosong, 0);
-const totalBentrok = coverage.reduce((sum, item) => sum + item.bentrok, 0);
+  if (data.length === 0) {
+    return (
+      <FadeIn>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col justify-between max-lg:p-4">
+          <h2 className="text-lg font-bold text-[#181c20]">
+            Tutupan Jadwal per Hari
+          </h2>
+          <div className="flex items-center justify-center h-56 text-sm text-[#787584]">
+            Belum ada jadwal tersusun
+          </div>
+        </div>
+      </FadeIn>
+    );
+  }
 
-export function ScheduleCoverageChart() {
+  const totalTerisi = data.reduce((sum, item) => sum + item.terisi, 0);
+  const totalKosong = data.reduce((sum, item) => sum + item.kosong, 0);
+  const totalBentrok = data.reduce((sum, item) => sum + item.bentrok, 0);
+
   return (
     <FadeIn>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col justify-between max-lg:p-4">
@@ -44,12 +57,18 @@ export function ScheduleCoverageChart() {
             <h2 className="text-lg font-bold text-[#181c20]">
               Tutupan Jadwal per Hari
             </h2>
-            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold">
+            <span
+              className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                totalBentrok > 0
+                  ? "bg-red-100 text-red-700"
+                  : "bg-emerald-100 text-emerald-800"
+              }`}
+            >
               {totalBentrok} sesi bentrok
             </span>
           </div>
           <span className="px-3 py-1 rounded-full bg-[#f1f4f9] text-[#4e566c] text-xs font-semibold border border-[#e0e2e7]/50">
-            {totalTerisi + totalKosong + totalBentrok} sesi / minggu
+            {totalTerisi + totalKosong} sesi / minggu
           </span>
         </div>
 
@@ -60,7 +79,7 @@ export function ScheduleCoverageChart() {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#e2e8f0]" />
-            <span className="text-[#4e566c] font-medium">Slot kosong</span>
+            <span className="text-[#4e566c] font-medium">Tanpa guru</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
@@ -71,7 +90,7 @@ export function ScheduleCoverageChart() {
         <div className="w-full h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={coverage}
+              data={data}
               margin={{ top: 8, right: 8, bottom: 0, left: -18 }}
               barCategoryGap={22}
             >
@@ -105,7 +124,7 @@ export function ScheduleCoverageChart() {
               />
               <Bar
                 dataKey="kosong"
-                name="Slot kosong"
+                name="Tanpa guru"
                 stackId="sesi"
                 fill="#e2e8f0"
                 barSize={28}
@@ -124,8 +143,8 @@ export function ScheduleCoverageChart() {
 
         <div className="text-[11px] text-[#4e566c] font-medium pt-2 border-t border-[#eceef3] flex items-center justify-between gap-3">
           <span>
-            <strong className="text-[#181c20]">{totalKosong} slot</strong> masih
-            kosong minggu ini
+            <strong className="text-[#181c20]">{totalKosong} sesi</strong> tanpa
+            guru minggu ini
           </span>
           <span className="font-semibold text-red-600">
             {totalBentrok} bentrok harus diselesaikan
