@@ -11,18 +11,44 @@ import {
   Tooltip,
 } from "recharts";
 import { FadeIn } from "@/components/ui/animations";
+import type { TeachingLoadDatum } from "@/lib/api/dashboard";
 
-const radialData = [
-  { name: "0 JP", value: 7, color: "#ef4444", label: "Belum dapat mapel" },
-  { name: "1–12 JP", value: 18, color: "#f59e0b", label: "Beban ringan" },
-  { name: "13–24 JP", value: 82, color: "#6c5dd3", label: "Beban normal" },
-  { name: "> 24 JP", value: 11, color: "#a39afd", label: "Overload" },
-];
+const STYLE: Record<string, { color: string; label: string }> = {
+  "0 JP": { color: "#ef4444", label: "Belum dapat mapel" },
+  "1–12 JP": { color: "#f59e0b", label: "Beban ringan" },
+  "13–24 JP": { color: "#6c5dd3", label: "Beban normal" },
+  "> 24 JP": { color: "#a39afd", label: "Overload" },
+};
 
-const totalTeachers = radialData.reduce((sum, item) => sum + item.value, 0);
-const maxValue = Math.max(...radialData.map((item) => item.value));
+type Props = {
+  data?: TeachingLoadDatum[];
+  loading?: boolean;
+};
 
-export function TeachingLoadChart() {
+export function TeachingLoadChart({ data, loading = false }: Props) {
+  if (loading || !data) {
+    return (
+      <FadeIn delay={0.1}>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col gap-4 max-lg:p-4 animate-pulse">
+          <div className="h-5 w-56 rounded bg-slate-200" />
+          <div className="mx-auto h-56 w-56 rounded-full bg-slate-200" />
+          <div className="h-3 w-full rounded bg-slate-200" />
+        </div>
+      </FadeIn>
+    );
+  }
+
+  const radialData = data.map((item) => ({
+    ...item,
+    color: STYLE[item.name]?.color ?? "#6c5dd3",
+    label: STYLE[item.name]?.label ?? item.name,
+  }));
+  const totalTeachers = radialData.reduce((sum, item) => sum + item.value, 0);
+  const maxValue = Math.max(...radialData.map((item) => item.value), 1);
+  const zero = data.find((item) => item.name === "0 JP")?.value ?? 0;
+  const overload = data.find((item) => item.name === "> 24 JP")?.value ?? 0;
+  const needsAttention = zero + overload;
+
   return (
     <FadeIn delay={0.1}>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col gap-4 max-lg:p-4">
@@ -31,12 +57,18 @@ export function TeachingLoadChart() {
             <h2 className="text-lg font-bold text-[#181c20]">
               Sebaran Beban Mengajar Guru
             </h2>
-            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold">
-              18 guru perlu atur ulang
-            </span>
+            {needsAttention > 0 ? (
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold">
+                {needsAttention} guru perlu atur ulang
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                Beban mengajar seimbang
+              </span>
+            )}
           </div>
           <span className="px-3 py-1 rounded-full bg-[#f1f4f9] text-[#4e566c] text-xs font-semibold border border-[#e0e2e7]/50">
-            {totalTeachers} guru aktif
+            {totalTeachers} guru
           </span>
         </div>
 
@@ -57,7 +89,11 @@ export function TeachingLoadChart() {
                 axisLine={false}
                 tick={{ fontSize: 11, fill: "#4e566c", fontWeight: 600 }}
               />
-              <PolarRadiusAxis domain={[0, maxValue]} tick={false} axisLine={false} />
+              <PolarRadiusAxis
+                domain={[0, maxValue]}
+                tick={false}
+                axisLine={false}
+              />
               <RadialBar dataKey="value" background cornerRadius={6}>
                 {radialData.map((item) => (
                   <Cell key={item.name} fill={item.color} />
@@ -78,30 +114,20 @@ export function TeachingLoadChart() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-[#eceef3] pt-3 text-[11px] text-[#4e566c]">
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-[#ef4444]" />
-            <span>
-              <strong className="font-semibold text-[#181c20]">7 guru</strong> belum dapat mapel
+          {radialData.map((item) => (
+            <span key={item.name} className="flex items-center gap-1.5">
+              <span
+                className="size-2.5 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span>
+                <strong className="font-semibold text-[#181c20]">
+                  {item.value} guru
+                </strong>{" "}
+                {item.label.toLowerCase()}
+              </span>
             </span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-[#f59e0b]" />
-            <span>
-              <strong className="font-semibold text-[#181c20]">18 guru</strong> beban ringan
-            </span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-[#6c5dd3]" />
-            <span>
-              <strong className="font-semibold text-[#181c20]">82 guru</strong> beban normal
-            </span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-[#a39afd]" />
-            <span className="font-semibold text-[#a39afd]">
-              <strong>11 guru</strong> overload
-            </span>
-          </span>
+          ))}
         </div>
       </div>
     </FadeIn>
