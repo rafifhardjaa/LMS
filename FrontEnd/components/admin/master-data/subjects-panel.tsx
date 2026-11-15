@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CirclePlus, FilterX, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { GradeLevel, Major, Subject } from "@/lib/api/master-data";
-import { EntityModal, type FieldDef, type Values } from "./entity-modal";
 import {
   EmptyRow,
   PanelCard,
@@ -15,28 +14,25 @@ import {
   thClass,
 } from "./panel-ui";
 
-type FormState = { mode: "create" } | { mode: "edit"; subject: Subject } | null;
-
 export function SubjectsPanel({
   subjects,
   majors,
   gradeLevels,
   isAdmin,
   onChanged,
+  onRequestDialog,
 }: {
   subjects: Subject[];
   majors: Major[];
   gradeLevels: GradeLevel[];
   isAdmin: boolean;
   onChanged: () => Promise<void> | void;
+  onRequestDialog?: (mode: "edit" | "delete", subjectId: string) => void;
 }) {
-const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("");
   const [majorId, setMajorId] = useState("");
   const [gradeLevelId, setGradeLevelId] = useState("");
   const [semester, setSemester] = useState("");
-  const [form, setForm] = useState<FormState>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -55,93 +51,6 @@ const [query, setQuery] = useState("");
     });
   }, [subjects, query, majorId, gradeLevelId, semester]);
 
-  const fields: FieldDef[] = [
-    { key: "name", label: "Nama Mapel", required: true, colSpan: 2 },
-    { key: "code", label: "Kode Mapel", required: true, placeholder: "RPL-X-1" },
-    {
-      key: "gradeLevelId",
-      label: "Tingkatan",
-      type: "select",
-      required: true,
-      options: gradeLevels.map((g) => ({ value: g.id, label: `${g.code} — ${g.name}` })),
-    },
-    {
-      key: "majorId",
-      label: "Jurusan",
-      type: "select",
-      options: [
-        { value: "", label: "Umum (tanpa jurusan)" },
-        ...majors.map((m) => ({ value: m.id, label: `${m.code} — ${m.name}` })),
-      ],
-      help: "Kosongkan untuk mata pelajaran umum.",
-    },
-    {
-      key: "semester",
-      label: "Semester",
-      type: "select",
-      required: true,
-      options: [
-        { value: "Ganjil", label: "Ganjil" },
-        { value: "Genap", label: "Genap" },
-      ],
-    },
-    { key: "description", label: "Deskripsi", type: "textarea", colSpan: 2 },
-    { key: "isActive", label: "Aktif", type: "checkbox" },
-  ];
-
-  const resetFilters = () => {
-    setQuery("");
-    setMajorId("");
-    setGradeLevelId("");
-    setSemester("");
-  };
-
-  const close = () => {
-    setForm(null);
-    setFormError(null);
-  };
-
-  const submit = async (values: Values) => {
-    setSubmitting(true);
-    setFormError(null);
-    const payload = {
-      name: String(values.name),
-      code: String(values.code),
-      description: values.description ? String(values.description) : null,
-      majorId: values.majorId ? String(values.majorId) : null,
-      gradeLevelId: String(values.gradeLevelId),
-      semester: String(values.semester),
-      isActive: Boolean(values.isActive),
-    };
-    const result =
-      form?.mode === "edit"
-        ? await masterDataApi.subjects.update(form.subject.id, payload)
-        : await masterDataApi.subjects.create(payload);
-    setSubmitting(false);
-    if (result.error) {
-      setFormError(
-        (result.error as { message?: string }).message ??
-          "Gagal menyimpan mata pelajaran"
-      );
-      return;
-    }
-    close();
-    await onChanged();
-  };
-
-  const remove = async (subject: Subject) => {
-    if (!window.confirm(`Hapus mata pelajaran ${subject.name}?`)) return;
-    const result = await masterDataApi.subjects.remove(subject.id);
-    if (result.error) {
-      window.alert(
-        (result.error as { message?: string }).message ??
-          "Gagal menghapus mata pelajaran"
-      );
-      return;
-    }
-    await onChanged();
-  };
-
   const toggle = async (subject: Subject) => {
     const result = await masterDataApi.subjects.update(subject.id, {
       isActive: !subject.isActive,
@@ -157,7 +66,7 @@ const [query, setQuery] = useState("");
 
   return (
     <>
-      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_0.8fr_0.9fr_auto]">
+      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_0.8fr_auto]">
         <label className="relative">
           <span className="sr-only">Cari mata pelajaran</span>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
@@ -211,17 +120,6 @@ const [query, setQuery] = useState("");
           title="Daftar Mata Pelajaran"
           subtitle="Kejuruan dan umum per tingkatan, semester, dan tahun ajaran"
           count={rows.length}
-          actions={
-            isAdmin ? (
-              <button
-                type="button"
-                onClick={() => setForm({ mode: "create" })}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#5343b9] px-3 text-xs font-semibold text-white hover:bg-[#4331a8]"
-              >
-                <CirclePlus className="size-3.5" /> Tambah Mapel
-              </button>
-            ) : null
-          }
         />
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-left">
@@ -276,8 +174,8 @@ const [query, setQuery] = useState("");
                     <RowActions
                       canEdit={isAdmin}
                       active={subject.isActive}
-                      onEdit={() => setForm({ mode: "edit", subject })}
-                      onDelete={() => void remove(subject)}
+                      onEdit={() => onRequestDialog?.("edit", subject.id)}
+                      onDelete={() => onRequestDialog?.("delete", subject.id)}
                       onToggle={() => void toggle(subject)}
                     />
                   </td>
@@ -293,37 +191,6 @@ const [query, setQuery] = useState("");
           </table>
         </div>
       </PanelCard>
-
-      {form !== null ? (
-        <EntityModal
-          open
-          title={
-            form?.mode === "edit" ? "Ubah Mata Pelajaran" : "Tambah Mata Pelajaran"
-          }
-        description="Mapel umum dikosongkan jurusannya; mapel kejuruan wajib memilih jurusan."
-        fields={fields}
-initial={
-              form?.mode === "edit"
-                ? {
-                    name: form.subject.name,
-                    code: form.subject.code,
-                    description: form.subject.description ?? "",
-                    majorId: form.subject.majorId ?? "",
-                    gradeLevelId: form.subject.gradeLevelId,
-                    semester: form.subject.semester,
-                    isActive: form.subject.isActive,
-                  }
-                : {
-                    semester: "Ganjil",
-                    isActive: true,
-                  }
-        }
-        submitting={submitting}
-        error={formError}
-          onClose={close}
-          onSubmit={submit}
-        />
-      ) : null}
     </>
   );
 }
