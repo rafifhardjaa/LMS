@@ -102,12 +102,13 @@ export function StudentsTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left">
+        <table className="w-full min-w-[760px] text-left">
           <thead className="bg-[#f1f4f9] text-xs font-semibold text-[#181c20]">
             <tr>
               <th className="px-6 py-3.5">Siswa</th>
               <th className="w-[150px] px-3 py-3.5">NISN</th>
               <th className="w-[220px] px-3 py-3.5">Jurusan</th>
+              <th className="w-[130px] px-3 py-3.5">Kelas</th>
               <th className="px-3 py-3.5 pr-6">Email</th>
             </tr>
           </thead>
@@ -122,10 +123,11 @@ export function StudentsTable() {
                 </td>
                 <td className="px-3 py-4 text-xs text-[#181c20]">{s.nisn ?? "—"}</td>
                 <td className="px-3 py-4 text-xs text-[#181c20]">{s.majorName ?? "—"}</td>
+                <td className="px-3 py-4 text-xs text-[#181c20]">{s.className ?? "—"}</td>
                 <td className="px-3 py-4 pr-6 text-xs text-[#4e566c]">{s.email ?? "—"}</td>
               </tr>
             ))}
-            {!pageRows.length && <tr><td colSpan={4} className="px-6 py-12 text-center text-sm text-[#787584]">{error ?? "Tidak ada siswa yang cocok dengan filter."}</td></tr>}
+            {!pageRows.length && <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-[#787584]">{error ?? "Tidak ada siswa yang cocok dengan filter."}</td></tr>}
           </tbody>
         </table>
       </div>
