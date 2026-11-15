@@ -156,6 +156,19 @@ export async function listSubjects(
     .orderBy(gradeLevels.code, majors.code, subjects.name);
 }
 
+export async function getSubjectStats() {
+  const subjects = await listSubjects({ includeInactive: true });
+  const active = subjects.filter((s) => s.isActive).length;
+  const kejuruan = subjects.filter((s) => s.majorId).length;
+  return {
+    total: subjects.length,
+    active,
+    inactive: subjects.length - active,
+    kejuruan,
+    umum: subjects.length - kejuruan,
+  };
+}
+
 export async function getSubject(id: string) {
   assertUuid(id);
   const rows = await db

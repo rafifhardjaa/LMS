@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware, requireRole } from "../middleware/auth-middleware";
-import { createJadwalPelajaran, listJadwalPelajaran, removeJadwalPelajaran, updateJadwalPelajaran } from "../services/master-data-service";
+import { createJadwalPelajaran, getJadwalStats, listJadwalPelajaran, removeJadwalPelajaran, updateJadwalPelajaran } from "../services/master-data-service";
 import { handleError } from "../utils/response";
 
 export const jadwalPelajaranRoute = new Elysia({ prefix: "/api/v1/jadwal-pelajaran" })
@@ -34,6 +34,26 @@ export const jadwalPelajaranRoute = new Elysia({ prefix: "/api/v1/jadwal-pelajar
         majorId: t.Optional(t.String()),
         hari: t.Optional(t.String()),
       }),
+    }
+  )
+  .get(
+    "/stats",
+    async ({ status }: any) => {
+      try {
+        const data = await getJadwalStats();
+        return status(200, { success: true, message: "Jadwal pelajaran stats", data });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru"]),
+      detail: {
+        tags: ["Jadwal Pelajaran"],
+        summary: "Statistik jadwal pelajaran (total sesi, bentrok, kelas terisi)",
+        security: [{ BearerAuth: [] }],
+      },
     }
   )
   .post(

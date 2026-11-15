@@ -521,6 +521,18 @@ export async function listTeachers(
       .orderBy(users.fullName);
 }
 
+export async function getTeacherStats() {
+  const teachers = await listTeachers();
+  const active = teachers.filter((t) => t.isActive).length;
+  return {
+    total: teachers.length,
+    active,
+    inactive: teachers.length - active,
+    subjectsTaught: teachers.reduce((sum, t) => sum + (t.subjectCount ?? 0), 0),
+    classesAssigned: teachers.reduce((sum, t) => sum + (t.classCount ?? 0), 0),
+  };
+}
+
 // ── Buat sesi jadwal pelajaran ──────────────────────────────────────────
 const SESI_JAM: Record<number, { mulai: string; selesai: string }> = {
   1: { mulai: "07:00:00", selesai: "08:00:00" },
@@ -835,6 +847,17 @@ export async function listJadwalPelajaran(filters: {
     .leftJoin(users, eq(jadwalPelajaran.teacherId, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(classes.name, jadwalPelajaran.hari, jadwalPelajaran.sesi);
+}
+
+export async function getJadwalStats() {
+  const jadwal = await listJadwalPelajaran({});
+  return {
+    totalSesi: jadwal.length,
+    bentrok: jadwal.filter((j) => (j.bentrokKelas ?? 0) > 0).length,
+    kelasTerisi: new Set(jadwal.map((j) => j.classId)).size,
+    durasiLebihDari90: jadwal.filter((j) => j.durasiLebihDari90).length,
+    diLuarJamKerja: jadwal.filter((j) => j.diLuarJamKerja).length,
+  };
 }
 
 // ── Buat guru baru ───────────────────────────────────────────────────
