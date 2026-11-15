@@ -2,8 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { masterDataApi } from "@/lib/api/master-data";
-import type { StudentSummary } from "@/lib/api/master-data";
+import type { StudentSummary, Major, GradeLevel, SchoolClass } from "@/lib/api/master-data";
 import { ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
+import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
+
+type SsoFilter = "" | "active" | "inactive";
 
 const PAGE_SIZE = 20;
 
@@ -16,13 +19,50 @@ function pageWindow(current: number, total: number): number[] {
 
 export function StudentsTable() {
   const [query, setQuery] = useState("");
-  const [jurusan, setJurusan] = useState("Semua Jurusan");
-  const [tingkat, setTingkat] = useState("Semua Tingkat");
-  const [sso, setSso] = useState("Semua Status SSO");
+  const [jurusan, setJurusan] = useState("");
+  const [tingkat, setTingkat] = useState("");
+  const [rombel, setRombel] = useState("");
+  const [sso, setSso] = useState<SsoFilter>("");
   const [page, setPage] = useState(1);
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [gradeLevels, setGradeLevels] = useState<GradeLevel[]>([]);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [loadingFilters, setLoadingFilters] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const loadMasters = async () => {
+      try {
+        const [majorsRes, gradesRes, classesRes] = await Promise.all([
+          masterDataApi.majors.list(true),
+          masterDataApi.gradeLevels.list(true),
+          masterDataApi.classes.list({ includeInactive: true }),
+        ]);
+        if (!active) return;
+        if (majorsRes.error || gradesRes.error || classesRes.error) {
+          throw new Error("Gagal memuat data master");
+        }
+        setMajors(majorsRes.data?.data ?? []);
+        setGradeLevels(gradesRes.data?.data ?? []);
+        setClasses(classesRes.data?.data ?? []);
+      } catch (e) {
+        console.error("Error loading master data:", e);
+        if (!active) return;
+        setMajors([]);
+        setGradeLevels([]);
+        setClasses([]);
+      } finally {
+        if (active) setLoadingFilters(false);
+      }
+    };
+    void loadMasters();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -32,12 +72,14 @@ export function StudentsTable() {
         q?: string;
         majorId?: string;
         gradeLevelId?: string;
+        classId?: string;
         status?: "active" | "inactive" | "all";
       } = {};
       if (query) filters.q = query;
-      if (jurusan !== "Semua Jurusan") filters.majorId = jurusan;
-      if (tingkat !== "Semua Tingkat") filters.gradeLevelId = tingkat;
-      if (sso !== "Semua Status SSO") filters.status = sso === "Aktif" ? "active" : "inactive";
+      if (jurusan) filters.majorId = jurusan;
+      if (tingkat) filters.gradeLevelId = tingkat;
+      if (rombel) filters.classId = rombel;
+      if (sso) filters.status = sso;
 
       const res = await masterDataApi.students.list(filters);
       if (res.error) throw new Error((res.error as { message?: string }).message ?? "Gagal memuat siswa");
@@ -50,19 +92,50 @@ export function StudentsTable() {
     }
   };
 
-  useEffect(() => { load(); }, [query, jurusan, tingkat, sso]);
+  useEffect(() => { void load(); }, [query, jurusan, tingkat, rombel, sso]);
 
   const reset = () => {
     setQuery("");
-    setJurusan("Semua Jurusan");
-    setTingkat("Semua Tingkat");
-    setSso("Semua Status SSO");
+    setJurusan("");
+    setTingkat("");
+    setRombel("");
+    setSso("");
     setPage(1);
   };
 
-  const jurusanOptions = ["Semua Jurusan", ...new Set(students.map((s) => s.majorName).filter((name): name is string => Boolean(name)))];
-  const tingkatOptions = ["Semua Tingkat", "Kelas X", "Kelas XI", "Kelas XII"];
-  const ssoOptions = ["Semua Status SSO", "Aktif", "Butuh Aktivasi"];
+  const rombelOptions: JurusanOption[] = useMemo(() => {
+    const filtered = classes.filter(
+      (c) =>
+        (!jurusan || c.majorId === jurusan) &&
+        (!tingkat || c.gradeLevelId === tingkat)
+    );
+    return [
+      { value: "", label: "Semua Kelas" },
+      ...filtered.map((c) => ({ value: c.id, label: c.name })),
+    ];
+  }, [classes, jurusan, tingkat]);
+
+  const jurusanOptions: JurusanOption[] = useMemo(
+    () => [
+      { value: "", label: "Semua Jurusan" },
+      ...majors.map((m) => ({ value: m.id, label: `${m.code} - ${m.name}` })),
+    ],
+    [majors]
+  );
+
+  const tingkatOptions: JurusanOption[] = useMemo(
+    () => [
+      { value: "", label: "Semua Tingkat" },
+      ...gradeLevels.map((g) => ({ value: g.id, label: `Kelas ${g.code}` })),
+    ],
+    [gradeLevels]
+  );
+
+  const ssoOptions: JurusanOption[] = [
+    { value: "", label: "Semua Status" },
+    { value: "active", label: "Aktif" },
+    { value: "inactive", label: "Butuh Aktivasi" },
+  ];
 
   const totalPages = Math.max(1, Math.ceil(students.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -83,21 +156,24 @@ export function StudentsTable() {
         <h2 className="text-lg font-bold text-[#181c20]">Daftar Siswa & Peserta Didik</h2>
         <span className="rounded-full bg-[#e5deff] px-2 py-0.5 text-[11px] font-semibold text-[#4331a8]">{students.length} Total</span>
       </div>
-      <div className="grid grid-cols-1 gap-3 border-b border-[#eceef3] px-6 pb-5 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_0.8fr_0.7fr_auto]">
+      <div className="grid grid-cols-1 gap-3 border-b border-[#eceef3] px-6 pb-5 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_0.8fr_0.8fr_0.7fr_auto]">
         <label className="relative">
           <span className="sr-only">Cari siswa</span>
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
           <input value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="Cari nama siswa, NISN, atau kelas" className="h-11 w-full rounded-full bg-[#f1f4f9] pl-11 pr-4 text-sm text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30" />
         </label>
-        <select value={jurusan} onChange={(e) => { setJurusan(e.target.value); setPage(1); }} className="h-11 w-full appearance-none rounded-full bg-[#f1f4f9] pl-4 pr-10 text-sm font-medium text-[#181c20] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
-          {jurusanOptions.map((o) => <option key={o}>{o}</option>)}
-        </select>
-        <select value={tingkat} onChange={(e) => { setTingkat(e.target.value); setPage(1); }} className="h-11 w-full appearance-none rounded-full bg-[#f1f4f9] pl-4 pr-10 text-sm font-medium text-[#181c20] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
-          {tingkatOptions.map((o) => <option key={o}>{o}</option>)}
-        </select>
-        <select value={sso} onChange={(e) => { setSso(e.target.value); setPage(1); }} className="h-11 w-full appearance-none rounded-full bg-[#f1f4f9] pl-4 pr-10 text-sm font-medium text-[#181c20] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30">
-          {ssoOptions.map((o) => <option key={o}>{o}</option>)}
-        </select>
+        <div className="w-[220px] shrink-0">
+          <SearchableDropdown value={jurusan} onChange={(v) => { setJurusan(v); setRombel(""); setPage(1); }} options={jurusanOptions} label="Semua Jurusan" />
+        </div>
+        <div className="w-[130px] shrink-0">
+          <SearchableDropdown value={tingkat} onChange={(v) => { setTingkat(v); setRombel(""); setPage(1); }} options={tingkatOptions} label="Semua Tingkat" />
+        </div>
+        <div className="w-[130px] shrink-0">
+          <SearchableDropdown value={rombel} onChange={(v) => { setRombel(v); setPage(1); }} options={rombelOptions} label="Semua Kelas" disabled={loadingFilters} />
+        </div>
+        <div className="w-[150px] shrink-0">
+          <SearchableDropdown value={sso} onChange={(v) => { setSso(v as SsoFilter); setPage(1); }} options={ssoOptions} label="Semua Status" />
+        </div>
         <button type="button" onClick={reset} aria-label="Reset filter" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] hover:text-[#6c5dd3]"><RefreshCw className="size-[18px]" /></button>
       </div>
 
