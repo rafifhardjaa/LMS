@@ -37,7 +37,13 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
-export function CourseMasterData() {
+export function CourseMasterData({
+  refreshKey = 0,
+  onSubjectAction,
+}: {
+  refreshKey?: number;
+  onSubjectAction?: (mode: "edit" | "delete", subjectId: string) => void;
+} = {}) {
   const role = useAuthStore((state) => state.user?.role ?? "admin");
   const isAdmin = role === "admin";
   const canSeeAssignments = role === "admin" || role === "guru";
@@ -109,7 +115,7 @@ export function CourseMasterData() {
       void load();
     }, 0);
     return () => clearTimeout(timer);
-  }, [load]);
+  }, [load, refreshKey]);
 
   const stats = useMemo(() => {
     const activeSubjects = subjects.filter((s) => s.isActive);
@@ -210,6 +216,7 @@ export function CourseMasterData() {
                   gradeLevels={gradeLevels}
                   isAdmin={isAdmin}
                   onChanged={load}
+                  onRequestDialog={onSubjectAction}
                 />
               ) : null}
               {tab === "majors" ? (
