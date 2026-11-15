@@ -11,24 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { FadeIn } from "@/components/ui/animations";
-
-type Readiness = {
-  entity: string;
-  pct: number;
-  gap: string;
-};
-
-/**
- * Kelengkapan data induk per entitas. Satu grafik mewakili seluruh menu admin:
- * bar terpendek = halaman yang paling perlu dibereskan lebih dulu.
- */
-const readiness: Readiness[] = [
-  { entity: "Siswa", pct: 96, gap: "74 siswa belum punya rombel" },
-  { entity: "Guru", pct: 94, gap: "7 guru belum dapat mapel" },
-  { entity: "Mapel", pct: 86, gap: "5 mapel tanpa guru pengampu" },
-  { entity: "Rombel", pct: 100, gap: "Semua rombel lengkap" },
-  { entity: "Jadwal", pct: 84, gap: "9 sesi bentrok, 4 slot kosong" },
-];
+import type { ReadinessDatum } from "@/lib/api/dashboard";
 
 const barColor = (pct: number) => {
   if (pct >= 95) return "#6c5dd3";
@@ -36,9 +19,43 @@ const barColor = (pct: number) => {
   return "#ef4444";
 };
 
-const worst = [...readiness].sort((a, b) => a.pct - b.pct)[0];
+type Props = {
+  data?: ReadinessDatum[];
+  loading?: boolean;
+};
 
-export function DataReadinessChart() {
+export function DataReadinessChart({ data, loading = false }: Props) {
+  if (loading || !data) {
+    return (
+      <FadeIn>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col gap-4 max-lg:p-4 animate-pulse">
+          <div className="h-5 w-44 rounded bg-slate-200" />
+          <div className="h-5 w-56 rounded bg-slate-200" />
+          <div className="w-full h-56 rounded-xl bg-slate-200" />
+          <div className="h-3 w-full rounded bg-slate-200" />
+        </div>
+      </FadeIn>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <FadeIn>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col justify-between max-lg:p-4">
+          <h2 className="text-lg font-bold text-[#181c20]">
+            Kesiapan Data Master
+          </h2>
+          <div className="flex items-center justify-center h-56 text-sm text-[#787584]">
+            Belum ada data kesiapan
+          </div>
+        </div>
+      </FadeIn>
+    );
+  }
+
+  const worst = [...data].sort((a, b) => a.pct - b.pct)[0]!;
+  const below95 = data.filter((item) => item.pct < 95).length;
+
   return (
     <FadeIn>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e0e2e7]/40 flex flex-col justify-between max-lg:p-4">
@@ -47,9 +64,15 @@ export function DataReadinessChart() {
             <h2 className="text-lg font-bold text-[#181c20]">
               Kesiapan Data Master
             </h2>
-            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
-              3 entitas belum 95%
-            </span>
+            {below95 > 0 ? (
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
+                {below95} entitas belum 95%
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                Semua entitas siap
+              </span>
+            )}
           </div>
           <span className="px-3 py-1 rounded-full bg-[#f1f4f9] text-[#4e566c] text-xs font-semibold border border-[#e0e2e7]/50">
             T.A. 2026/2027 Ganjil
@@ -74,7 +97,7 @@ export function DataReadinessChart() {
         <div className="w-full h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={readiness}
+              data={data}
               layout="vertical"
               margin={{ top: 4, right: 36, bottom: 0, left: 0 }}
               barCategoryGap={12}
@@ -111,7 +134,7 @@ export function DataReadinessChart() {
                 }}
               />
               <Bar dataKey="pct" barSize={16} radius={[0, 8, 8, 0]}>
-                {readiness.map((item) => (
+                {data.map((item) => (
                   <Cell key={item.entity} fill={barColor(item.pct)} />
                 ))}
               </Bar>
