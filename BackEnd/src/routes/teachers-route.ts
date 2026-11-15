@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware, requireRole } from "../middleware/auth-middleware";
-import { createTeacher, listTeachers, removeTeacher, updateTeacher } from "../services/master-data-service";
+import { createTeacher, getTeacherStats, listTeachers, removeTeacher, updateTeacher } from "../services/master-data-service";
 import { handleError } from "../utils/response";
 
 export const teachersRoute = new Elysia({ prefix: "/api/v1/teachers" })
@@ -102,6 +102,26 @@ export const teachersRoute = new Elysia({ prefix: "/api/v1/teachers" })
         security: [{ BearerAuth: [] }],
       },
       params: t.Object({ id: t.String() }),
+    }
+  )
+  .get(
+    "/stats",
+    async ({ status }: any) => {
+      try {
+        const data = await getTeacherStats();
+        return status(200, { success: true, message: "Teacher stats", data });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru"]),
+      detail: {
+        tags: ["Teachers"],
+        summary: "Statistik guru (total, aktif, mapel & kelas diampu)",
+        security: [{ BearerAuth: [] }],
+      },
     }
   )
   .get(
