@@ -826,6 +826,7 @@ export async function listJadwalPelajaran(filters: {
       subjectId: jadwalPelajaran.subjectId,
       subjectName: subjects.name,
       subjectCode: subjects.code,
+      capaianPembelajaran: subjects.capaianPembelajaran,
       teacherId: jadwalPelajaran.teacherId,
       teacherName: users.fullName,
       teacherCode: users.kodeGuru,

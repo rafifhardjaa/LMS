@@ -53,6 +53,7 @@ export type SubjectInput = {
   name: string;
   code: string;
   description?: string | null;
+  capaianPembelajaran?: string | null;
   majorId?: string | null;
   gradeLevelId: string;
   semester?: string;
@@ -64,6 +65,7 @@ const subjectColumns = {
   name: subjects.name,
   code: subjects.code,
   description: subjects.description,
+  capaianPembelajaran: subjects.capaianPembelajaran,
   majorId: subjects.majorId,
   majorCode: majors.code,
   majorName: majors.name,
@@ -91,6 +93,7 @@ function normalize(input: SubjectInput) {
     name,
     code,
     description: input.description?.trim() || null,
+    capaianPembelajaran: input.capaianPembelajaran?.trim() || null,
     majorId: input.majorId ?? null,
     gradeLevelId: input.gradeLevelId,
     semester: input.semester?.trim() || "Ganjil",
@@ -229,6 +232,9 @@ export async function updateSubject(
   }
   if (patch.description !== undefined) {
     values.description = patch.description?.trim() || null;
+  }
+  if (patch.capaianPembelajaran !== undefined) {
+    values.capaianPembelajaran = patch.capaianPembelajaran?.trim() || null;
   }
   if (patch.majorId !== undefined) {
     if (patch.majorId) assertUuid(patch.majorId);

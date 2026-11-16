@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { JadwalPelajaran } from "@/lib/api/master-data";
 import { CourseSidebar } from "@/components/teacher/modul-management/detail/course-sidebar";
+import { CourseInfoContent } from "@/components/teacher/modul-management/detail/course-info-content";
+import { meetings } from "@/components/teacher/modul-management/detail/data";
 
 export default function ModulCourseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -14,6 +16,7 @@ export default function ModulCourseDetailPage() {
   const [rows, setRows] = useState<JadwalPelajaran[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState("info");
 
   useEffect(() => {
     let active = true;
@@ -68,12 +71,19 @@ export default function ModulCourseDetailPage() {
             subjectName={course.subjectName}
             classLabel={classLabel}
             majorName={course.majorName}
+            selectedKey={selectedKey}
+            onSelect={setSelectedKey}
           />
-          <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-white/60 px-6 text-center">
-            <p className="text-[13px] font-semibold text-[#94A3B8]">
-              Konten utama menyusul
-            </p>
-          </div>
+          {selectedKey === "info" ? (
+            <CourseInfoContent capaianPembelajaran={course.capaianPembelajaran} />
+          ) : (
+            <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-white/60 px-6 text-center">
+              <p className="text-[13px] font-semibold text-[#94A3B8]">
+                Konten {meetings.find((m) => m.label === selectedKey)?.label ?? "pertemuan"}{" "}
+                menyusul
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="rounded-2xl bg-white px-6 py-10 text-center shadow-sm">
