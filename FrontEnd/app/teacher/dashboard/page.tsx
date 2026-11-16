@@ -1,15 +1,8 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { KpiCards } from "@/components/teacher/kpi-cards";
 import { CourseCards } from "@/components/teacher/course-cards";
-import { TaskManager } from "@/components/teacher/task-manager";
-import { StudentGrades } from "@/components/teacher/student-grades";
-import { QuickLinks } from "@/components/teacher/quick-links";
-import { ExportCard } from "@/components/teacher/export-card";
-import { Attendance } from "@/components/teacher/attendance";
-import { CoursePerformance } from "@/components/teacher/course-performance";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
 
 export default function GuruDashboardPage() {
@@ -41,41 +34,13 @@ export default function GuruDashboardPage() {
                     </strong>
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[#94A3B8] text-[13px]">
-                    Terakhir sinkronisasi: 14:02 WIB
-                  </span>
-                  <motion.button
-                    type="button"
-                    className="px-3 py-1 bg-white hover:bg-[#FFEBEB] text-[#b71422] text-[12px] font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-1"
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.96 }}
-                  >
-                    <RefreshCw className="size-4" />
-                    Sinkronkan LMS
-                  </motion.button>
-                </div>
               </div>
             </FadeIn>
 
-            {/* MAIN WORKSPACE (2-COLUMN GRID: 65% / 35%) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* LEFT MAIN COLUMN */}
-              <SlideIn direction="left" className="lg:col-span-8 flex flex-col gap-6">
-                <KpiCards />
-                <CourseCards />
-                <TaskManager />
-                <StudentGrades />
-              </SlideIn>
-
-              {/* RIGHT SIDEBAR COLUMN */}
-              <SlideIn direction="right" delay={0.1} className="lg:col-span-4 flex flex-col gap-6">
-                <QuickLinks />
-                <ExportCard />
-                <Attendance />
-                <CoursePerformance />
-              </SlideIn>
-            </div>
+            <SlideIn direction="left" className="flex flex-col gap-6">
+              <KpiCards />
+              <CourseCards />
+            </SlideIn>
           </div>
         </motion.div>
       </div>
