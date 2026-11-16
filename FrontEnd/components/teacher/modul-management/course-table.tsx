@@ -1,8 +1,8 @@
 "use client";
 
 import { Eye, Search } from "lucide-react";
+import Link from "next/link";
 import moment from "moment";
-import { toast } from "sonner";
 import { useAuthStore } from "@/lib/store/auth-store";
 import type { JadwalPelajaran } from "@/lib/api/master-data";
 
@@ -85,11 +85,8 @@ export function CourseTable({ rows }: CourseTableProps) {
                   </td>
                   <td className="px-5 py-2.5">
                     <div className="flex items-center justify-end">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          toast.info("Detail modul akan tersedia di tahap berikutnya.")
-                        }
+                      <Link
+                        href={`/teacher/modul-course/${row.classId}--${row.subjectId}`}
                         className={`inline-flex h-7 items-center gap-1 rounded-lg border px-2 text-[9px] font-bold transition ${
                           isToday
                             ? "border-[#b7e831] bg-[#b7e831]/20 text-[#7A941F] hover:border-[#b7e831]"
@@ -98,7 +95,7 @@ export function CourseTable({ rows }: CourseTableProps) {
                       >
                         <Eye className="size-3" />
                         Lihat detail
-                      </button>
+                      </Link>
                     </div>
                   </td>
                 </tr>

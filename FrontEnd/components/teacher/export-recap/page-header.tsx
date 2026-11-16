@@ -1,11 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import {
-  ChevronRight,
   CloudDownload,
   History,
-  LayoutGrid,
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,23 +23,6 @@ export function ExportPageHeader({
   return (
     <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
       <div>
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-3 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-[#94A3B8]"
-        >
-          <Link
-            href="/teacher/dashboard"
-            className="inline-flex items-center gap-1 transition hover:text-[#b71422]"
-          >
-            <LayoutGrid className="size-3.5" />
-            Dashboard
-          </Link>
-          <ChevronRight className="size-3.5" />
-          <span className="font-semibold text-[#1E293B]">
-            Ekspor Rekap &amp; Laporan Akademik
-          </span>
-        </nav>
-
         <h1 className="text-[28px] font-bold leading-tight tracking-[-0.03em] text-[#1E293B]">
           Pusat Ekspor Rekap &amp; Laporan Akademik
         </h1>

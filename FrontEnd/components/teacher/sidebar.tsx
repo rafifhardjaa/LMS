@@ -23,10 +23,10 @@ const menu = [
     title: "Dashboard",
   },
   {
-    label: "Modul",
+    label: "Modul & Course",
     icon: BookOpen,
-    href: "/teacher/modul",
-    title: "Modul Ajar",
+    href: "/teacher/modul-course",
+    title: "Modul & Course",
   },
   {
     label: "Tugas & Materi",
