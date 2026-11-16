@@ -3,6 +3,7 @@
 import {
   Bar,
   BarChart,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -10,6 +11,11 @@ import {
 } from "recharts";
 import { FadeIn } from "@/components/ui/animations";
 import type { ScheduleCoverageDatum } from "@/lib/api/dashboard";
+import {
+  SCHEDULE_DAY_COLORS,
+  SCHEDULE_SERIES_COLORS,
+  colorAt,
+} from "@/lib/chart-colors";
 
 type Props = {
   data?: ScheduleCoverageDatum[];
@@ -74,15 +80,27 @@ export function ScheduleCoverageChart({ data, loading = false }: Props) {
 
         <div className="flex items-center gap-4 text-xs mb-2 max-lg:flex-wrap max-lg:gap-y-2">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#6c5dd3]" />
-            <span className="text-[#4e566c] font-medium">Terisi</span>
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{
+                background:
+                  "linear-gradient(135deg,#14b8a6,#f97316,#22c55e,#6366f1,#0ea5e9,#f43f5e)",
+              }}
+            />
+            <span className="text-[#4e566c] font-medium">Terisi (per hari)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#e2e8f0]" />
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: SCHEDULE_SERIES_COLORS.tanpaGuru }}
+            />
             <span className="text-[#4e566c] font-medium">Tanpa guru</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: SCHEDULE_SERIES_COLORS.bentrok }}
+            />
             <span className="text-[#4e566c] font-medium">Bentrok</span>
           </div>
         </div>
@@ -115,25 +133,26 @@ export function ScheduleCoverageChart({ data, loading = false }: Props) {
                   padding: "6px 10px",
                 }}
               />
-              <Bar
-                dataKey="terisi"
-                name="Terisi"
-                stackId="sesi"
-                fill="#6c5dd3"
-                barSize={28}
-              />
+              <Bar dataKey="terisi" name="Terisi" stackId="sesi" barSize={28}>
+                {data.map((item, index) => (
+                  <Cell
+                    key={item.day}
+                    fill={colorAt(SCHEDULE_DAY_COLORS, index)}
+                  />
+                ))}
+              </Bar>
               <Bar
                 dataKey="kosong"
                 name="Tanpa guru"
                 stackId="sesi"
-                fill="#e2e8f0"
+                fill={SCHEDULE_SERIES_COLORS.tanpaGuru}
                 barSize={28}
               />
               <Bar
                 dataKey="bentrok"
                 name="Bentrok"
                 stackId="sesi"
-                fill="#ef4444"
+                fill={SCHEDULE_SERIES_COLORS.bentrok}
                 barSize={28}
                 radius={[6, 6, 0, 0]}
               />
