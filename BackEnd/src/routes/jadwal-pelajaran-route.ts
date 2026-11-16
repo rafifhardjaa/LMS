@@ -7,13 +7,15 @@ export const jadwalPelajaranRoute = new Elysia({ prefix: "/api/v1/jadwal-pelajar
   .use(authMiddleware)
   .get(
     "/",
-    async ({ query, status }: any) => {
+    async ({ query, user, status }: any) => {
       try {
         const data = await listJadwalPelajaran({
           classId: query.classId,
           gradeLevelId: query.gradeLevelId,
           majorId: query.majorId,
           hari: query.hari,
+          teacherId: user?.role === "guru" ? user.id : query.teacherId,
+          activeOnly: query.activeOnly === "true",
         });
         return status(200, { success: true, message: "Jadwal pelajaran retrieved", data });
       } catch (error) {
@@ -33,6 +35,8 @@ export const jadwalPelajaranRoute = new Elysia({ prefix: "/api/v1/jadwal-pelajar
         gradeLevelId: t.Optional(t.String()),
         majorId: t.Optional(t.String()),
         hari: t.Optional(t.String()),
+        teacherId: t.Optional(t.String()),
+        activeOnly: t.Optional(t.String()),
       }),
     }
   )

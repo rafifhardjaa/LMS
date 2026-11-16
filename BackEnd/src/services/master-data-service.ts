@@ -802,6 +802,8 @@ export async function listJadwalPelajaran(filters: {
   gradeLevelId?: string;
   majorId?: string;
   hari?: string;
+  teacherId?: string;
+  activeOnly?: boolean;
 }) {
   const conditions: SQL[] = [];
 
@@ -809,6 +811,11 @@ export async function listJadwalPelajaran(filters: {
   if (filters.gradeLevelId) conditions.push(eq(jadwalPelajaran.gradeLevelId, filters.gradeLevelId));
   if (filters.majorId) conditions.push(eq(jadwalPelajaran.majorId, filters.majorId));
   if (filters.hari) conditions.push(eq(jadwalPelajaran.hari, filters.hari));
+  if (filters.teacherId) conditions.push(eq(jadwalPelajaran.teacherId, filters.teacherId));
+  if (filters.activeOnly) {
+    conditions.push(eq(classes.isActive, true));
+    conditions.push(eq(subjects.isActive, true));
+  }
 
   return db
     .select({
