@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  ChevronRight,
   CloudSync,
   PlusCircle,
   Table2,
@@ -36,19 +35,6 @@ export function AttendancePageHeader({
   return (
     <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
       <div>
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-3 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-[#94A3B8]"
-        >
-          <span>Dashboard</span>
-          <ChevronRight className="size-3.5" />
-          <span className="text-[#475569]">Presensi &amp; Siswa</span>
-          <ChevronRight className="size-3.5" />
-          <span className="rounded-full bg-[#FFEBEB] px-2.5 py-1 text-[10px] font-bold text-[#b71422]">
-            VII-A • Fisika Terapan &amp; Informatika
-          </span>
-        </nav>
-
         <div className="flex items-stretch gap-3">
           <span className="mt-0.5 w-2.5 shrink-0 rounded-full bg-[#b71422]" />
           <div>
