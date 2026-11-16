@@ -31,6 +31,7 @@ const ROLE_HOME: Record<string, string> = {
 
 interface Session {
   role: string;
+  mustChangePassword: boolean;
 }
 
 /**
@@ -50,13 +51,19 @@ function readSession(token: string): Session | null {
     const payload = JSON.parse(atob(padded)) as {
       role?: unknown;
       exp?: unknown;
+      mcp?: unknown;
     };
 
     if (typeof payload.exp === "number" && payload.exp * 1000 <= Date.now()) {
       return null;
     }
 
-    return typeof payload.role === "string" ? { role: payload.role } : null;
+    if (typeof payload.role !== "string") return null;
+
+    return {
+      role: payload.role,
+      mustChangePassword: payload.mcp === true,
+    };
   } catch {
     return null;
   }
@@ -104,6 +111,15 @@ export function middleware(req: NextRequest) {
     if (!area.roles.includes(session.role)) {
       const url = req.nextUrl.clone();
       url.pathname = home;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    // User wajib ganti password: semua halaman protected diarahkan ke
+    // /auth/change-password sampai password diganti.
+    if (session.mustChangePassword) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/auth/change-password";
       url.search = "";
       return NextResponse.redirect(url);
     }

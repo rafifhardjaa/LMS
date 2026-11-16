@@ -204,6 +204,8 @@ export interface JadwalPelajaranFilters {
   gradeLevelId?: string;
   majorId?: string;
   hari?: string;
+  teacherId?: string;
+  activeOnly?: boolean;
 }
 
 export interface MajorInput {

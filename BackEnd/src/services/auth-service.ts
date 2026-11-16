@@ -42,6 +42,8 @@ export interface AuthTokenClaims {
   role: string;
   /** Token version — dicocokkan dengan users.token_version oleh middleware. */
   tv: number;
+  /** True jika password_changed_at masih NULL (wajib ganti password). */
+  mcp?: boolean;
   /** Unix timestamp (detik). */
   exp: number;
 }
@@ -80,6 +82,7 @@ async function buildClaims(userId: string): Promise<AuthTokenClaims> {
       id: users.id,
       email: users.email,
       tokenVersion: users.tokenVersion,
+      passwordChangedAt: users.passwordChangedAt,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -97,6 +100,7 @@ async function buildClaims(userId: string): Promise<AuthTokenClaims> {
     email: user.email ?? "",
     role,
     tv: user.tokenVersion,
+    mcp: user.passwordChangedAt === null,
     exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
   };
 }
