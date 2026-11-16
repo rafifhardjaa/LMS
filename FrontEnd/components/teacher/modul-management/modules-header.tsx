@@ -4,7 +4,7 @@ import { CalendarDays, ChevronRight, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
 
-export function SubjectHeader({ courseCount }: { courseCount: number }) {
+export function ModulesHeader({ sessionCount }: { sessionCount: number }) {
   return (
     <FadeIn>
       <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
@@ -12,12 +12,10 @@ export function SubjectHeader({ courseCount }: { courseCount: number }) {
           <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#94A3B8]">
             <span>Dashboard</span>
             <ChevronRight className="size-3.5" />
-            <span className="text-[#b71422]">
-              Mata Pelajaran &amp; Kurikulum
-            </span>
+            <span className="text-[#b71422]">Modul</span>
           </div>
           <h1 className="mt-1 text-[24px] font-semibold leading-8 tracking-tight text-[#1E293B]">
-            Manajemen Mata Pelajaran &amp; Kurikulum Pengampu
+            Manajemen Modul Ajar Pengampu
           </h1>
           <p className="mt-1 max-w-3xl text-[13px] leading-5 text-[#475569]">
             Kelola rombel kelas aktif, distribusi alur tujuan pembelajaran (ATP),
@@ -35,7 +33,7 @@ export function SubjectHeader({ courseCount }: { courseCount: number }) {
             className="flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-[13px] font-semibold text-[#1E293B] shadow-sm transition-colors hover:bg-[#F8FAFC]"
           >
             <CalendarDays className="size-[18px] text-[#006398]" />
-            Jadwal Sesi ({courseCount})
+            Jadwal Sesi ({sessionCount})
           </button>
           <button
             type="button"

@@ -99,6 +99,7 @@ export interface TeachingAssignment {
   className: string | null;
   classSection: string | null;
   majorCode: string | null;
+  majorName?: string | null;
   gradeCode: string | null;
   assignedAt: string;
 }

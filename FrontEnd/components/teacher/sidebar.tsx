@@ -23,10 +23,10 @@ const menu = [
     title: "Dashboard",
   },
   {
-    label: "Mata Pelajaran",
+    label: "Modul",
     icon: BookOpen,
-    href: "/teacher/mata-pelajaran",
-    title: "Mata Pelajaran & Kurikulum",
+    href: "/teacher/modul",
+    title: "Modul Ajar",
   },
   {
     label: "Tugas & Materi",
