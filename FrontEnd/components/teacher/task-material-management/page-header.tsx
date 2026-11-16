@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { Check, ChevronRight, Home, PlusCircle, Upload } from "lucide-react";
+import { Check, PlusCircle, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
 
@@ -11,19 +10,6 @@ export function TaskMaterialHeader() {
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#94A3B8]">
-              <Link
-                href="/teacher/dashboard"
-                className="flex items-center gap-1 transition-colors hover:text-[#b71422]"
-              >
-                <Home className="size-3.5" />
-                Dashboard
-              </Link>
-              <ChevronRight className="size-3.5" />
-              <span className="text-[#b71422]">
-                Tugas &amp; Materi Pembelajaran
-              </span>
-            </div>
             <h1 className="mt-2 text-[24px] font-semibold leading-8 tracking-tight text-[#1E293B]">
               Manajemen Tugas, Modul &amp; Materi Pembelajaran
             </h1>

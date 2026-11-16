@@ -213,7 +213,7 @@ export function CourseCards() {
 
         <div className="mt-4 pt-1 flex justify-end border-t border-[#EBF0F5]">
           <motion.a
-            href="/teacher/modul"
+            href="/teacher/modul-course"
             className="text-[#b71422] hover:text-[#db3237] text-[12px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
             whileHover={{ x: 4 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
