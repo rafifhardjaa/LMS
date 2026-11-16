@@ -79,7 +79,7 @@ export function ModulesManagement() {
 
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
-      <ModulesHeader sessionCount={rows.length} />
+      <ModulesHeader />
 
       <KpiGrid kpis={kpis} />
 

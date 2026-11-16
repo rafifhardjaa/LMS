@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  ChevronRight,
   CloudCheck,
   Download,
   PlusCircle,
@@ -36,17 +35,6 @@ export function AnalyticsPageHeader({
   return (
     <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
       <div>
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-3 flex flex-wrap items-center gap-1.5 text-[11px] font-medium tracking-[0.02em] text-[#64748B]"
-        >
-          <span>Dashboard</span>
-          <ChevronRight className="size-3.5 text-[#94A3B8]" />
-          <span>Analitik &amp; Nilai</span>
-          <ChevronRight className="size-3.5 text-[#94A3B8]" />
-          <span className="text-[#b71422]">Fisika Terapan (VII-A)</span>
-        </nav>
-
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-[28px] font-bold tracking-[-0.03em] text-[#1E293B]">
             Analitik &amp; Nilai

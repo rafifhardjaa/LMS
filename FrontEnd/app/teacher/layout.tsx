@@ -27,7 +27,7 @@ export default function GuruLayout({
       <GuruSidebar />
       <div className="min-h-screen flex flex-col relative z-10 pl-64">
         <GuruTopbar />
-        <main className="w-full flex-1 pt-16 px-6 pb-6">{children}</main>
+        <main className="w-full flex-1 pt-28 px-6 pb-6">{children}</main>
       </div>
     </div>
   );
