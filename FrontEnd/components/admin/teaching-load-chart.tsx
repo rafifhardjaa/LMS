@@ -12,12 +12,13 @@ import {
 } from "recharts";
 import { FadeIn } from "@/components/ui/animations";
 import type { TeachingLoadDatum } from "@/lib/api/dashboard";
+import { TEACHING_LOAD_COLORS, colorAt } from "@/lib/chart-colors";
 
-const STYLE: Record<string, { color: string; label: string }> = {
-  "0 JP": { color: "#ef4444", label: "Belum dapat mapel" },
-  "1–12 JP": { color: "#f59e0b", label: "Beban ringan" },
-  "13–24 JP": { color: "#6c5dd3", label: "Beban normal" },
-  "> 24 JP": { color: "#a39afd", label: "Overload" },
+const LABEL: Record<string, string> = {
+  "0 JP": "Belum dapat mapel",
+  "1–12 JP": "Beban ringan",
+  "13–24 JP": "Beban normal",
+  "> 24 JP": "Overload",
 };
 
 type Props = {
@@ -38,10 +39,10 @@ export function TeachingLoadChart({ data, loading = false }: Props) {
     );
   }
 
-  const radialData = data.map((item) => ({
+  const radialData = data.map((item, index) => ({
     ...item,
-    color: STYLE[item.name]?.color ?? "#6c5dd3",
-    label: STYLE[item.name]?.label ?? item.name,
+    color: colorAt(TEACHING_LOAD_COLORS, index),
+    label: LABEL[item.name] ?? item.name,
   }));
   const totalTeachers = radialData.reduce((sum, item) => sum + item.value, 0);
   const maxValue = Math.max(...radialData.map((item) => item.value), 1);

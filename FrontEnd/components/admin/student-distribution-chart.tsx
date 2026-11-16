@@ -3,6 +3,7 @@
 import {
   Bar,
   BarChart,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -10,6 +11,7 @@ import {
 } from "recharts";
 import { FadeIn } from "@/components/ui/animations";
 import type { StudentDistributionDatum } from "@/lib/api/dashboard";
+import { STUDENT_DISTRIBUTION_COLORS, colorAt } from "@/lib/chart-colors";
 
 type Props = {
   data?: StudentDistributionDatum[];
@@ -67,22 +69,9 @@ export function StudentDistributionChart({ data, loading = false }: Props) {
         </div>
 
         <div className="flex items-center gap-4 text-xs mb-2 max-lg:flex-wrap max-lg:gap-y-2">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#6c5dd3]" />
-            <span className="text-[#4e566c] font-medium">Kelas X</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#a39afd]" />
-            <span className="text-[#4e566c] font-medium">Kelas XI</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#c7bfff]" />
-            <span className="text-[#4e566c] font-medium">Kelas XII</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#cbd5e1]" />
-            <span className="text-[#4e566c] font-medium">Tanpa Rombel</span>
-          </div>
+          <span className="text-[#4e566c] font-medium">
+            Warna mewakili jurusan
+          </span>
         </div>
 
         <div className="w-full h-64">
@@ -110,43 +99,54 @@ export function StudentDistributionChart({ data, loading = false }: Props) {
               />
               <Tooltip
                 cursor={{ fill: "rgba(108,93,211,0.06)" }}
-                formatter={(value, name) => [`${value ?? 0} siswa`, name]}
-                contentStyle={{
-                  borderRadius: 12,
-                  border: "1px solid #e0e2e7",
-                  fontSize: 11,
-                  padding: "6px 10px",
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const d = payload[0]?.payload as
+                    | StudentDistributionDatum
+                    | undefined;
+                  if (!d) return null;
+                  return (
+                    <div
+                      style={{
+                        borderRadius: 12,
+                        border: "1px solid #e0e2e7",
+                        background: "#fff",
+                        fontSize: 11,
+                        padding: "6px 10px",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontWeight: 700,
+                          color: "#181c20",
+                          marginBottom: 2,
+                        }}
+                      >
+                        {d.majorName}
+                      </p>
+                      <p style={{ color: "#4e566c" }}>
+                        Total: {d.total} siswa
+                      </p>
+                      <p style={{ color: "#4e566c" }}>
+                        Kelas X: {d.x} · XI: {d.xi} · XII: {d.xii}
+                      </p>
+                      {d.tanpa > 0 && (
+                        <p style={{ color: "#4e566c" }}>
+                          Tanpa Rombel: {d.tanpa}
+                        </p>
+                      )}
+                    </div>
+                  );
                 }}
               />
-              <Bar
-                dataKey="x"
-                name="Kelas X"
-                stackId="siswa"
-                fill="#6c5dd3"
-                barSize={14}
-              />
-              <Bar
-                dataKey="xi"
-                name="Kelas XI"
-                stackId="siswa"
-                fill="#a39afd"
-                barSize={14}
-              />
-              <Bar
-                dataKey="xii"
-                name="Kelas XII"
-                stackId="siswa"
-                fill="#c7bfff"
-                barSize={14}
-              />
-              <Bar
-                dataKey="tanpa"
-                name="Tanpa Rombel"
-                stackId="siswa"
-                fill="#cbd5e1"
-                barSize={14}
-                radius={[0, 8, 8, 0]}
-              />
+              <Bar dataKey="total" name="Siswa" barSize={16} radius={[0, 8, 8, 0]}>
+                {data.map((item, index) => (
+                  <Cell
+                    key={item.majorCode}
+                    fill={colorAt(STUDENT_DISTRIBUTION_COLORS, index)}
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
