@@ -12,12 +12,7 @@ import {
 } from "recharts";
 import { FadeIn } from "@/components/ui/animations";
 import type { ReadinessDatum } from "@/lib/api/dashboard";
-
-const barColor = (pct: number) => {
-  if (pct >= 95) return "#6c5dd3";
-  if (pct >= 85) return "#f59e0b";
-  return "#ef4444";
-};
+import { READINESS_COLORS, colorAt } from "@/lib/chart-colors";
 
 type Props = {
   data?: ReadinessDatum[];
@@ -80,18 +75,9 @@ export function DataReadinessChart({ data, loading = false }: Props) {
         </div>
 
         <div className="flex items-center gap-4 text-xs mb-2">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#6c5dd3]" />
-            <span className="text-[#4e566c] font-medium">Lengkap (≥95%)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-            <span className="text-[#4e566c] font-medium">Perlu dilengkapi</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-            <span className="text-[#4e566c] font-medium">Kritis (&lt;85%)</span>
-          </div>
+          <span className="text-[#4e566c] font-medium">
+            Garis putus-putus = target kelengkapan 95%
+          </span>
         </div>
 
         <div className="w-full h-56">
@@ -119,9 +105,15 @@ export function DataReadinessChart({ data, loading = false }: Props) {
                 tickLine={false}
               />
               <ReferenceLine
-                x={100}
+                x={95}
                 stroke="#e0e2e7"
                 strokeDasharray="3 3"
+                label={{
+                  value: "Target 95%",
+                  position: "insideTopRight",
+                  fontSize: 10,
+                  fill: "#787584",
+                }}
               />
               <Tooltip
                 cursor={{ fill: "rgba(108,93,211,0.06)" }}
@@ -134,8 +126,11 @@ export function DataReadinessChart({ data, loading = false }: Props) {
                 }}
               />
               <Bar dataKey="pct" barSize={16} radius={[0, 8, 8, 0]}>
-                {data.map((item) => (
-                  <Cell key={item.entity} fill={barColor(item.pct)} />
+                {data.map((item, index) => (
+                  <Cell
+                    key={item.entity}
+                    fill={colorAt(READINESS_COLORS, index)}
+                  />
                 ))}
               </Bar>
             </BarChart>
