@@ -9,9 +9,17 @@ type CourseSidebarProps = {
   subjectName: string;
   classLabel: string;
   majorName?: string | null;
+  selectedKey: string;
+  onSelect: (key: string) => void;
 };
 
-export function CourseSidebar({ subjectName, classLabel, majorName }: CourseSidebarProps) {
+export function CourseSidebar({
+  subjectName,
+  classLabel,
+  majorName,
+  selectedKey,
+  onSelect,
+}: CourseSidebarProps) {
   const [courseOpen, setCourseOpen] = useState(true);
 
   return (
@@ -54,17 +62,49 @@ export function CourseSidebar({ subjectName, classLabel, majorName }: CourseSide
 
         {courseOpen && (
           <ul className="mt-2 divide-y divide-[#E2E8F0]">
-            <li className="cursor-pointer px-1 py-2.5 transition-colors hover:bg-[#F8FAFC]">
-              <p className="text-[13px] font-bold text-[#1E293B]">Info pembelajaran</p>
-              <p className="mt-0.5 text-[11px] text-[#94A3B8]">Konten menyusul</p>
+            <li>
+              <button
+                type="button"
+                onClick={() => onSelect("info")}
+                className={cn(
+                  "w-full px-1 py-2.5 text-left transition-colors hover:bg-[#F8FAFC]",
+                  selectedKey === "info" && "bg-[#F8FAFC]",
+                )}
+              >
+                <p
+                  className={cn(
+                    "text-[13px] font-bold",
+                    selectedKey === "info"
+                      ? "text-[#b71422]"
+                      : "text-[#1E293B]",
+                  )}
+                >
+                  Info pembelajaran
+                </p>
+              </button>
             </li>
             {meetings.map((meeting) => (
-              <li
-                key={meeting.label}
-                className="cursor-pointer px-1 py-2.5 transition-colors hover:bg-[#F8FAFC]"
-              >
-                <p className="text-[13px] font-bold text-[#1E293B]">{meeting.label}</p>
-                <p className="mt-0.5 text-[11px] text-[#94A3B8]">{meeting.date}</p>
+              <li key={meeting.label}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(meeting.label)}
+                  className={cn(
+                    "w-full px-1 py-2.5 text-left transition-colors hover:bg-[#F8FAFC]",
+                    selectedKey === meeting.label && "bg-[#F8FAFC]",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-[13px] font-bold",
+                      selectedKey === meeting.label
+                        ? "text-[#b71422]"
+                        : "text-[#1E293B]",
+                    )}
+                  >
+                    {meeting.label}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[#94A3B8]">{meeting.date}</p>
+                </button>
               </li>
             ))}
           </ul>

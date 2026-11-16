@@ -182,6 +182,7 @@ export interface JadwalPelajaran {
   subjectId: string;
   subjectName: string;
   subjectCode: string;
+  capaianPembelajaran: string | null;
   gradeLevelId: string;
   gradeCode: string;
   majorId: string;

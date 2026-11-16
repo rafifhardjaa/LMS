@@ -100,6 +100,7 @@ export const subjects = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     code: varchar("code", { length: 100 }).notNull(),
     description: text("description"),
+    capaianPembelajaran: text("capaian_pembelajaran"),
     // Mata pelajaran kejuruan wajib memiliki jurusan; mapel umum harus null.
     majorId: uuid("major_id").references(() => majors.id, {
       onDelete: "set null",

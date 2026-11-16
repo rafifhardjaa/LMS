@@ -10,6 +10,7 @@
     "db:migrate": "bun run src/db/migrate.ts",
     "db:setup": "bun run db:migrate && bun run seed",
     "db:backfill-passwords": "bun run scripts/fill-default-passwords.ts",
+    "db:fill-capaian": "bun run scripts/fill-capaian.ts",
     "db:backup": "bash scripts/db-backup.sh",
     "db:import-jadwal": "bun run scripts/import-jadwal-xlsx.ts",
     "db:import-guru": "bun run scripts/import-users-guru-xlsx.ts",
