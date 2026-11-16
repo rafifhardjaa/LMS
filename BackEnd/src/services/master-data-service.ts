@@ -1434,6 +1434,7 @@ export async function listTeachingAssignments(
       className: classes.name,
       classSection: classes.section,
       majorCode: majors.code,
+      majorName: majors.name,
       gradeCode: gradeLevels.code,
       assignedAt: teachingAssignments.assignedAt,
     })
