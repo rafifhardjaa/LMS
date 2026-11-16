@@ -15,7 +15,7 @@ export function KpiGrid({ kpis }: { kpis: Kpi[] }) {
   return (
     <StaggerChildren
       staggerDelay={0.06}
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2"
     >
       {kpis.map((kpi) => (
         <StaggerItem key={kpi.label} className="h-full">
