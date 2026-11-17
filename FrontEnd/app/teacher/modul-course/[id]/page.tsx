@@ -7,6 +7,7 @@ import type { JadwalPelajaran, StudentSummary } from "@/lib/api/master-data";
 import { CourseSidebar } from "@/components/teacher/modul-management/detail/course-sidebar";
 import { CourseInfoContent } from "@/components/teacher/modul-management/detail/course-info-content";
 import { PesertaTable } from "@/components/teacher/modul-management/detail/peserta-table";
+import { PertemuanContent } from "@/components/teacher/modul-management/detail/pertemuan-content";
 import { meetings } from "@/components/teacher/modul-management/detail/data";
 
 export default function ModulCourseDetailPage() {
@@ -124,6 +125,13 @@ export default function ModulCourseDetailPage() {
               majorName={course.majorName}
               loading={studentsLoading}
               error={studentsError}
+            />
+          ) : meetings.some((m) => m.label === selectedKey) ? (
+            <PertemuanContent
+              key={selectedKey}
+              meeting={meetings.find((m) => m.label === selectedKey)!}
+              waktuMulai={course.waktuMulai}
+              waktuSelesai={course.waktuSelesai}
             />
           ) : (
             <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-white/60 px-6 text-center">
