@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { masterDataApi } from "@/lib/api/master-data";
-import type { JadwalPelajaran } from "@/lib/api/master-data";
+import type { JadwalPelajaran, StudentSummary } from "@/lib/api/master-data";
 import { CourseSidebar } from "@/components/teacher/modul-management/detail/course-sidebar";
 import { CourseInfoContent } from "@/components/teacher/modul-management/detail/course-info-content";
+import { PesertaTable } from "@/components/teacher/modul-management/detail/peserta-table";
 import { meetings } from "@/components/teacher/modul-management/detail/data";
 
 export default function ModulCourseDetailPage() {
@@ -17,6 +18,9 @@ export default function ModulCourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState("info");
+  const [students, setStudents] = useState<StudentSummary[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -49,6 +53,37 @@ export default function ModulCourseDetailPage() {
     };
   }, [classId, subjectId]);
 
+  const courseClassId = rows[0]?.classId;
+
+  useEffect(() => {
+    if (!courseClassId) return;
+    let active = true;
+    const loadStudents = async () => {
+      try {
+        setStudentsLoading(true);
+        const res = await masterDataApi.students.list({ classId: courseClassId });
+        if (!active) return;
+        if (res.error) {
+          throw new Error(res.error.message ?? "Gagal memuat daftar peserta");
+        }
+        setStudents(res.data?.data ?? []);
+        setStudentsError(null);
+      } catch (err) {
+        console.error("Error loading course participants:", err);
+        if (active) {
+          setStudents([]);
+          setStudentsError("Tidak dapat memuat daftar peserta. Silakan coba lagi.");
+        }
+      } finally {
+        if (active) setStudentsLoading(false);
+      }
+    };
+    void loadStudents();
+    return () => {
+      active = false;
+    };
+  }, [courseClassId]);
+
   const course = rows[0];
   const classLabel = course
     ? `${course.className}${course.classSection ? ` ${course.classSection}` : ""}`.trim()
@@ -73,9 +108,23 @@ export default function ModulCourseDetailPage() {
             majorName={course.majorName}
             selectedKey={selectedKey}
             onSelect={setSelectedKey}
+            pesertaCount={students.length}
           />
           {selectedKey === "info" ? (
-            <CourseInfoContent capaianPembelajaran={course.capaianPembelajaran} />
+            <CourseInfoContent
+              subjectName={course.subjectName}
+              capaianPembelajaran={course.capaianPembelajaran}
+              pesertaCount={students.length}
+            />
+          ) : selectedKey === "peserta" ? (
+            <PesertaTable
+              students={students}
+              teacherName={course.teacherName}
+              classLabel={classLabel}
+              majorName={course.majorName}
+              loading={studentsLoading}
+              error={studentsError}
+            />
           ) : (
             <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-white/60 px-6 text-center">
               <p className="text-[13px] font-semibold text-[#94A3B8]">

@@ -11,6 +11,7 @@ type CourseSidebarProps = {
   majorName?: string | null;
   selectedKey: string;
   onSelect: (key: string) => void;
+  pesertaCount?: number | null;
 };
 
 export function CourseSidebar({
@@ -19,6 +20,7 @@ export function CourseSidebar({
   majorName,
   selectedKey,
   onSelect,
+  pesertaCount,
 }: CourseSidebarProps) {
   const [courseOpen, setCourseOpen] = useState(true);
 
@@ -34,11 +36,22 @@ export function CourseSidebar({
       </div>
 
       <div className="border-b border-[#F1F5F9] py-3">
-        <p className="flex items-center gap-2 text-[14px] font-bold text-[#1E293B]">
+        <button
+          type="button"
+          onClick={() => onSelect("peserta")}
+          className={cn(
+            "flex w-full items-center gap-2 rounded-lg px-1 py-1 text-left text-[14px] font-bold transition-colors hover:bg-[#F8FAFC]",
+            selectedKey === "peserta" ? "text-[#b71422]" : "text-[#1E293B]",
+          )}
+        >
           <Users className="size-4 text-[#006398]" />
           Peserta
+        </button>
+        <p className="mt-0.5 pl-7 text-[11px] text-[#94A3B8]">
+          {pesertaCount === null || pesertaCount === undefined
+            ? "Konten menyusul"
+            : `${pesertaCount} siswa`}
         </p>
-        <p className="mt-1.5 pl-6 text-[11px] text-[#94A3B8]">Konten menyusul</p>
       </div>
 
       <div className="pt-3">
