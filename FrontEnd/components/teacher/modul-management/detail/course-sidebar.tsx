@@ -25,7 +25,7 @@ export function CourseSidebar({
   const [courseOpen, setCourseOpen] = useState(true);
 
   return (
-    <aside className="max-h-[calc(100vh-13rem)] w-full shrink-0 overflow-y-auto rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:w-72">
+    <aside className="max-h-[calc(100vh-8.5rem)] w-full shrink-0 overflow-y-auto rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:w-72">
       <div className="border-b border-[#F1F5F9] pb-3">
         <h2 className="text-[15px] font-bold leading-6 text-[#1E293B]">
           {subjectName} - {classLabel}
