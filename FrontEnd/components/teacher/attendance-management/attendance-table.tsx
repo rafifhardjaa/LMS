@@ -30,7 +30,6 @@ type AttendanceTableProps = {
   page: number;
   pageCount: number;
   filteredCount: number;
-  isLocked: boolean;
   onPageChange: (page: number) => void;
   onStatusChange: (studentId: string, status: AttendanceStatus) => void;
   onWhatsApp: (student: StudentAttendance) => void;
@@ -112,7 +111,6 @@ export function AttendanceTable({
   page,
   pageCount,
   filteredCount,
-  isLocked,
   onPageChange,
   onStatusChange,
   onWhatsApp,
@@ -122,36 +120,24 @@ export function AttendanceTable({
   const endIndex = Math.min(startIndex + students.length, filteredCount);
 
   return (
-    <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="flex flex-col gap-3 bg-[#F8FAFC] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-[12px] font-bold text-[#1E293B]">
-            Presensi Kelas Tatap Muka &amp; Lab Praktikum
-          </h2>
-          <span className="size-2 animate-pulse rounded-full bg-[#22C55E]" />
-          <span className="text-[9px] font-bold uppercase tracking-[0.04em] text-[#006B2C]">
-            Sinkronisasi SiManis Aktif
-          </span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5 text-[8px] font-bold uppercase tracking-[0.04em] text-[#94A3B8]">
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-[#16A34A]" />
-            H = Hadir
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-[#D97706]" />
-            S = Sakit
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-[#0284C7]" />
-            I = Izin
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-[#DC2626]" />
-            A = Alpa
-          </span>
-        </div>
+    <div className="bg-white">
+      <div className="flex flex-wrap items-center gap-2.5 bg-[#F8FAFC] px-4 py-3 text-[8px] font-bold uppercase tracking-[0.04em] text-[#94A3B8]">
+        <span className="inline-flex items-center gap-1">
+          <span className="size-2 rounded-full bg-[#16A34A]" />
+          H = Hadir
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="size-2 rounded-full bg-[#D97706]" />
+          S = Sakit
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="size-2 rounded-full bg-[#0284C7]" />
+          I = Izin
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="size-2 rounded-full bg-[#DC2626]" />
+          A = Alpa
+        </span>
       </div>
 
       <div className="overflow-x-auto">
@@ -224,7 +210,6 @@ export function AttendanceTable({
                           type="button"
                           aria-pressed={isActive}
                           aria-label={`${student.name}: ${status}`}
-                          disabled={isLocked}
                           onClick={() => onStatusChange(student.id, status)}
                           className={cn(
                             "flex size-7 items-center justify-center rounded text-[10px] font-bold transition",
@@ -234,7 +219,6 @@ export function AttendanceTable({
                                   "text-[#94A3B8]",
                                   statusButtonStyles[status].hover,
                                 ),
-                            isLocked && "cursor-not-allowed opacity-60",
                           )}
                         >
                           {status.charAt(0)}
@@ -300,7 +284,7 @@ export function AttendanceTable({
             Tidak ada siswa yang cocok
           </p>
           <p className="mt-0.5 max-w-sm text-[10px] leading-4 text-[#94A3B8]">
-            Ubah kata kunci atau filter status untuk melihat daftar presensi.
+            Ubah filter status untuk melihat daftar presensi.
           </p>
         </div>
       )}
@@ -355,6 +339,6 @@ export function AttendanceTable({
           </button>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
