@@ -5,9 +5,15 @@ import { motion } from "framer-motion";
 import { BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { SearchableDropdown } from "@/components/admin/searchable-dropdown";
 import { meetings } from "./data";
 
 export type ManageMode = "add" | "edit" | "delete";
+
+const meetingOptions = meetings.map((meeting) => ({
+  value: meeting.label,
+  label: `${meeting.label} — ${meeting.date}`,
+}));
 
 const inputClass =
   "h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20";
@@ -81,17 +87,16 @@ export function ManagePertemuanPanel({
           {(mode === "edit" || mode === "delete") && (
             <div className="sm:col-span-2">
               <FieldLabel required>Pertemuan</FieldLabel>
-              <select
+              <SearchableDropdown
+                id="manage-pertemuan"
                 value={selectedPertemuan}
-                onChange={(event) => setSelectedPertemuan(event.target.value)}
-                className={inputClass}
-              >
-                {meetings.map((meeting) => (
-                  <option key={meeting.label} value={meeting.label}>
-                    {meeting.label} — {meeting.date}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedPertemuan}
+                options={meetingOptions}
+                label="Pilih pertemuan"
+                searchPlaceholder="Cari pertemuan..."
+                emptyMessage="Pertemuan tidak ditemukan."
+                variant="light"
+              />
             </div>
           )}
 
