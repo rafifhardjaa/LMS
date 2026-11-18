@@ -21,6 +21,10 @@ interface SearchableDropdownProps {
   options?: JurusanOption[];
   label?: string;
   disabled?: boolean;
+  id?: string;
+  searchPlaceholder?: string;
+  emptyMessage?: string;
+  variant?: "admin" | "ghost";
 }
 
 export function SearchableDropdown({
@@ -29,6 +33,10 @@ export function SearchableDropdown({
   options = JURUSAN_OPTIONS,
   label = "Jurusan",
   disabled = false,
+  id = "dropdownTrigger",
+  searchPlaceholder = "Cari jurusan atau keahlian...",
+  emptyMessage = "Jurusan tidak ditemukan.",
+  variant = "admin",
 }: SearchableDropdownProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -65,20 +73,33 @@ export function SearchableDropdown({
       <span className="sr-only">{label}</span>
       <button
         type="button"
-        id="dropdownTrigger"
+        id={id}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => { if (!disabled) toggle(); }}
         disabled={disabled}
-        className={`flex min-h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 py-2 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
-          open ? "shadow-[0_2px_10px_-2px_rgba(32,44,90,0.12)]" : ""
-        }`}
+        className={
+          variant === "ghost"
+            ? `flex min-h-9 w-full items-center justify-between rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-left text-[11px] font-semibold text-white transition-all hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50 ${
+                open ? "bg-white/15" : ""
+              }`
+            : `flex min-h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 py-2 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
+                open ? "shadow-[0_2px_10px_-2px_rgba(32,44,90,0.12)]" : ""
+              }`
+        }
       >
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="break-words font-semibold text-slate-800" title={selected.label}>{selected.label}</span>
+          <span
+            className={`break-words font-semibold ${variant === "ghost" ? "text-white" : "text-slate-800"}`}
+            title={selected.label}
+          >
+            {selected.label}
+          </span>
         </div>
         <ChevronDown
-          className={`size-5 shrink-0 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""} ${
+            variant === "ghost" ? "size-4 text-white/70" : "size-5 text-slate-500"
+          }`}
         />
       </button>
 
@@ -93,7 +114,7 @@ export function SearchableDropdown({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari jurusan atau keahlian..."
+              placeholder={searchPlaceholder}
               autoComplete="off"
               className="w-full rounded-xl bg-slate-50 py-2 pl-9 pr-3.5 text-xs text-slate-800 transition-all placeholder:text-slate-400 focus:outline-none"
             />
@@ -129,7 +150,7 @@ export function SearchableDropdown({
               );
             })}
             {filtered.length === 0 && (
-              <li className="px-3 py-4 text-center text-slate-500">Jurusan tidak ditemukan.</li>
+              <li className="px-3 py-4 text-center text-slate-500">{emptyMessage}</li>
             )}
           </ul>
         </div>

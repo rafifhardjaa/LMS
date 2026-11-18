@@ -8,6 +8,13 @@ import {
   HelpCircle,
   Users,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  CountUp,
+  FadeIn,
+  StaggerChildren,
+  StaggerItem,
+} from "@/components/ui/animations";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { meetings } from "./data";
 
@@ -56,19 +63,19 @@ export function CourseInfoContent({
     });
 
   const stats = [
-    { label: "Peserta", value: pesertaCount === undefined ? "-" : String(pesertaCount) },
-    { label: "Pertemuan", value: String(meetings.length) },
+    { label: "Peserta", value: pesertaCount ?? 0 },
+    { label: "Pertemuan", value: meetings.length },
     { label: "Semester", value: "Genap 2024/2025" },
   ];
 
   return (
     <section className="flex min-h-64 flex-1 flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-5 py-4">
+      <FadeIn className="bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-5 py-4">
         <h2 className="text-[15px] font-bold text-white">Info Pembelajaran</h2>
         <p className="mt-0.5 text-[12px] font-medium text-white/80">
           {subjectName}
         </p>
-      </div>
+      </FadeIn>
 
       <div className="flex flex-col gap-5 px-5 py-5">
         <div className="flex items-center gap-3">
@@ -88,7 +95,13 @@ export function CourseInfoContent({
         <div className="grid grid-cols-3 divide-x divide-[#E2E8F0] rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-3">
           {stats.map((stat) => (
             <div key={stat.label} className="px-4 text-center">
-              <p className="text-[18px] font-bold text-[#1E293B]">{stat.value}</p>
+              <p className="text-[18px] font-bold text-[#1E293B]">
+                {typeof stat.value === "number" ? (
+                  <CountUp to={stat.value} />
+                ) : (
+                  stat.value
+                )}
+              </p>
               <p className="mt-0.5 text-[11px] font-semibold text-[#94A3B8]">
                 {stat.label}
               </p>
@@ -100,28 +113,34 @@ export function CourseInfoContent({
           <p className="text-[14px] font-semibold text-[#1E293B]">
             Capaian Pembelajaran
           </p>
-          <ol className="mt-2.5 flex flex-col gap-2.5">
+          <StaggerChildren
+            as="ol"
+            className="mt-2.5 flex flex-col gap-2.5"
+          >
             {capaianItems.map((item) => (
-              <li key={item.nomor} className="flex items-start gap-2.5">
+              <StaggerItem
+                key={item.nomor}
+                className="flex items-start gap-2.5"
+              >
                 <span className="mt-0.5 flex size-5.5 shrink-0 items-center justify-center rounded-full bg-[#b71422] text-[11px] font-bold text-white">
                   {item.nomor}
                 </span>
                 <p className="text-[13px] leading-6 text-[#475569]">{item.teks}</p>
-              </li>
+              </StaggerItem>
             ))}
-          </ol>
+          </StaggerChildren>
         </div>
 
         <div>
           <p className="text-[14px] font-semibold text-[#1E293B]">
             Bobot Penilaian
           </p>
-          <div className="mt-2.5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerChildren className="mt-2.5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {bobotPenilaian.map((item) => {
               const Icon = item.icon;
               const nilai = parseInt(item.persen, 10);
               return (
-                <div
+                <StaggerItem
                   key={item.label}
                   className="border-b border-[#E2E8F0] pb-2.5"
                 >
@@ -133,15 +152,18 @@ export function CourseInfoContent({
                     <span className="text-[13px] text-[#475569]">{item.label}</span>
                   </div>
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
-                    <div
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${nilai}%` }}
+                      transition={{ duration: 0.7, delay: 0.2 }}
                       className="h-full rounded-full"
-                      style={{ width: `${nilai}%`, backgroundColor: item.color }}
+                      style={{ backgroundColor: item.color }}
                     />
                   </div>
-                </div>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerChildren>
         </div>
       </div>
     </section>

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { JadwalPelajaran, StudentSummary } from "@/lib/api/master-data";
 import { CourseSidebar } from "@/components/teacher/modul-management/detail/course-sidebar";
@@ -92,66 +94,98 @@ export default function ModulCourseDetailPage() {
 
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
-      {error ? (
-        <div className="rounded-2xl bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#b91c1c] shadow-sm">
-          {error}
-        </div>
-      ) : loading ? (
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <div className="h-64 w-full animate-pulse rounded-2xl bg-white lg:w-72" />
-          <div className="h-64 flex-1 animate-pulse rounded-2xl bg-white" />
-        </div>
-      ) : course ? (
-        <div className="flex flex-col items-start gap-4 lg:flex-row">
-          <CourseSidebar
-            subjectName={course.subjectName}
-            classLabel={classLabel}
-            majorName={course.majorName}
-            selectedKey={selectedKey}
-            onSelect={setSelectedKey}
-            pesertaCount={students.length}
-          />
-          {selectedKey === "info" ? (
-            <CourseInfoContent
-              subjectName={course.subjectName}
-              capaianPembelajaran={course.capaianPembelajaran}
-              pesertaCount={students.length}
-            />
-          ) : selectedKey === "peserta" ? (
-            <PesertaTable
-              students={students}
-              teacherName={course.teacherName}
-              classLabel={classLabel}
-              majorName={course.majorName}
-              loading={studentsLoading}
-              error={studentsError}
-            />
-          ) : meetings.some((m) => m.label === selectedKey) ? (
-            <PertemuanContent
-              key={selectedKey}
-              meeting={meetings.find((m) => m.label === selectedKey)!}
-              waktuMulai={course.waktuMulai}
-              waktuSelesai={course.waktuSelesai}
-            />
-          ) : (
-            <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-white/60 px-6 text-center">
-              <p className="text-[13px] font-semibold text-[#94A3B8]">
-                Konten {meetings.find((m) => m.label === selectedKey)?.label ?? "pertemuan"}{" "}
-                menyusul
+      <AnimatePresence mode="wait">
+        {error ? (
+          <FadeIn key="error">
+            <div className="rounded-2xl bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#b91c1c] shadow-sm">
+              {error}
+            </div>
+          </FadeIn>
+        ) : loading ? (
+          <FadeIn key="loading">
+            <div className="flex flex-col gap-4 lg:flex-row">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4 }}
+                className="h-64 w-full animate-pulse rounded-2xl bg-white lg:w-72"
+              />
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="h-64 flex-1 animate-pulse rounded-2xl bg-white"
+              />
+            </div>
+          </FadeIn>
+        ) : course ? (
+          <div key="content" className="flex flex-col items-start gap-4 lg:flex-row">
+            <SlideIn direction="left" className="w-full lg:w-72">
+              <CourseSidebar
+                subjectName={course.subjectName}
+                classLabel={classLabel}
+                majorName={course.majorName}
+                selectedKey={selectedKey}
+                onSelect={setSelectedKey}
+                pesertaCount={students.length}
+              />
+            </SlideIn>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedKey}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="flex min-w-0 flex-1 flex-col"
+              >
+                {selectedKey === "info" ? (
+                  <CourseInfoContent
+                    subjectName={course.subjectName}
+                    capaianPembelajaran={course.capaianPembelajaran}
+                    pesertaCount={students.length}
+                  />
+                ) : selectedKey === "peserta" ? (
+                  <PesertaTable
+                    students={students}
+                    teacherName={course.teacherName}
+                    classLabel={classLabel}
+                    majorName={course.majorName}
+                    loading={studentsLoading}
+                    error={studentsError}
+                  />
+                ) : meetings.some((m) => m.label === selectedKey) ? (
+                  <PertemuanContent
+                    key={selectedKey}
+                    meeting={meetings.find((m) => m.label === selectedKey)!}
+                    waktuMulai={course.waktuMulai}
+                    waktuSelesai={course.waktuSelesai}
+                  />
+                ) : (
+                  <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-white/60 px-6 text-center">
+                    <p className="text-[13px] font-semibold text-[#94A3B8]">
+                      Konten {meetings.find((m) => m.label === selectedKey)?.label ?? "pertemuan"}{" "}
+                      menyusul
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        ) : (
+          <FadeIn key="not-found">
+            <div className="rounded-2xl bg-white px-6 py-10 text-center shadow-sm">
+              <p className="text-[14px] font-semibold text-[#1E293B]">
+                Course tidak ditemukan
+              </p>
+              <p className="mt-1 text-[12px] text-[#64748B]">
+                Data course dengan id tersebut tidak tersedia.
               </p>
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="rounded-2xl bg-white px-6 py-10 text-center shadow-sm">
-          <p className="text-[14px] font-semibold text-[#1E293B]">
-            Course tidak ditemukan
-          </p>
-          <p className="mt-1 text-[12px] text-[#64748B]">
-            Data course dengan id tersebut tidak tersedia.
-          </p>
-        </div>
-      )}
+          </FadeIn>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
