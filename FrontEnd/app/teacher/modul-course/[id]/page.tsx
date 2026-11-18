@@ -169,6 +169,76 @@ export default function ModulCourseDetailPage() {
     [meetings, selectedKey]
   );
 
+  const meetingSubjectId = course?.subjectId ?? null;
+  const meetingClassId = course?.classId ?? null;
+
+  useEffect(() => {
+    if (!meetingSubjectId || !meetingClassId) return;
+    let active = true;
+    const loadMeetings = async () => {
+      try {
+        setMeetingsLoading(true);
+        const res = await masterDataApi.courseDetails.meetings.list(
+          meetingSubjectId,
+          meetingClassId
+        );
+        if (!active) return;
+        if (res.error) {
+          throw new Error(res.error.message ?? "Gagal memuat pertemuan");
+        }
+        setMeetings(res.data?.data ?? []);
+        setMeetingsError(null);
+
+        const nextMeetings = res.data?.data ?? [];
+        const stillExists = nextMeetings.some(
+          (meeting) =>
+            `Pertemuan ${meeting.meetingNumber}` === selectedKey
+        );
+        if (
+          selectedKey !== "info" &&
+          selectedKey !== "peserta" &&
+          !stillExists
+        ) {
+          setSelectedKey("info");
+        }
+      } catch (err) {
+        console.error("Error loading course meetings:", err);
+        if (active) {
+          setMeetings([]);
+          setMeetingsError("Tidak dapat memuat daftar pertemuan.");
+        }
+      } finally {
+        if (active) setMeetingsLoading(false);
+      }
+    };
+    void loadMeetings();
+    return () => {
+      active = false;
+    };
+  }, [meetingClassId, meetingSubjectId, meetingsVersion, selectedKey]);
+
+  const sidebarMeetings = useMemo(
+    () =>
+      meetings.length
+        ? meetings.map((meeting) => ({
+            label: `Pertemuan ${meeting.meetingNumber}`,
+            date: moment(meeting.meetingDate, ["YYYY-MM-DD"]).format("DD-MM-YYYY"),
+          }))
+        : fallbackMeetings.map((meeting) => ({
+            label: meeting.label,
+            date: meeting.date,
+          })),
+    [meetings]
+  );
+
+  const selectedMeeting = useMemo(
+    () =>
+      meetings.find(
+        (meeting) => `Pertemuan ${meeting.meetingNumber}` === selectedKey
+      ) ?? null,
+    [meetings, selectedKey]
+  );
+
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AnimatePresence mode="wait">
