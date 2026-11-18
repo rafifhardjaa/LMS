@@ -12,9 +12,9 @@ import type {
   AttendanceCounts,
   AttendanceStatus,
   ClassFilter,
-  SessionFilter,
-  StatusFilter,
+  MeetingFilter,
   StudentAttendance,
+  SubjectFilter,
 } from "./types";
 
 const statusDefaults: Record<
@@ -42,9 +42,10 @@ const statusDefaults: Record<
 
 export function AttendanceManagement() {
   const [roster, setRoster] = useState(initialStudents);
-  const [classFilter, setClassFilter] = useState<ClassFilter>("VII-A");
-  const [sessionFilter, setSessionFilter] = useState<SessionFilter>("today");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [classFilter, setClassFilter] = useState<ClassFilter | "">("");
+  const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>("");
+  const [meetingFilter, setMeetingFilter] = useState<MeetingFilter>("");
+  const [isSessionOpened, setIsSessionOpened] = useState(false);
   const [page, setPage] = useState(1);
 
   const classRoster = useMemo(
@@ -62,31 +63,28 @@ export function AttendanceManagement() {
     );
   }, [classRoster]);
 
-  const filteredStudents = useMemo(() => {
-    return classRoster.filter(
-      (student) => statusFilter === "ALL" || student.status === statusFilter,
-    );
-  }, [classRoster, statusFilter]);
-
-  const pageCount = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(classRoster.length / pageSize));
   const safePage = Math.min(page, pageCount);
-  const visibleStudents = filteredStudents.slice(
+  const visibleStudents = classRoster.slice(
     (safePage - 1) * pageSize,
     safePage * pageSize,
   );
 
-  function handleClassChange(value: ClassFilter) {
+  function handleClassChange(value: ClassFilter | "") {
     setClassFilter(value);
+    setIsSessionOpened(false);
     setPage(1);
   }
 
-  function handleSessionChange(value: SessionFilter) {
-    setSessionFilter(value);
+  function handleSubjectChange(value: SubjectFilter) {
+    setSubjectFilter(value);
+    setIsSessionOpened(false);
     setPage(1);
   }
 
-  function handleStatusFilterChange(value: StatusFilter) {
-    setStatusFilter(value);
+  function handleMeetingChange(value: MeetingFilter) {
+    setMeetingFilter(value);
+    setIsSessionOpened(false);
     setPage(1);
   }
 
@@ -132,12 +130,15 @@ export function AttendanceManagement() {
         <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <AttendanceToolbar
             classFilter={classFilter}
-            sessionFilter={sessionFilter}
-            statusFilter={statusFilter}
+            subjectFilter={subjectFilter}
+            meetingFilter={meetingFilter}
+            opened={isSessionOpened}
             counts={counts}
+            studentCount={classRoster.length}
             onClassChange={handleClassChange}
-            onSessionChange={handleSessionChange}
-            onStatusChange={handleStatusFilterChange}
+            onSubjectChange={handleSubjectChange}
+            onMeetingChange={handleMeetingChange}
+            onOpenSession={() => setIsSessionOpened(true)}
           />
 
           <AttendanceTable
@@ -145,7 +146,8 @@ export function AttendanceManagement() {
             classFilter={classFilter}
             page={safePage}
             pageCount={pageCount}
-            filteredCount={filteredStudents.length}
+            filteredCount={classRoster.length}
+            opened={isSessionOpened}
             onPageChange={setPage}
             onStatusChange={handleStatusChange}
             onWhatsApp={handleWhatsApp}

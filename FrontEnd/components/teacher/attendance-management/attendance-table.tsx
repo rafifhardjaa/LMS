@@ -4,6 +4,7 @@ import {
   CalendarClock,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   IdCard,
   MapPin,
   Medal,
@@ -26,10 +27,11 @@ import type {
 
 type AttendanceTableProps = {
   students: StudentAttendance[];
-  classFilter: ClassFilter;
+  classFilter: ClassFilter | "";
   page: number;
   pageCount: number;
   filteredCount: number;
+  opened: boolean;
   onPageChange: (page: number) => void;
   onStatusChange: (studentId: string, status: AttendanceStatus) => void;
   onWhatsApp: (student: StudentAttendance) => void;
@@ -111,6 +113,7 @@ export function AttendanceTable({
   page,
   pageCount,
   filteredCount,
+  opened,
   onPageChange,
   onStatusChange,
   onWhatsApp,
@@ -119,27 +122,25 @@ export function AttendanceTable({
   const startIndex = (page - 1) * pageSize;
   const endIndex = Math.min(startIndex + students.length, filteredCount);
 
+  if (!opened) {
+    return (
+      <div className="flex flex-col items-center justify-center bg-white px-6 py-16 text-center">
+        <span className="flex size-16 items-center justify-center rounded-2xl border border-[#F3C4C4] bg-[#FFEBEB] text-[#b71422]">
+          <ClipboardList className="size-8" />
+        </span>
+        <p className="mt-4 text-sm font-bold text-[#1E293B]">
+          Pilih terlebih dahulu sesi presensi
+        </p>
+        <p className="mt-1 max-w-sm text-[11px] leading-5 text-[#94A3B8]">
+          Lengkapi filter kelas, mata pelajaran, dan pertemuan pada header di
+          atas, lalu klik &quot;Buka presensi&quot;.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white">
-      <div className="flex flex-wrap items-center gap-2.5 bg-[#F8FAFC] px-4 py-3 text-[8px] font-bold uppercase tracking-[0.04em] text-[#94A3B8]">
-        <span className="inline-flex items-center gap-1">
-          <span className="size-2 rounded-full bg-[#16A34A]" />
-          H = Hadir
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="size-2 rounded-full bg-[#D97706]" />
-          S = Sakit
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="size-2 rounded-full bg-[#0284C7]" />
-          I = Izin
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="size-2 rounded-full bg-[#DC2626]" />
-          A = Alpa
-        </span>
-      </div>
-
       <div className="overflow-x-auto">
         <table className="w-full min-w-[700px] table-fixed border-collapse text-left">
           <colgroup>
