@@ -35,6 +35,8 @@ export interface SchoolClass {
   gradeName: string | null;
   capacity: number;
   isActive: boolean;
+  advisorId: string | null;
+  advisorName: string | null;
   studentCount: number;
   teacherCount: number;
   createdAt: string;
@@ -210,6 +212,19 @@ export interface JadwalPelajaranFilters {
   hari?: string;
   teacherId?: string;
   activeOnly?: boolean;
+}
+
+export interface AttendanceSubjectInfo {
+  id: string;
+  name: string;
+  code: string | null;
+}
+
+export interface AttendanceDate {
+  date: string;
+  day: string;
+  subjectCount: number;
+  subjects: AttendanceSubjectInfo[];
 }
 
 export interface CourseMeeting {
@@ -530,6 +545,14 @@ export const masterDataApi = {
         `/api/v1/teacher-assignments/${id}`,
         { method: "DELETE" }
       ),
+  },
+  attendance: {
+    dates: {
+      list: (classId: string) =>
+        apiFetch<ApiSuccess<AttendanceDate[]>>(
+          `/api/v1/attendance/dates${queryString({ classId })}`
+        ),
+    },
   },
   courseDetails: {
     meetings: {
