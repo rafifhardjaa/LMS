@@ -286,6 +286,8 @@ const classColumns = {
   gradeName: gradeLevels.name,
   capacity: classes.capacity,
   isActive: classes.isActive,
+  advisorId: classes.advisorId,
+  advisorName: users.fullName,
   studentCount: sql<number>`(select count(*)::int from users u where u.class_id = ${classes.id})`,
   teacherCount: sql<number>`(select count(*)::int from teacher_classrooms tc where tc.class_id = ${classes.id})`,
   createdAt: classes.createdAt,
@@ -317,6 +319,7 @@ export async function listClasses(filters: ClassFilters = {}) {
     .from(classes)
     .leftJoin(majors, eq(classes.majorId, majors.id))
     .leftJoin(gradeLevels, eq(classes.gradeLevelId, gradeLevels.id))
+    .leftJoin(users, eq(classes.advisorId, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(gradeLevels.code, majors.code, classes.name);
 }
@@ -328,6 +331,7 @@ export async function getClass(id: string) {
     .from(classes)
     .leftJoin(majors, eq(classes.majorId, majors.id))
     .leftJoin(gradeLevels, eq(classes.gradeLevelId, gradeLevels.id))
+    .leftJoin(users, eq(classes.advisorId, users.id))
     .where(eq(classes.id, id))
     .limit(1);
   const row = rows[0];

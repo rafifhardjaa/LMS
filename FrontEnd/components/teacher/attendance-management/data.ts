@@ -13,37 +13,12 @@ import type {
   AttendanceStatus,
   AttendanceSummaryMetric,
   AtRiskStudent,
-  ClassFilter,
   StudentAttendance,
   WeeklyTrendPoint,
 } from "./types";
 
 export const totalStudents = 35;
 export const pageSize = 8;
-
-export const classOptions: { value: ClassFilter | ""; label: string }[] = [
-  { value: "", label: "Pilih kelas" },
-  { value: "VII-A", label: "VII - A • Fisika Terapan (35 Siswa)" },
-  { value: "VII-B", label: "VII - B • Algoritma & Pemrograman (36 Siswa)" },
-  { value: "VIII-A", label: "VIII - A • Jaringan Komputer Dasar (34 Siswa)" },
-  { value: "VIII-C", label: "VIII - C • IoT Terapan (32 Siswa)" },
-];
-
-export const subjectOptions: { value: string; label: string }[] = [
-  { value: "", label: "Pilih mata pelajaran" },
-  { value: "fisika-terapan", label: "Fisika Terapan" },
-  { value: "algoritma-pemrograman", label: "Algoritma & Pemrograman" },
-  { value: "jaringan-komputer-dasar", label: "Jaringan Komputer Dasar" },
-  { value: "iot-terapan", label: "IoT Terapan" },
-];
-
-export const meetingOptions: { value: string; label: string }[] = [
-  { value: "", label: "Pilih pertemuan" },
-  ...Array.from({ length: 16 }, (_, index) => ({
-    value: String(index + 1),
-    label: `Pertemuan ${index + 1}`,
-  })),
-];
 
 export const statusButtonStyles: Record<
   AttendanceStatus,
