@@ -7,7 +7,37 @@ import {
   teachingAssignments,
   users,
 } from "../db/schema";
-import { ForbiddenError, NotFoundError } from "../utils/response";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "../utils/response";
+
+const DAY_NAMES = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+function deriveDay(date: string): string {
+  const parsed = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new BadRequestError("Format tanggal tidak valid");
+  }
+  const day = DAY_NAMES[parsed.getUTCDay()];
+  if (!day) {
+    throw new BadRequestError("Format tanggal tidak valid");
+  }
+  return day;
+}
+
+function assertPositiveInteger(value: number) {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new BadRequestError("Nomor pertemuan harus bilangan bulat positif");
+  }
+}
+
+function assertDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new BadRequestError("Tanggal harus berformat YYYY-MM-DD");
+  }
+}
 
 async function assertTeacherHasAssignment(
   teacherId: string | null,
@@ -112,4 +142,180 @@ export async function listCourseMeetings({
     startTime: schedule[0]?.startTime ?? null,
     endTime: schedule[0]?.endTime ?? null,
   }));
+}
+
+export async function createCourseMeeting({
+  subjectId,
+  classId,
+  teacherId,
+  meetingNumber,
+  meetingDate,
+  title,
+  objective,
+}: {
+  subjectId: string;
+  classId: string;
+  teacherId: string | null;
+  meetingNumber: number;
+  meetingDate: string;
+  title: string;
+  objective: string;
+}) {
+  await assertTeacherHasAssignment(teacherId, subjectId, classId);
+  assertPositiveInteger(meetingNumber);
+  assertDate(meetingDate);
+
+  const material = await db
+    .select({ id: courseMaterials.id })
+    .from(courseMaterials)
+    .where(
+      and(
+        eq(courseMaterials.subjectId, subjectId),
+        eq(courseMaterials.meetingNumber, meetingNumber)
+      )
+    )
+    .limit(1);
+
+  if (material.length) {
+    throw new BadRequestError(`Pertemuan ${meetingNumber} sudah ada`);
+  }
+
+  await db.insert(courseMaterials).values({
+    subjectId,
+    meetingNumber,
+    title,
+    objective,
+  });
+
+  await db.insert(courseMeetings).values({
+    subjectId,
+    classId,
+    teacherId: teacherId ?? null,
+    meetingNumber,
+    meetingDate,
+    day: deriveDay(meetingDate),
+  });
+
+  return {
+    subjectId,
+    classId,
+    meetingNumber,
+    meetingDate,
+    day: deriveDay(meetingDate),
+    title,
+    objective,
+  };
+}
+
+export async function updateCourseMeeting({
+  subjectId,
+  classId,
+  teacherId,
+  meetingNumber,
+  meetingDate,
+  title,
+  objective,
+}: {
+  subjectId: string;
+  classId: string;
+  teacherId: string | null;
+  meetingNumber: number;
+  meetingDate?: string;
+  title?: string;
+  objective?: string;
+}) {
+  await assertTeacherHasAssignment(teacherId, subjectId, classId);
+  assertPositiveInteger(meetingNumber);
+
+  const existing = await db
+    .select({
+      meetingNumber: courseMeetings.meetingNumber,
+      meetingDate: courseMeetings.meetingDate,
+      day: courseMeetings.day,
+    })
+    .from(courseMeetings)
+    .where(
+      and(
+        eq(courseMeetings.subjectId, subjectId),
+        eq(courseMeetings.classId, classId),
+        eq(courseMeetings.meetingNumber, meetingNumber)
+      )
+    )
+    .limit(1);
+
+  if (!existing.length) {
+    throw new NotFoundError(`Pertemuan ${meetingNumber} tidak ditemukan`);
+  }
+
+  const nextDate = meetingDate ?? existing[0]!.meetingDate;
+  assertDate(nextDate);
+
+  await db
+    .update(courseMeetings)
+    .set({ meetingDate: nextDate, day: deriveDay(nextDate) })
+    .where(
+      and(
+        eq(courseMeetings.subjectId, subjectId),
+        eq(courseMeetings.classId, classId),
+        eq(courseMeetings.meetingNumber, meetingNumber)
+      )
+    );
+
+  if (title !== undefined || objective !== undefined) {
+    await db
+      .update(courseMaterials)
+      .set({
+        ...(title !== undefined ? { title } : {}),
+        ...(objective !== undefined ? { objective } : {}),
+      })
+      .where(
+        and(
+          eq(courseMaterials.subjectId, subjectId),
+          eq(courseMaterials.meetingNumber, meetingNumber)
+        )
+      );
+  }
+
+  return {
+    subjectId,
+    classId,
+    meetingNumber,
+    meetingDate: nextDate,
+    day: deriveDay(nextDate),
+  };
+}
+
+export async function deleteCourseMeeting({
+  subjectId,
+  classId,
+  teacherId,
+  meetingNumber,
+}: {
+  subjectId: string;
+  classId: string;
+  teacherId: string | null;
+  meetingNumber: number;
+}) {
+  await assertTeacherHasAssignment(teacherId, subjectId, classId);
+  assertPositiveInteger(meetingNumber);
+
+  await db
+    .delete(courseMeetings)
+    .where(
+      and(
+        eq(courseMeetings.subjectId, subjectId),
+        eq(courseMeetings.meetingNumber, meetingNumber)
+      )
+    );
+
+  await db
+    .delete(courseMaterials)
+    .where(
+      and(
+        eq(courseMaterials.subjectId, subjectId),
+        eq(courseMaterials.meetingNumber, meetingNumber)
+      )
+    );
+
+  return { subjectId, meetingNumber };
 }
