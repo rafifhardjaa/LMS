@@ -14,7 +14,6 @@ import type {
   AttendanceSummaryMetric,
   AtRiskStudent,
   ClassFilter,
-  SessionFilter,
   StudentAttendance,
   WeeklyTrendPoint,
 } from "./types";
@@ -22,34 +21,29 @@ import type {
 export const totalStudents = 35;
 export const pageSize = 8;
 
-export const classOptions: { value: ClassFilter; label: string }[] = [
+export const classOptions: { value: ClassFilter | ""; label: string }[] = [
+  { value: "", label: "Pilih kelas" },
   { value: "VII-A", label: "VII - A • Fisika Terapan (35 Siswa)" },
   { value: "VII-B", label: "VII - B • Algoritma & Pemrograman (36 Siswa)" },
   { value: "VIII-A", label: "VIII - A • Jaringan Komputer Dasar (34 Siswa)" },
   { value: "VIII-C", label: "VIII - C • IoT Terapan (32 Siswa)" },
 ];
 
-export const sessionOptions: { value: SessionFilter; label: string }[] = [
-  {
-    value: "today",
-    label: "Hari Ini: Rabu, 20 Mar 2025 (Jam 3-4 / 09:30-11:00 WITA)",
-  },
-  {
-    value: "yesterday",
-    label: "Selasa, 19 Mar 2025 (Jam 1-2 / 07:30-09:00 WITA)",
-  },
-  {
-    value: "last-week",
-    label: "Jumat, 14 Mar 2025 (Jam 5-6 / 13:30-15:00 WITA)",
-  },
+export const subjectOptions: { value: string; label: string }[] = [
+  { value: "", label: "Pilih mata pelajaran" },
+  { value: "fisika-terapan", label: "Fisika Terapan" },
+  { value: "algoritma-pemrograman", label: "Algoritma & Pemrograman" },
+  { value: "jaringan-komputer-dasar", label: "Jaringan Komputer Dasar" },
+  { value: "iot-terapan", label: "IoT Terapan" },
 ];
 
-export const statusLabels: Record<AttendanceStatus, string> = {
-  HADIR: "Hadir",
-  SAKIT: "Sakit",
-  IZIN: "Izin",
-  ALPA: "Alpa",
-};
+export const meetingOptions: { value: string; label: string }[] = [
+  { value: "", label: "Pilih pertemuan" },
+  ...Array.from({ length: 16 }, (_, index) => ({
+    value: String(index + 1),
+    label: `Pertemuan ${index + 1}`,
+  })),
+];
 
 export const statusButtonStyles: Record<
   AttendanceStatus,
