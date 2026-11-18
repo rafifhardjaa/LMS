@@ -32,6 +32,7 @@ export default function ModulCourseDetailPage() {
   const [meetings, setMeetings] = useState<CourseMeeting[]>([]);
   const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
+  const [meetingsVersion, setMeetingsVersion] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -119,6 +120,19 @@ export default function ModulCourseDetailPage() {
         }
         setMeetings(res.data?.data ?? []);
         setMeetingsError(null);
+
+        const nextMeetings = res.data?.data ?? [];
+        const stillExists = nextMeetings.some(
+          (meeting) =>
+            `Pertemuan ${meeting.meetingNumber}` === selectedKey
+        );
+        if (
+          selectedKey !== "info" &&
+          selectedKey !== "peserta" &&
+          !stillExists
+        ) {
+          setSelectedKey("info");
+        }
       } catch (err) {
         console.error("Error loading course meetings:", err);
         if (active) {
@@ -133,7 +147,7 @@ export default function ModulCourseDetailPage() {
     return () => {
       active = false;
     };
-  }, [meetingClassId, meetingSubjectId]);
+  }, [meetingClassId, meetingSubjectId, meetingsVersion, selectedKey]);
 
   const sidebarMeetings = useMemo(
     () =>
@@ -225,6 +239,10 @@ export default function ModulCourseDetailPage() {
                   <PertemuanContent
                     key={selectedKey}
                     meeting={selectedMeeting}
+                    subjectId={course.subjectId}
+                    classId={course.classId}
+                    meetings={meetings}
+                    onMeetingsChanged={() => setMeetingsVersion((value) => value + 1)}
                   />
                 ) : meetingsLoading && selectedKey !== "info" && selectedKey !== "peserta" ? (
                   <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
