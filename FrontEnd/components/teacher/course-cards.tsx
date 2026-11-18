@@ -56,7 +56,7 @@ function badgeColor(subjectCode: string | null) {
 }
 
 function classLabel(j: JadwalPelajaran) {
-  return `${j.className ?? ""}${j.classSection ? ` - ${j.classSection}` : ""}`.trim() || "-";
+  return j.className?.trim() || "-";
 }
 
 function mapCourses(jadwal: JadwalPelajaran[], todayName: string): Course[] {

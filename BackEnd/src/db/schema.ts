@@ -4,6 +4,7 @@ import {
   index,
   integer,
   pgTable,
+  type PgColumn,
   serial,
   text,
   time,
@@ -317,12 +318,16 @@ export const classes = pgTable(
       .references(() => gradeLevels.id, { onDelete: "cascade" }),
     capacity: integer("capacity").default(10).notNull(),
     isActive: boolean("is_active").default(true).notNull(),
+    advisorId: uuid("advisor_id").references((): PgColumn => users.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
     majorIdx: index("classes_major_idx").on(table.majorId),
     gradeLevelIdx: index("classes_grade_level_idx").on(table.gradeLevelId),
+    advisorIdx: index("classes_advisor_idx").on(table.advisorId),
     nameIdx: index("classes_name_idx").on(
       table.name,
       table.majorId,

@@ -97,9 +97,7 @@ export default function ModulCourseDetailPage() {
   }, [courseClassId]);
 
   const course = rows[0];
-  const classLabel = course
-    ? `${course.className}${course.classSection ? ` ${course.classSection}` : ""}`.trim()
-    : "-";
+  const classLabel = course?.className || "-";
 
   const meetingSubjectId = course?.subjectId ?? null;
   const meetingClassId = course?.classId ?? null;
