@@ -537,6 +537,36 @@ export const masterDataApi = {
         apiFetch<ApiSuccess<CourseMeeting[]>>(
           `/api/v1/course-details/${subjectId}/meetings${queryString({ classId })}`
         ),
+      create: (subjectId: string, body: {
+        classId: string;
+        meetingNumber: number;
+        meetingDate: string;
+        title: string;
+        objective: string;
+      }) =>
+        apiFetch<ApiSuccess<CourseMeeting>>(
+          `/api/v1/course-details/${subjectId}/meetings`,
+          { method: "POST", body: JSON.stringify(body) }
+        ),
+      update: (
+        subjectId: string,
+        meetingNumber: number,
+        body: {
+          classId: string;
+          meetingDate?: string;
+          title?: string;
+          objective?: string;
+        }
+      ) =>
+        apiFetch<ApiSuccess<CourseMeeting>>(
+          `/api/v1/course-details/${subjectId}/meetings/${meetingNumber}`,
+          { method: "PUT", body: JSON.stringify(body) }
+        ),
+      remove: (subjectId: string, meetingNumber: number, classId: string) =>
+        apiFetch<ApiSuccess<unknown>>(
+          `/api/v1/course-details/${subjectId}/meetings/${meetingNumber}${queryString({ classId })}`,
+          { method: "DELETE" }
+        ),
     },
     materials: {
       list: (subjectId: string) =>

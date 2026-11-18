@@ -61,9 +61,19 @@ function PlaceholderBox({
 
 type PertemuanContentProps = {
   meeting: CourseMeeting;
+  subjectId: string;
+  classId: string;
+  meetings: CourseMeeting[];
+  onMeetingsChanged: () => void;
 };
 
-export function PertemuanContent({ meeting }: PertemuanContentProps) {
+export function PertemuanContent({
+  meeting,
+  subjectId,
+  classId,
+  meetings,
+  onMeetingsChanged,
+}: PertemuanContentProps) {
   const [manageOpen, setManageOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<ManageMode | null>(null);
   const status = statusStyle[statusOf(meeting.meetingDate)];
@@ -263,7 +273,11 @@ export function PertemuanContent({ meeting }: PertemuanContentProps) {
                 <ScaleIn key={activeMode}>
                   <ManagePertemuanPanel
                     mode={activeMode}
+                    subjectId={subjectId}
+                    classId={classId}
+                    meetings={meetings}
                     onDone={() => setActiveMode(null)}
+                    onMeetingsChanged={onMeetingsChanged}
                   />
                 </ScaleIn>
               )}
