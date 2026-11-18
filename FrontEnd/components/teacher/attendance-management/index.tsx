@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { FadeIn } from "@/components/ui/animations";
+import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { AttendancePageHeader } from "./page-header";
 import { AttendanceSummaryGrid } from "./summary-grid";
 import { AttendanceTable } from "./attendance-table";
 import { AttendanceToolbar } from "./attendance-toolbar";
-import { pageSize, students as initialStudents } from "./data";
+import { students as initialStudents } from "./data";
 import type {
   AttendanceCounts,
   AttendanceStatus,
@@ -46,7 +46,6 @@ export function AttendanceManagement() {
   const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>("");
   const [meetingFilter, setMeetingFilter] = useState<MeetingFilter>("");
   const [isSessionOpened, setIsSessionOpened] = useState(false);
-  const [page, setPage] = useState(1);
 
   const classRoster = useMemo(
     () => roster.filter((student) => student.className === classFilter),
@@ -63,29 +62,19 @@ export function AttendanceManagement() {
     );
   }, [classRoster]);
 
-  const pageCount = Math.max(1, Math.ceil(classRoster.length / pageSize));
-  const safePage = Math.min(page, pageCount);
-  const visibleStudents = classRoster.slice(
-    (safePage - 1) * pageSize,
-    safePage * pageSize,
-  );
-
   function handleClassChange(value: ClassFilter | "") {
     setClassFilter(value);
     setIsSessionOpened(false);
-    setPage(1);
   }
 
   function handleSubjectChange(value: SubjectFilter) {
     setSubjectFilter(value);
     setIsSessionOpened(false);
-    setPage(1);
   }
 
   function handleMeetingChange(value: MeetingFilter) {
     setMeetingFilter(value);
     setIsSessionOpened(false);
-    setPage(1);
   }
 
   function handleStatusChange(studentId: string, status: AttendanceStatus) {
@@ -104,16 +93,16 @@ export function AttendanceManagement() {
     );
   }
 
-  function handleWhatsApp(student: StudentAttendance) {
-    toast.success("Pesan wali murid disiapkan", {
-      description: `Pesan WhatsApp untuk wali ${student.name} siap dikirim.`,
-    });
+  function handleCancelSession() {
+    setIsSessionOpened(false);
   }
 
-  function handleViewStudent(student: StudentAttendance) {
-    toast.info(`Rekap kehadiran ${student.name}`, {
-      description:
-        "Ringkasan kehadiran semester dan riwayat dispensasi siswa dibuka.",
+  function handleSaveSession() {
+    setIsSessionOpened(false);
+    toast.success("Presensi tersimpan", {
+      description: `Presensi rombel ${classFilter} untuk pertemuan ${
+        meetingFilter ? `ke-${meetingFilter}` : "terpilih"
+      } berhasil disimpan.`,
     });
   }
 
@@ -121,12 +110,14 @@ export function AttendanceManagement() {
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AttendancePageHeader />
 
-      <AttendanceSummaryGrid
-        counts={counts}
-        totalStudents={classRoster.length}
-      />
+      <SlideIn direction="down" delay={0.05}>
+        <AttendanceSummaryGrid
+          counts={counts}
+          totalStudents={classRoster.length}
+        />
+      </SlideIn>
 
-      <FadeIn delay={0.06}>
+      <FadeIn delay={0.12}>
         <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <AttendanceToolbar
             classFilter={classFilter}
@@ -142,16 +133,12 @@ export function AttendanceManagement() {
           />
 
           <AttendanceTable
-            students={visibleStudents}
+            students={classRoster}
             classFilter={classFilter}
-            page={safePage}
-            pageCount={pageCount}
-            filteredCount={classRoster.length}
             opened={isSessionOpened}
-            onPageChange={setPage}
             onStatusChange={handleStatusChange}
-            onWhatsApp={handleWhatsApp}
-            onViewStudent={handleViewStudent}
+            onCancel={handleCancelSession}
+            onSave={handleSaveSession}
           />
         </section>
       </FadeIn>

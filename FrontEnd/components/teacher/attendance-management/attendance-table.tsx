@@ -1,26 +1,16 @@
 "use client";
 
 import {
-  CalendarClock,
-  ChevronLeft,
-  ChevronRight,
+  CheckCircle2,
   ClipboardList,
-  IdCard,
-  MapPin,
-  Medal,
-  MessageCircle,
-  Paperclip,
-  QrCode,
-  ReceiptText,
-  ScanFace,
   Search,
-  TriangleAlert,
+  Undo2,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { pageSize, statusButtonStyles } from "./data";
+import { statusButtonStyles } from "./data";
 import type {
   AttendanceStatus,
-  AttendanceTone,
   ClassFilter,
   StudentAttendance,
 } from "./types";
@@ -28,144 +18,83 @@ import type {
 type AttendanceTableProps = {
   students: StudentAttendance[];
   classFilter: ClassFilter | "";
-  page: number;
-  pageCount: number;
-  filteredCount: number;
   opened: boolean;
-  onPageChange: (page: number) => void;
   onStatusChange: (studentId: string, status: AttendanceStatus) => void;
-  onWhatsApp: (student: StudentAttendance) => void;
-  onViewStudent: (student: StudentAttendance) => void;
+  onCancel: () => void;
+  onSave: () => void;
 };
-
-const noteToneClassName: Record<AttendanceTone, string> = {
-  neutral: "bg-[#F1F5F9] text-[#475569]",
-  success: "bg-[#DCFCE7] text-[#16A34A]",
-  warning: "bg-[#FEF3C7] text-[#D97706]",
-  info: "bg-[#E0F2FE] text-[#0284C7]",
-  danger: "bg-[#FFEBEB] text-[#b71422]",
-};
-
-const methodIcons = {
-  qr: QrCode,
-  geo: MapPin,
-  face: ScanFace,
-  manual: CalendarClock,
-  document: ReceiptText,
-  dispensation: Medal,
-};
-
-const methodIconClassName = {
-  qr: "text-[#16A34A]",
-  geo: "text-[#0284C7]",
-  face: "text-[#16A34A]",
-  manual: "text-[#D97706]",
-  document: "text-[#D97706]",
-  dispensation: "text-[#0284C7]",
-};
-
-function CheckInCell({ student }: { student: StudentAttendance }) {
-  if (student.status === "SAKIT") {
-    return (
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#D97706]">
-        <ReceiptText className="size-3.5 shrink-0" />
-        Surat Dokter Valid
-      </div>
-    );
-  }
-
-  if (student.status === "IZIN") {
-    return (
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#0284C7]">
-        <Medal className="size-3.5 shrink-0" />
-        Dispensasi Sekolah
-      </div>
-    );
-  }
-
-  if (student.status === "ALPA") {
-    return (
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#DC2626]">
-        <TriangleAlert className="size-3.5 shrink-0" />
-        Tidak ada keterangan
-      </div>
-    );
-  }
-
-  const Icon = methodIcons[student.method];
-
-  return (
-    <div className="flex items-center gap-1.5 text-[10px] text-[#334155]">
-      <Icon
-        className={cn("size-3.5 shrink-0", methodIconClassName[student.method])}
-      />
-      <span className="font-semibold">{student.checkInTime ?? "07:30 WITA"}</span>
-      <span className="text-[8px] font-bold uppercase tracking-[0.04em] text-[#94A3B8]">
-        ({student.methodLabel})
-      </span>
-    </div>
-  );
-}
 
 export function AttendanceTable({
   students,
   classFilter,
-  page,
-  pageCount,
-  filteredCount,
   opened,
-  onPageChange,
   onStatusChange,
-  onWhatsApp,
-  onViewStudent,
+  onCancel,
+  onSave,
 }: AttendanceTableProps) {
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = Math.min(startIndex + students.length, filteredCount);
-
-  if (!opened) {
-    return (
-      <div className="flex flex-col items-center justify-center bg-white px-6 py-16 text-center">
-        <span className="flex size-16 items-center justify-center rounded-2xl border border-[#F3C4C4] bg-[#FFEBEB] text-[#b71422]">
-          <ClipboardList className="size-8" />
-        </span>
-        <p className="mt-4 text-sm font-bold text-[#1E293B]">
-          Pilih terlebih dahulu sesi presensi
-        </p>
-        <p className="mt-1 max-w-sm text-[11px] leading-5 text-[#94A3B8]">
-          Lengkapi filter kelas, mata pelajaran, dan pertemuan pada header di
-          atas, lalu klik &quot;Buka presensi&quot;.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white">
+    <AnimatePresence mode="wait">
+      {!opened ? (
+        <motion.div
+          key="placeholder"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col items-center justify-center bg-white px-6 py-16 text-center"
+        >
+          <motion.span
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="flex size-16 items-center justify-center rounded-2xl border border-[#F3C4C4] bg-[#FFEBEB] text-[#b71422]"
+          >
+            <ClipboardList className="size-8" />
+          </motion.span>
+          <p className="mt-4 text-sm font-bold text-[#1E293B]">
+            Pilih terlebih dahulu sesi presensi
+          </p>
+          <p className="mt-1 max-w-sm text-[11px] leading-5 text-[#94A3B8]">
+            Lengkapi filter kelas, mata pelajaran, dan pertemuan pada header di
+            atas, lalu klik &quot;Buka presensi&quot;.
+          </p>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="table"
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -16 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white"
+        >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px] table-fixed border-collapse text-left">
+        <table className="w-full min-w-[640px] table-fixed border-collapse text-left">
           <colgroup>
-            <col className="w-[5%]" />
-            <col className="w-[28%]" />
-            <col className="w-[20%]" />
-            <col className="w-[18%]" />
-            <col className="w-[18%]" />
-            <col className="w-[11%]" />
+            <col className="w-[7%]" />
+            <col className="w-[43%]" />
+            <col className="w-[24%]" />
+            <col className="w-[26%]" />
           </colgroup>
           <thead>
             <tr className="bg-[#EFF4FF] text-[8px] font-bold uppercase tracking-[0.06em] text-[#94A3B8]">
               <th className="px-3 py-3 text-center">No</th>
-              <th className="px-3 py-3">Nama Lengkap &amp; Identitas</th>
+              <th className="px-3 py-3">Nama Lengkap</th>
+              <th className="px-3 py-3">Nomor Induk</th>
               <th className="px-3 py-3 text-center">Status Kehadiran</th>
-              <th className="px-3 py-3">Waktu &amp; Metode Check-in</th>
-              <th className="px-3 py-3">Catatan Guru / Keterangan</th>
-              <th className="px-2 py-3 text-right">Aksi Cepat</th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-[#F1F5F9]">
-            {students.map((student) => (
-              <tr
+            {students.map((student, index) => (
+              <motion.tr
                 key={student.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.3,
+                  delay: Math.min(index * 0.03, 0.45),
+                }}
                 className={cn(
                   "transition-colors hover:bg-[#F8FAFC]",
                   student.status === "SAKIT" && "bg-[#FEF3C7]/10",
@@ -174,7 +103,7 @@ export function AttendanceTable({
                 )}
               >
                 <td className="px-3 py-3 text-center text-[10px] font-bold text-[#94A3B8]">
-                  {student.rollNo}
+                  {index + 1}
                 </td>
 
                 <td className="px-4 py-3">
@@ -187,15 +116,14 @@ export function AttendanceTable({
                     >
                       {student.initials}
                     </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] font-bold text-[#1E293B]">
-                        {student.name}
-                      </p>
-                      <p className="mt-0.5 font-mono text-[9px] font-medium text-[#94A3B8]">
-                        {student.nisn} • {student.gender}
-                      </p>
-                    </div>
+                    <p className="truncate text-[11px] font-bold text-[#1E293B]">
+                      {student.name}
+                    </p>
                   </div>
+                </td>
+
+                <td className="px-3 py-3 font-mono text-[11px] font-medium text-[#475569]">
+                  {student.nisn}
                 </td>
 
                 <td className="px-3 py-3">
@@ -228,56 +156,18 @@ export function AttendanceTable({
                     })}
                   </div>
                 </td>
-
-                <td className="px-3 py-3">
-                  <CheckInCell student={student} />
-                </td>
-
-                <td className="px-3 py-3">
-                  <span
-                    title={student.note}
-                    className={cn(
-                      "inline-flex max-w-[190px] items-center gap-1 truncate rounded-md px-2 py-1 text-[9px] font-semibold",
-                      noteToneClassName[student.noteTone ?? "neutral"],
-                    )}
-                  >
-                    {student.note.includes("PDF") && (
-                      <Paperclip className="size-3 shrink-0" />
-                    )}
-                    <span className="truncate">{student.note}</span>
-                  </span>
-                </td>
-
-                <td className="px-2 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      title={`Hubungi wali ${student.name}`}
-                      aria-label={`Hubungi wali ${student.name}`}
-                      onClick={() => onWhatsApp(student)}
-                      className="flex size-7 items-center justify-center rounded-lg bg-[#F1F5F9] text-[#475569] transition hover:bg-[#FFEBEB] hover:text-[#b71422]"
-                    >
-                      <MessageCircle className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      title={`Lihat rekap ${student.name}`}
-                      aria-label={`Lihat rekap ${student.name}`}
-                      onClick={() => onViewStudent(student)}
-                      className="flex size-7 items-center justify-center rounded-lg bg-[#F1F5F9] text-[#475569] transition hover:bg-[#FFEBEB] hover:text-[#b71422]"
-                    >
-                      <IdCard className="size-3.5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              </motion.tr>
             ))}
           </tbody>
         </table>
       </div>
 
       {students.length === 0 && (
-        <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center px-6 py-12 text-center"
+        >
           <span className="flex size-10 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8]">
             <Search className="size-4" />
           </span>
@@ -285,61 +175,41 @@ export function AttendanceTable({
             Tidak ada siswa yang cocok
           </p>
           <p className="mt-0.5 max-w-sm text-[10px] leading-4 text-[#94A3B8]">
-            Ubah filter status untuk melihat daftar presensi.
+            Ubah filter kelas untuk melihat daftar presensi.
           </p>
-        </div>
+        </motion.div>
       )}
 
-      <div className="flex flex-col gap-3 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-[#F1F5F9] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[10px] font-medium text-[#94A3B8]">
-          Menampilkan baris{" "}
-          <span className="font-bold text-[#475569]">
-            {filteredCount === 0 ? "0" : `${startIndex + 1}–${endIndex}`}
-          </span>{" "}
-          dari total {filteredCount} siswa aktif rombel {classFilter}
+          Menampilkan {students.length} siswa aktif rombel {classFilter || "-"}
         </p>
 
-        <div className="flex items-center gap-1">
-          <button
+        <div className="flex items-center gap-2">
+          <motion.button
             type="button"
-            onClick={() => onPageChange(Math.max(1, page - 1))}
-            disabled={page === 1}
-            className="flex h-7 items-center gap-0.5 rounded-lg bg-[#F1F5F9] px-2 text-[9px] font-bold text-[#475569] transition hover:bg-[#FFEBEB] hover:text-[#b71422] disabled:cursor-not-allowed disabled:opacity-40"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onCancel}
+            className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-300 px-4 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
           >
-            <ChevronLeft className="size-3" />
-            Sebelumnya
-          </button>
-
-          {Array.from({ length: pageCount }, (_, index) => index + 1).map(
-            (pageNumber) => (
-              <button
-                key={pageNumber}
-                type="button"
-                onClick={() => onPageChange(pageNumber)}
-                aria-current={page === pageNumber ? "page" : undefined}
-                className={cn(
-                  "flex size-7 items-center justify-center rounded-lg text-[9px] font-bold transition",
-                  page === pageNumber
-                    ? "bg-[#b71422] text-white shadow-sm"
-                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#FFEBEB] hover:text-[#b71422]",
-                )}
-              >
-                {pageNumber}
-              </button>
-            ),
-          )}
-
-          <button
+            <Undo2 className="size-4" />
+            Batal
+          </motion.button>
+          <motion.button
             type="button"
-            onClick={() => onPageChange(Math.min(pageCount, page + 1))}
-            disabled={page === pageCount}
-            className="flex h-7 items-center gap-0.5 rounded-lg bg-[#F1F5F9] px-2 text-[9px] font-bold text-[#475569] transition hover:bg-[#FFEBEB] hover:text-[#b71422] disabled:cursor-not-allowed disabled:opacity-40"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onSave}
+            className="flex h-9 items-center gap-1.5 rounded-xl bg-[#b71422] px-4 text-xs font-semibold text-white shadow-[0_8px_20px_-8px_rgba(183,20,34,0.7)] transition hover:bg-[#8f0f1a]"
           >
-            Selanjutnya
-            <ChevronRight className="size-3" />
-          </button>
+            <CheckCircle2 className="size-4" />
+            Simpan presensi
+          </motion.button>
         </div>
       </div>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

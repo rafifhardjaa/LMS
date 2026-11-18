@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronDown,
   ClipboardCheck,
@@ -14,7 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import moment from "moment";
-import { cn } from "@/lib/utils";
+import { FadeIn, ScaleIn } from "@/components/ui/animations";
 import type { Meeting } from "./data";
 import {
   ManagePertemuanPanel,
@@ -78,7 +79,7 @@ export function PertemuanContent({
   return (
     <div className="flex min-h-64 flex-1 flex-col gap-4">
       <section className="flex flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-col gap-2 bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+        <FadeIn className="flex flex-col gap-2 bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-[15px] font-bold text-white">{meeting.label}</h2>
             <p className="mt-0.5 text-[12px] font-medium text-white/80">
@@ -98,148 +99,180 @@ export function PertemuanContent({
               {status.label}
             </span>
           </div>
-        </div>
+        </FadeIn>
 
         <div className="flex flex-col gap-5 px-5 py-5">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
-              Materi
-            </p>
-            <p className="mt-1.5 text-[14px] font-semibold text-[#1E293B]">
-              Judul materi menyusul
-            </p>
-            <p className="mt-1 text-[13px] leading-6 text-[#475569]">
-              Tujuan pembelajaran singkat pertemuan ini akan ditampilkan di sini.
-            </p>
-            <div className="mt-3">
-              <PlaceholderBox
-                icon={FileText}
-                text="Lampiran materi (integrasi menyusul)"
-              />
+          <FadeIn delay={0.1}>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                Materi
+              </p>
+              <p className="mt-1.5 text-[14px] font-semibold text-[#1E293B]">
+                Judul materi menyusul
+              </p>
+              <p className="mt-1 text-[13px] leading-6 text-[#475569]">
+                Tujuan pembelajaran singkat pertemuan ini akan ditampilkan di sini.
+              </p>
+              <div className="mt-3">
+                <PlaceholderBox
+                  icon={FileText}
+                  text="Lampiran materi (integrasi menyusul)"
+                />
+              </div>
             </div>
-          </div>
+          </FadeIn>
 
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
-              Tugas
-            </p>
-            <div className="mt-2.5 flex flex-col gap-2.5">
-              <PlaceholderBox icon={FileText} text="File tugas (integrasi menyusul)" />
-              <PlaceholderBox
-                icon={Upload}
-                text="Pengumpulan tugas (integrasi menyusul)"
-              />
+          <FadeIn delay={0.16}>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                Tugas
+              </p>
+              <div className="mt-2.5 flex flex-col gap-2.5">
+                <PlaceholderBox icon={FileText} text="File tugas (integrasi menyusul)" />
+                <PlaceholderBox
+                  icon={Upload}
+                  text="Pengumpulan tugas (integrasi menyusul)"
+                />
+              </div>
             </div>
-          </div>
+          </FadeIn>
 
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
-              Kuis
-            </p>
-            <div className="mt-2.5 flex flex-col gap-2.5">
-              <PlaceholderBox icon={FileText} text="File kuis (integrasi menyusul)" />
-              <PlaceholderBox
-                icon={Upload}
-                text="Pengumpulan kuis (integrasi menyusul)"
-              />
+          <FadeIn delay={0.22}>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                Kuis
+              </p>
+              <div className="mt-2.5 flex flex-col gap-2.5">
+                <PlaceholderBox icon={FileText} text="File kuis (integrasi menyusul)" />
+                <PlaceholderBox
+                  icon={Upload}
+                  text="Pengumpulan kuis (integrasi menyusul)"
+                />
+              </div>
             </div>
-          </div>
+          </FadeIn>
         </div>
 
         <div className="mt-auto flex flex-col items-start justify-between gap-3 border-t border-[#F1F5F9] px-5 py-3.5 sm:flex-row sm:items-center">
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setManageOpen((current) => !current)}
             aria-expanded={manageOpen}
             className="inline-flex h-9 items-center gap-2 rounded-xl border border-[#DCE5EE] bg-[#F8FAFC] px-4 text-[12px] font-bold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
           >
             <Settings2 className="size-4" />
             Manage pertemuan
-            <ChevronDown
-              className={cn(
-                "size-4 transition-transform",
-                manageOpen && "rotate-180",
-              )}
-            />
-          </button>
-          <Link
-            href="/teacher/presensi-siswa"
-            className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white transition hover:bg-[#8f0f1a]"
+            <motion.span
+              animate={{ rotate: manageOpen ? 180 : 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <ChevronDown className="size-4" />
+            </motion.span>
+          </motion.button>
+          <motion.div
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="inline-block"
           >
-            <ClipboardCheck className="size-4" />
-            Buka presensi
-          </Link>
+            <Link
+              href="/teacher/presensi-siswa"
+              className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white transition hover:bg-[#8f0f1a]"
+            >
+              <ClipboardCheck className="size-4" />
+              Buka presensi
+            </Link>
+          </motion.div>
         </div>
       </section>
 
-      {manageOpen && (
-        <section className="rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-          <p className="text-[14px] font-bold text-[#1E293B]">Manage Pertemuan</p>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">
-            Metode Tindakan / Manajemen Data
-          </p>
-          <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => openMode("add")}
-              className="flex items-center gap-2.5 rounded-xl border border-[#DCE5EE] bg-white px-4 py-3 text-left transition hover:border-[#b71422]/30 hover:bg-[#F8FAFC]"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EDFFF6] text-[#7A941F]">
-                <PlusCircle className="size-4" />
-              </span>
-              <span>
-                <span className="block text-[12px] font-bold text-[#1E293B]">
-                  Tambah Baru
+      <AnimatePresence initial={false}>
+        {manageOpen && (
+          <motion.section
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+          >
+            <p className="text-[14px] font-bold text-[#1E293B]">Manage Pertemuan</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">
+              Metode Tindakan / Manajemen Data
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => openMode("add")}
+                className="flex items-center gap-2.5 rounded-xl border border-[#DCE5EE] bg-white px-4 py-3 text-left transition hover:border-[#b71422]/30 hover:bg-[#F8FAFC]"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EDFFF6] text-[#7A941F]">
+                  <PlusCircle className="size-4" />
                 </span>
-                <span className="mt-0.5 block text-[10px] text-[#94A3B8]">
-                  Buat pertemuan baru
+                <span>
+                  <span className="block text-[12px] font-bold text-[#1E293B]">
+                    Tambah Baru
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-[#94A3B8]">
+                    Buat pertemuan baru
+                  </span>
                 </span>
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => openMode("edit")}
-              className="flex items-center gap-2.5 rounded-xl border border-[#DCE5EE] bg-white px-4 py-3 text-left transition hover:border-[#b71422]/30 hover:bg-[#F8FAFC]"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EDF6FF] text-[#006398]">
-                <PencilLine className="size-4" />
-              </span>
-              <span>
-                <span className="block text-[12px] font-bold text-[#1E293B]">
-                  Perbarui
+              </motion.button>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => openMode("edit")}
+                className="flex items-center gap-2.5 rounded-xl border border-[#DCE5EE] bg-white px-4 py-3 text-left transition hover:border-[#b71422]/30 hover:bg-[#F8FAFC]"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EDF6FF] text-[#006398]">
+                  <PencilLine className="size-4" />
                 </span>
-                <span className="mt-0.5 block text-[10px] text-[#94A3B8]">
-                  Ubah data pertemuan
+                <span>
+                  <span className="block text-[12px] font-bold text-[#1E293B]">
+                    Perbarui
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-[#94A3B8]">
+                    Ubah data pertemuan
+                  </span>
                 </span>
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => openMode("delete")}
-              className="flex items-center gap-2.5 rounded-xl border border-[#DCE5EE] bg-white px-4 py-3 text-left transition hover:border-[#ba1a1a]/30 hover:bg-[#FFEBEB]"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#FFEBEB] text-[#ba1a1a]">
-                <Trash2 className="size-4" />
-              </span>
-              <span>
-                <span className="block text-[12px] font-bold text-[#1E293B]">
-                  Hapus
+              </motion.button>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => openMode("delete")}
+                className="flex items-center gap-2.5 rounded-xl border border-[#DCE5EE] bg-white px-4 py-3 text-left transition hover:border-[#ba1a1a]/30 hover:bg-[#FFEBEB]"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#FFEBEB] text-[#ba1a1a]">
+                  <Trash2 className="size-4" />
                 </span>
-                <span className="mt-0.5 block text-[10px] text-[#94A3B8]">
-                  Hapus pertemuan
+                <span>
+                  <span className="block text-[12px] font-bold text-[#1E293B]">
+                    Hapus
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-[#94A3B8]">
+                    Hapus pertemuan
+                  </span>
                 </span>
-              </span>
-            </button>
-          </div>
+              </motion.button>
+            </div>
 
-          {activeMode && (
-            <ManagePertemuanPanel
-              mode={activeMode}
-              onDone={() => setActiveMode(null)}
-            />
-          )}
-        </section>
-      )}
+            <AnimatePresence mode="wait">
+              {activeMode && (
+                <ScaleIn key={activeMode}>
+                  <ManagePertemuanPanel
+                    mode={activeMode}
+                    onDone={() => setActiveMode(null)}
+                  />
+                </ScaleIn>
+              )}
+            </AnimatePresence>
+          </motion.section>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
