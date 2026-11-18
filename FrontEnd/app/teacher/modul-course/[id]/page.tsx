@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import moment from "moment";
 import { AnimatePresence, motion } from "framer-motion";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
-import type { JadwalPelajaran, StudentSummary } from "@/lib/api/master-data";
+import type {
+  CourseMeeting,
+  JadwalPelajaran,
+  StudentSummary,
+} from "@/lib/api/master-data";
 import { CourseSidebar } from "@/components/teacher/modul-management/detail/course-sidebar";
 import { CourseInfoContent } from "@/components/teacher/modul-management/detail/course-info-content";
 import { PesertaTable } from "@/components/teacher/modul-management/detail/peserta-table";
 import { PertemuanContent } from "@/components/teacher/modul-management/detail/pertemuan-content";
-import { meetings } from "@/components/teacher/modul-management/detail/data";
+import { meetings as fallbackMeetings } from "@/components/teacher/modul-management/detail/data";
 
 export default function ModulCourseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -24,6 +29,9 @@ export default function ModulCourseDetailPage() {
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [meetings, setMeetings] = useState<CourseMeeting[]>([]);
+  const [meetingsLoading, setMeetingsLoading] = useState(false);
+  const [meetingsError, setMeetingsError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -92,6 +100,63 @@ export default function ModulCourseDetailPage() {
     ? `${course.className}${course.classSection ? ` ${course.classSection}` : ""}`.trim()
     : "-";
 
+  const meetingSubjectId = course?.subjectId ?? null;
+  const meetingClassId = course?.classId ?? null;
+
+  useEffect(() => {
+    if (!meetingSubjectId || !meetingClassId) return;
+    let active = true;
+    const loadMeetings = async () => {
+      try {
+        setMeetingsLoading(true);
+        const res = await masterDataApi.courseDetails.meetings.list(
+          meetingSubjectId,
+          meetingClassId
+        );
+        if (!active) return;
+        if (res.error) {
+          throw new Error(res.error.message ?? "Gagal memuat pertemuan");
+        }
+        setMeetings(res.data?.data ?? []);
+        setMeetingsError(null);
+      } catch (err) {
+        console.error("Error loading course meetings:", err);
+        if (active) {
+          setMeetings([]);
+          setMeetingsError("Tidak dapat memuat daftar pertemuan.");
+        }
+      } finally {
+        if (active) setMeetingsLoading(false);
+      }
+    };
+    void loadMeetings();
+    return () => {
+      active = false;
+    };
+  }, [meetingClassId, meetingSubjectId]);
+
+  const sidebarMeetings = useMemo(
+    () =>
+      meetings.length
+        ? meetings.map((meeting) => ({
+            label: `Pertemuan ${meeting.meetingNumber}`,
+            date: moment(meeting.meetingDate, ["YYYY-MM-DD"]).format("DD-MM-YYYY"),
+          }))
+        : fallbackMeetings.map((meeting) => ({
+            label: meeting.label,
+            date: meeting.date,
+          })),
+    [meetings]
+  );
+
+  const selectedMeeting = useMemo(
+    () =>
+      meetings.find(
+        (meeting) => `Pertemuan ${meeting.meetingNumber}` === selectedKey
+      ) ?? null,
+    [meetings, selectedKey]
+  );
+
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AnimatePresence mode="wait">
@@ -128,6 +193,7 @@ export default function ModulCourseDetailPage() {
                 selectedKey={selectedKey}
                 onSelect={setSelectedKey}
                 pesertaCount={students.length}
+                meetings={sidebarMeetings}
               />
             </SlideIn>
 
@@ -155,18 +221,23 @@ export default function ModulCourseDetailPage() {
                     loading={studentsLoading}
                     error={studentsError}
                   />
-                ) : meetings.some((m) => m.label === selectedKey) ? (
+                ) : selectedMeeting ? (
                   <PertemuanContent
                     key={selectedKey}
-                    meeting={meetings.find((m) => m.label === selectedKey)!}
-                    waktuMulai={course.waktuMulai}
-                    waktuSelesai={course.waktuSelesai}
+                    meeting={selectedMeeting}
                   />
+                ) : meetingsLoading && selectedKey !== "info" && selectedKey !== "peserta" ? (
+                  <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+                    <p className="text-[13px] font-semibold text-[#94A3B8]">
+                      Memuat pertemuan…
+                    </p>
+                  </div>
                 ) : (
                   <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-dashed border-[#CBD5E1] bg-white/60 px-6 text-center">
                     <p className="text-[13px] font-semibold text-[#94A3B8]">
-                      Konten {meetings.find((m) => m.label === selectedKey)?.label ?? "pertemuan"}{" "}
-                      menyusul
+                      {meetingsError
+                        ? meetingsError
+                        : `Konten ${selectedKey} menyusul`}
                     </p>
                   </div>
                 )}

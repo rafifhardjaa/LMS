@@ -212,6 +212,24 @@ export interface JadwalPelajaranFilters {
   activeOnly?: boolean;
 }
 
+export interface CourseMeeting {
+  meetingNumber: number;
+  meetingDate: string;
+  day: string;
+  title: string;
+  objective: string;
+  teacherName: string | null;
+  teacherCode: string | null;
+  startTime: string | null;
+  endTime: string | null;
+}
+
+export interface CourseMaterial {
+  meetingNumber: number;
+  title: string;
+  objective: string;
+}
+
 export interface MajorInput {
   code: string;
   name: string;
@@ -512,6 +530,20 @@ export const masterDataApi = {
         `/api/v1/teacher-assignments/${id}`,
         { method: "DELETE" }
       ),
+  },
+  courseDetails: {
+    meetings: {
+      list: (subjectId: string, classId: string) =>
+        apiFetch<ApiSuccess<CourseMeeting[]>>(
+          `/api/v1/course-details/${subjectId}/meetings${queryString({ classId })}`
+        ),
+    },
+    materials: {
+      list: (subjectId: string) =>
+        apiFetch<ApiSuccess<CourseMaterial[]>>(
+          `/api/v1/course-details/${subjectId}/materials`
+        ),
+    },
   },
   modules: {
     list: () =>

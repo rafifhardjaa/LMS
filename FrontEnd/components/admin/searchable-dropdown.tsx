@@ -24,7 +24,7 @@ interface SearchableDropdownProps {
   id?: string;
   searchPlaceholder?: string;
   emptyMessage?: string;
-  variant?: "admin" | "ghost";
+  variant?: "admin" | "ghost" | "light";
 }
 
 export function SearchableDropdown({
@@ -83,9 +83,13 @@ export function SearchableDropdown({
             ? `flex min-h-9 w-full items-center justify-between rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-left text-[11px] font-semibold text-white transition-all hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50 ${
                 open ? "bg-white/15" : ""
               }`
-            : `flex min-h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 py-2 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
-                open ? "shadow-[0_2px_10px_-2px_rgba(32,44,90,0.12)]" : ""
-              }`
+            : variant === "light"
+              ? `flex min-h-11 w-full items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3.5 py-2 text-left text-xs font-semibold text-[#1E293B] transition-all focus:border-[#b71422] focus:outline-none focus:ring-2 focus:ring-[#b71422]/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
+                  open ? "border-[#b71422]" : ""
+                }`
+              : `flex min-h-11 w-full items-center justify-between rounded-full bg-[#f1f4f9] px-4 py-2 text-left text-sm text-[#181c20] transition-all focus:outline-none focus:ring-2 focus:ring-[#6c5dd3]/30 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${
+                  open ? "shadow-[0_2px_10px_-2px_rgba(32,44,90,0.12)]" : ""
+                }`
         }
       >
         <div className="flex min-w-0 items-center gap-2.5">
@@ -135,16 +139,30 @@ export function SearchableDropdown({
                   }}
                   className={`flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 transition-colors ${
                     active
-                      ? "bg-[#6C5DD3]/10 font-semibold text-[#6C5DD3]"
+                      ? variant === "light"
+                        ? "bg-[#b71422]/10 font-semibold text-[#b71422]"
+                        : "bg-[#6C5DD3]/10 font-semibold text-[#6C5DD3]"
                       : "font-medium text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`size-2 rounded-full ${active ? "bg-[#6C5DD3]" : "bg-slate-300"}`} />
+                    <span
+                      className={`size-2 rounded-full ${
+                        active
+                          ? variant === "light"
+                            ? "bg-[#b71422]"
+                            : "bg-[#6C5DD3]"
+                          : "bg-slate-300"
+                      }`}
+                    />
                     <span className="break-words" title={option.label}>{option.label}</span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    {active && <Check className="size-4 text-[#6C5DD3]" />}
+                    {active && (
+                      <Check
+                        className={`size-4 ${variant === "light" ? "text-[#b71422]" : "text-[#6C5DD3]"}`}
+                      />
+                    )}
                   </div>
                 </li>
               );
