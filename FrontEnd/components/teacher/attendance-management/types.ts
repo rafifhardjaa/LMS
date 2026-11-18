@@ -15,8 +15,8 @@ export type AttendanceTone =
   | "info"
   | "danger";
 export type ClassFilter = "VII-A" | "VII-B" | "VIII-A" | "VIII-C";
-export type SessionFilter = "today" | "yesterday" | "last-week";
-export type StatusFilter = "ALL" | AttendanceStatus;
+export type SubjectFilter = string;
+export type MeetingFilter = string;
 
 export type StudentAttendance = {
   id: string;
