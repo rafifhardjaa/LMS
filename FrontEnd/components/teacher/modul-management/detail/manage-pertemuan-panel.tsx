@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -134,15 +135,19 @@ export function ManagePertemuanPanel({
             <span>Data pertemuan mengikuti kurikulum</span>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               onClick={onDone}
               className="rounded-xl border border-slate-300 px-5 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
             >
               Batal
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               onClick={handleSubmit}
               className={cn(
                 "rounded-xl px-6 py-2.5 text-xs font-semibold text-white shadow-md transition",
@@ -152,7 +157,7 @@ export function ManagePertemuanPanel({
               )}
             >
               {modeMeta[mode].submit}
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>

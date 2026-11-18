@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BookOpen, Users } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { FadeIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { JadwalPelajaran } from "@/lib/api/master-data";
@@ -83,29 +84,33 @@ export function ModulesManagement() {
 
       <KpiGrid kpis={kpis} />
 
-      {error ? (
-        <FadeIn>
-          <div className="rounded-2xl bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#b91c1c] shadow-sm">
-            {error}
-          </div>
-        </FadeIn>
-      ) : loading ? (
-        <FadeIn>
-          <div className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-            <div className="animate-pulse space-y-3 border-b border-[#E2E8F0] px-5 py-4">
-              <div className="h-4 w-1/3 rounded bg-[#E2E8F0]" />
-              <div className="h-3 w-1/4 rounded bg-[#E2E8F0]" />
+      <AnimatePresence mode="wait">
+        {error ? (
+          <FadeIn key="error">
+            <div className="rounded-2xl bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#b91c1c] shadow-sm">
+              {error}
             </div>
-            <div className="animate-pulse space-y-2 p-5">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={`skeleton-${i}`} className="h-8 w-full rounded bg-[#F1F5F9]" />
-              ))}
+          </FadeIn>
+        ) : loading ? (
+          <FadeIn key="loading">
+            <div className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+              <div className="animate-pulse space-y-3 border-b border-[#E2E8F0] px-5 py-4">
+                <div className="h-4 w-1/3 rounded bg-[#E2E8F0]" />
+                <div className="h-3 w-1/4 rounded bg-[#E2E8F0]" />
+              </div>
+              <div className="animate-pulse space-y-2 p-5">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={`skeleton-${i}`} className="h-8 w-full rounded bg-[#F1F5F9]" />
+                ))}
+              </div>
             </div>
-          </div>
-        </FadeIn>
-      ) : (
-        <CourseTable rows={rows} />
-      )}
+          </FadeIn>
+        ) : (
+          <FadeIn key="table">
+            <CourseTable rows={rows} />
+          </FadeIn>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
         <FadeIn delay={0.1} className="lg:col-span-7">
@@ -113,8 +118,12 @@ export function ModulesManagement() {
         </FadeIn>
 
         <FadeIn delay={0.16} className="flex flex-col gap-4 lg:col-span-5">
-          <AdminPanel items={adminItems} />
-          <DapodikPanel courseCount={classCount} />
+          <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+            <AdminPanel items={adminItems} />
+          </motion.div>
+          <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+            <DapodikPanel courseCount={classCount} />
+          </motion.div>
         </FadeIn>
       </div>
     </div>

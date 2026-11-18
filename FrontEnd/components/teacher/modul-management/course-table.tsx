@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, Search } from "lucide-react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import moment from "moment";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -63,8 +64,11 @@ export function CourseTable({ rows }: CourseTableProps) {
             {sorted.map((row, index) => {
               const isToday = row.hari === todayName;
               return (
-                <tr
+                <motion.tr
                   key={row.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.4) }}
                   style={{ backgroundColor: ROW_BG[index % 3] }}
                   className="transition-colors hover:brightness-[0.97]"
                 >
@@ -85,20 +89,26 @@ export function CourseTable({ rows }: CourseTableProps) {
                   </td>
                   <td className="px-5 py-2.5">
                     <div className="flex items-center justify-end">
-                      <Link
-                        href={`/teacher/modul-course/${row.classId}--${row.subjectId}`}
-                        className={`inline-flex h-7 items-center gap-1 rounded-lg border px-2 text-[9px] font-bold transition ${
-                          isToday
-                            ? "border-[#b7e831] bg-[#b7e831]/20 text-[#7A941F] hover:border-[#b7e831]"
-                            : "border-[#DCE5EE] bg-[#F8FAFC] text-[#475569] hover:border-[#b71422]/30 hover:text-[#b71422]"
-                        }`}
+                      <motion.div
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        className="inline-block"
                       >
-                        <Eye className="size-3" />
-                        Lihat detail
-                      </Link>
+                        <Link
+                          href={`/teacher/modul-course/${row.classId}--${row.subjectId}`}
+                          className={`inline-flex h-7 items-center gap-1 rounded-lg border px-2 text-[9px] font-bold transition ${
+                            isToday
+                              ? "border-[#b7e831] bg-[#b7e831]/20 text-[#7A941F] hover:border-[#b7e831]"
+                              : "border-[#DCE5EE] bg-[#F8FAFC] text-[#475569] hover:border-[#b71422]/30 hover:text-[#b71422]"
+                          }`}
+                        >
+                          <Eye className="size-3" />
+                          Lihat detail
+                        </Link>
+                      </motion.div>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               );
             })}
           </tbody>
