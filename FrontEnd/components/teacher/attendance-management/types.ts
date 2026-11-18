@@ -14,7 +14,6 @@ export type AttendanceTone =
   | "warning"
   | "info"
   | "danger";
-export type ClassFilter = "VII-A" | "VII-B" | "VIII-A" | "VIII-C";
 export type SubjectFilter = string;
 export type MeetingFilter = string;
 
@@ -26,7 +25,7 @@ export type StudentAttendance = {
   nisn: string;
   gender: "Lk" | "Pr";
   rollNo: string;
-  className: ClassFilter;
+  className: string;
   status: AttendanceStatus;
   checkInTime?: string;
   method: CheckInMethod;

@@ -73,7 +73,7 @@ export function CourseTable({ rows }: CourseTableProps) {
                   className="transition-colors hover:brightness-[0.97]"
                 >
                   <td className="px-5 py-2.5 text-[11px] font-bold text-[#1E293B]">
-                    {`${row.className}${row.classSection ? ` - ${row.classSection}` : ""}`.trim() || "-"}
+                    {row.className || "-"}
                   </td>
                   <td className="px-3 py-2.5 text-[11px] font-medium text-[#475569]">
                     {row.subjectName}

@@ -7,58 +7,52 @@ import {
   StaggerChildren,
   StaggerItem,
 } from "@/components/ui/animations";
-import {
-  classOptions,
-  meetingOptions,
-  subjectOptions,
-} from "./data";
-import type {
-  AttendanceCounts,
-  ClassFilter,
-  MeetingFilter,
-  SubjectFilter,
-} from "./types";
+import type { AttendanceDate } from "@/lib/api/master-data";
+import type { AttendanceCounts } from "./types";
+
+export type DropdownOption = { value: string; label: string };
 
 type AttendanceToolbarProps = {
-  classFilter: ClassFilter | "";
-  subjectFilter: SubjectFilter;
-  meetingFilter: MeetingFilter;
+  classOptions: DropdownOption[];
+  dateOptions: DropdownOption[];
+  classFilter: string;
+  dateFilter: string;
   opened: boolean;
+  canOpen: boolean;
   counts: AttendanceCounts;
   studentCount: number;
-  onClassChange: (value: ClassFilter | "") => void;
-  onSubjectChange: (value: SubjectFilter) => void;
-  onMeetingChange: (value: MeetingFilter) => void;
+  selectedClassLabel: string;
+  selectedDate: AttendanceDate | null;
+  onClassChange: (value: string) => void;
+  onDateChange: (value: string) => void;
   onOpenSession: () => void;
 };
 
 export function AttendanceToolbar({
+  classOptions,
+  dateOptions,
   classFilter,
-  subjectFilter,
-  meetingFilter,
+  dateFilter,
   opened,
+  canOpen,
   counts,
   studentCount,
+  selectedClassLabel,
+  selectedDate,
   onClassChange,
-  onSubjectChange,
-  onMeetingChange,
+  onDateChange,
   onOpenSession,
 }: AttendanceToolbarProps) {
-  const isReady = Boolean(classFilter && subjectFilter && meetingFilter);
+  const isReady = Boolean(classFilter && dateFilter);
   const summaryItems: { label: string; value: number; dot: string }[] = [
     { label: "Hadir", value: counts.HADIR, dot: "bg-[#22C55E]" },
     { label: "Sakit", value: counts.SAKIT, dot: "bg-[#F59E0B]" },
     { label: "Izin", value: counts.IZIN, dot: "bg-[#38BDF8]" },
     { label: "Alpa", value: counts.ALPA, dot: "bg-[#EF4444]" },
   ];
-  const classLabel =
-    classOptions.find((option) => option.value === classFilter)?.label ?? "-";
-  const subjectLabel =
-    subjectOptions.find((option) => option.value === subjectFilter)?.label ??
-    "-";
-  const meetingLabel =
-    meetingOptions.find((option) => option.value === meetingFilter)?.label ??
-    "-";
+  const subjectNames = (selectedDate?.subjects ?? [])
+    .map((subject) => subject.name)
+    .join(", ");
 
   return (
     <div className="flex flex-col gap-3 bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-4 py-4">
@@ -75,7 +69,7 @@ export function AttendanceToolbar({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
         <div className="flex w-full flex-col gap-3 lg:min-w-0 lg:flex-1">
           <StaggerChildren
-            className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-full"
+            className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:w-full"
             staggerDelay={0.08}
             delayChildren={0.05}
           >
@@ -88,31 +82,19 @@ export function AttendanceToolbar({
                 searchPlaceholder="Cari kelas..."
                 emptyMessage="Kelas tidak ditemukan."
                 variant="ghost"
-                onChange={(value) => onClassChange(value as ClassFilter | "")}
+                onChange={onClassChange}
               />
             </StaggerItem>
-            <StaggerItem key="subject">
+            <StaggerItem key="date">
               <SearchableDropdown
-                id="attendance-subject"
-                value={subjectFilter}
-                options={subjectOptions}
-                label="Pilih mata pelajaran"
-                searchPlaceholder="Cari mata pelajaran..."
-                emptyMessage="Mata pelajaran tidak ditemukan."
+                id="attendance-date"
+                value={dateFilter}
+                options={dateOptions}
+                label="Pilih tanggal presensi"
+                searchPlaceholder="Cari tanggal..."
+                emptyMessage="Tanggal tidak ditemukan."
                 variant="ghost"
-                onChange={onSubjectChange}
-              />
-            </StaggerItem>
-            <StaggerItem key="meeting">
-              <SearchableDropdown
-                id="attendance-meeting"
-                value={meetingFilter}
-                options={meetingOptions}
-                label="Pilih pertemuan"
-                searchPlaceholder="Cari pertemuan..."
-                emptyMessage="Pertemuan tidak ditemukan."
-                variant="ghost"
-                onChange={onMeetingChange}
+                onChange={onDateChange}
               />
             </StaggerItem>
           </StaggerChildren>
@@ -128,7 +110,7 @@ export function AttendanceToolbar({
                 className="w-full rounded-xl border border-white/15 bg-white/10 p-3 lg:w-full"
               >
                 <p className="text-[9px] font-bold uppercase tracking-[0.06em] text-white/70">
-                  Kondisi Kehadiran Hari Ini
+                  Kondisi Kehadiran Siswa
                 </p>
                 <StaggerChildren className="mt-2 grid grid-cols-4 gap-2" staggerDelay={0.06}>
                   {summaryItems.map((item) => (
@@ -146,7 +128,7 @@ export function AttendanceToolbar({
                   ))}
                 </StaggerChildren>
                 <p className="mt-2 text-[10px] leading-4 text-white/70">
-                  Sesi siap dibuka — klik Buka presensi untuk menampilkan daftar
+                  Pilih tanggal, lalu klik Buka presensi untuk menampilkan daftar
                   siswa.
                 </p>
               </motion.div>
@@ -188,7 +170,7 @@ export function AttendanceToolbar({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.92 }}
               transition={{ duration: 0.25 }}
-              className="w-full rounded-xl border border-[#F3C4C4] bg-white p-3 shadow-sm lg:w-[320px] lg:shrink-0"
+              className="w-full rounded-xl border border-[#F3C4C4] bg-white p-3 shadow-sm lg:w-[360px] lg:shrink-0"
             >
               <div className="flex items-center gap-2">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#FFEBEB] text-[#b71422]">
@@ -197,40 +179,53 @@ export function AttendanceToolbar({
                 <p className="text-xs font-bold text-[#181c20]">
                   Sesi presensi terpilih
                 </p>
-                <span className="ml-auto rounded-full bg-[#EDFFF6] px-2 py-0.5 text-[9px] font-bold text-[#7A941F]">
-                  Siap dibuka
+                <span
+                  className={`ml-auto rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                    canOpen
+                      ? "bg-[#EDFFF6] text-[#7A941F]"
+                      : "bg-[#FFEBEB] text-[#ba1a1a]"
+                  }`}
+                >
+                  {canOpen ? "Wali kelas" : "Bukan wali kelas"}
                 </span>
               </div>
               <div className="mt-2 text-[11px] leading-5 text-[#787584]">
                 <p>
                   <span className="font-semibold text-[#181c20]">Kelas:</span>{" "}
-                  {classLabel}
+                  {selectedClassLabel}
                 </p>
                 <p>
-                  <span className="font-semibold text-[#181c20]">
-                    Mata Pelajaran:
-                  </span>{" "}
-                  {subjectLabel}
+                  <span className="font-semibold text-[#181c20]">Tanggal:</span>{" "}
+                  {selectedDate
+                    ? `${selectedDate.day}, ${selectedDate.date}`
+                    : "-"}
                 </p>
                 <p>
-                  <span className="font-semibold text-[#181c20]">
-                    Pertemuan:
-                  </span>{" "}
-                  {meetingLabel}
-                </p>
-                <p>
-                  <span className="font-semibold text-[#181c20]">
-                    Jumlah Siswa:
-                  </span>{" "}
+                  <span className="font-semibold text-[#181c20]">Jumlah Siswa:</span>{" "}
                   {studentCount} Siswa
                 </p>
+                <p>
+                  <span className="font-semibold text-[#181c20]">Jumlah Mapel:</span>{" "}
+                  {selectedDate?.subjectCount ?? 0} Mapel
+                </p>
+                {subjectNames ? (
+                  <p title={subjectNames}>
+                    <span className="font-semibold text-[#181c20]">Mapel:</span>{" "}
+                    <span className="line-clamp-2">{subjectNames}</span>
+                  </p>
+                ) : null}
               </div>
+              {!canOpen ? (
+                <p className="mt-2 rounded-lg bg-[#FFEBEB] px-2.5 py-1.5 text-[10px] leading-4 text-[#ba1a1a]">
+                  Hanya wali kelas yang dapat membuka presensi kelas ini.
+                </p>
+              ) : null}
               <motion.button
                 type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: canOpen && !opened ? 1.02 : 1 }}
+                whileTap={{ scale: canOpen && !opened ? 0.97 : 1 }}
                 onClick={onOpenSession}
-                disabled={opened}
+                disabled={!canOpen || opened}
                 className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#b71422] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#8f0f1a] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <ClipboardCheck className="size-4" />
