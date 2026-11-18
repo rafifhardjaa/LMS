@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, ChevronDown, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { meetings } from "./data";
@@ -36,8 +37,10 @@ export function CourseSidebar({
       </div>
 
       <div className="border-b border-[#F1F5F9] py-3">
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => onSelect("peserta")}
           className={cn(
             "flex w-full items-center gap-2 rounded-lg px-1 py-1 text-left text-[14px] font-bold transition-colors hover:bg-[#F8FAFC]",
@@ -46,7 +49,7 @@ export function CourseSidebar({
         >
           <Users className="size-4 text-[#006398]" />
           Peserta
-        </button>
+        </motion.button>
         <p className="mt-0.5 pl-7 text-[11px] text-[#94A3B8]">
           {pesertaCount === null || pesertaCount === undefined
             ? "Konten menyusul"
@@ -55,8 +58,10 @@ export function CourseSidebar({
       </div>
 
       <div className="pt-3">
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => setCourseOpen((current) => !current)}
           aria-expanded={courseOpen}
           className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-left"
@@ -65,63 +70,75 @@ export function CourseSidebar({
             <BookOpen className="size-4 text-[#006398]" />
             Course
           </span>
-          <ChevronDown
-            className={cn(
-              "size-4.5 text-[#94A3B8] transition-transform",
-              courseOpen && "rotate-180",
-            )}
-          />
-        </button>
+          <motion.span
+            animate={{ rotate: courseOpen ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <ChevronDown className="size-4.5 text-[#94A3B8]" />
+          </motion.span>
+        </motion.button>
 
-        {courseOpen && (
-          <ul className="mt-2 divide-y divide-[#E2E8F0]">
-            <li>
-              <button
-                type="button"
-                onClick={() => onSelect("info")}
-                className={cn(
-                  "w-full px-1 py-2.5 text-left transition-colors hover:bg-[#F8FAFC]",
-                  selectedKey === "info" && "bg-[#F8FAFC]",
-                )}
-              >
-                <p
-                  className={cn(
-                    "text-[13px] font-bold",
-                    selectedKey === "info"
-                      ? "text-[#b71422]"
-                      : "text-[#1E293B]",
-                  )}
-                >
-                  Info pembelajaran
-                </p>
-              </button>
-            </li>
-            {meetings.map((meeting) => (
-              <li key={meeting.label}>
-                <button
+        <AnimatePresence initial={false}>
+          {courseOpen && (
+            <motion.ul
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="mt-2 divide-y divide-[#E2E8F0] overflow-hidden"
+            >
+              <li>
+                <motion.button
                   type="button"
-                  onClick={() => onSelect(meeting.label)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => onSelect("info")}
                   className={cn(
                     "w-full px-1 py-2.5 text-left transition-colors hover:bg-[#F8FAFC]",
-                    selectedKey === meeting.label && "bg-[#F8FAFC]",
+                    selectedKey === "info" && "bg-[#F8FAFC]",
                   )}
                 >
                   <p
                     className={cn(
                       "text-[13px] font-bold",
-                      selectedKey === meeting.label
+                      selectedKey === "info"
                         ? "text-[#b71422]"
                         : "text-[#1E293B]",
                     )}
                   >
-                    {meeting.label}
+                    Info pembelajaran
                   </p>
-                  <p className="mt-0.5 text-[11px] text-[#94A3B8]">{meeting.date}</p>
-                </button>
+                </motion.button>
               </li>
-            ))}
-          </ul>
-        )}
+              {meetings.map((meeting) => (
+                <li key={meeting.label}>
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => onSelect(meeting.label)}
+                    className={cn(
+                      "w-full px-1 py-2.5 text-left transition-colors hover:bg-[#F8FAFC]",
+                      selectedKey === meeting.label && "bg-[#F8FAFC]",
+                    )}
+                  >
+                    <p
+                      className={cn(
+                        "text-[13px] font-bold",
+                        selectedKey === meeting.label
+                          ? "text-[#b71422]"
+                          : "text-[#1E293B]",
+                      )}
+                    >
+                      {meeting.label}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-[#94A3B8]">{meeting.date}</p>
+                  </motion.button>
+                </li>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </div>
     </aside>
   );

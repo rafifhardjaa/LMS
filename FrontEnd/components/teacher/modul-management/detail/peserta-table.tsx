@@ -1,6 +1,8 @@
 "use client";
 
 import { Search, UserRound } from "lucide-react";
+import { motion } from "framer-motion";
+import { FadeIn } from "@/components/ui/animations";
 import type { StudentSummary } from "@/lib/api/master-data";
 
 const ROW_BG = ["#FFEDED", "#EDFFF6", "#EDF6FF"];
@@ -53,14 +55,17 @@ export function PesertaTable({
       </div>
 
       {error ? (
-        <div className="m-5 rounded-2xl bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#b91c1c]">
+        <FadeIn className="m-5 rounded-2xl bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#b91c1c]">
           {error}
-        </div>
+        </FadeIn>
       ) : loading ? (
-        <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
-          <p className="text-[13px] font-semibold text-[#94A3B8]">
-            Memuat daftar peserta…
-          </p>
+        <div className="flex flex-col gap-2 p-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={`skeleton-${i}`}
+              className="h-9 w-full animate-pulse rounded-lg bg-[#F1F5F9]"
+            />
+          ))}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -77,8 +82,14 @@ export function PesertaTable({
 
             <tbody className="divide-y divide-[#F1F5F9]">
               {students.map((student, index) => (
-                <tr
+                <motion.tr
                   key={student.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: Math.min(index * 0.03, 0.45),
+                  }}
                   style={{ backgroundColor: ROW_BG[index % 3] }}
                   className="transition-colors hover:brightness-[0.97]"
                 >
@@ -114,7 +125,7 @@ export function PesertaTable({
                       </span>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
@@ -122,7 +133,7 @@ export function PesertaTable({
       )}
 
       {!loading && !error && students.length === 0 && (
-        <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+        <FadeIn className="flex flex-col items-center justify-center px-6 py-10 text-center">
           <span className="flex size-10 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8]">
             <Search className="size-4" />
           </span>
@@ -132,7 +143,7 @@ export function PesertaTable({
           <p className="mt-0.5 max-w-sm text-[10px] leading-4 text-[#94A3B8]">
             Data siswa akan tampil setelah siswa terdaftar pada kelas tersebut.
           </p>
-        </div>
+        </FadeIn>
       )}
     </section>
   );
