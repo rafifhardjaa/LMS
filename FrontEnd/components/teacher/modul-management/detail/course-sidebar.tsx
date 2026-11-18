@@ -4,7 +4,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, ChevronDown, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { meetings } from "./data";
+
+export type MeetingListItem = {
+  label: string;
+  date: string;
+};
 
 type CourseSidebarProps = {
   subjectName: string;
@@ -13,6 +17,7 @@ type CourseSidebarProps = {
   selectedKey: string;
   onSelect: (key: string) => void;
   pesertaCount?: number | null;
+  meetings: MeetingListItem[];
 };
 
 export function CourseSidebar({
@@ -22,6 +27,7 @@ export function CourseSidebar({
   selectedKey,
   onSelect,
   pesertaCount,
+  meetings,
 }: CourseSidebarProps) {
   const [courseOpen, setCourseOpen] = useState(true);
 

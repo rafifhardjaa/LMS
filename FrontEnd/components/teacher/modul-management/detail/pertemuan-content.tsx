@@ -16,20 +16,22 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { FadeIn, ScaleIn } from "@/components/ui/animations";
-import type { Meeting } from "./data";
+import type { CourseMeeting } from "@/lib/api/master-data";
 import {
   ManagePertemuanPanel,
   type ManageMode,
 } from "./manage-pertemuan-panel";
 
 function formatDateLabel(date: string): string {
-  return moment(date, "DD-MM-YYYY").locale("id").format("dddd, D MMMM YYYY");
+  return moment(date, ["DD-MM-YYYY", "YYYY-MM-DD"])
+    .locale("id")
+    .format("dddd, D MMMM YYYY");
 }
 
 type PertemuanStatus = "selesai" | "berlangsung" | "akan-datang";
 
 function statusOf(date: string): PertemuanStatus {
-  const meeting = moment(date, "DD-MM-YYYY").startOf("day");
+  const meeting = moment(date, ["DD-MM-YYYY", "YYYY-MM-DD"]).startOf("day");
   const today = moment().startOf("day");
   if (meeting.isBefore(today)) return "selesai";
   if (meeting.isSame(today)) return "berlangsung";
@@ -58,19 +60,13 @@ function PlaceholderBox({
 }
 
 type PertemuanContentProps = {
-  meeting: Meeting;
-  waktuMulai?: string;
-  waktuSelesai?: string;
+  meeting: CourseMeeting;
 };
 
-export function PertemuanContent({
-  meeting,
-  waktuMulai,
-  waktuSelesai,
-}: PertemuanContentProps) {
+export function PertemuanContent({ meeting }: PertemuanContentProps) {
   const [manageOpen, setManageOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<ManageMode | null>(null);
-  const status = statusStyle[statusOf(meeting.date)];
+  const status = statusStyle[statusOf(meeting.meetingDate)];
 
   function openMode(mode: ManageMode) {
     setActiveMode(mode);
@@ -81,16 +77,18 @@ export function PertemuanContent({
       <section className="flex flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <FadeIn className="flex flex-col gap-2 bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-[15px] font-bold text-white">{meeting.label}</h2>
+            <h2 className="text-[15px] font-bold text-white">
+              Pertemuan {meeting.meetingNumber}
+            </h2>
             <p className="mt-0.5 text-[12px] font-medium text-white/80">
-              {formatDateLabel(meeting.date)}
+              {formatDateLabel(meeting.meetingDate)} · {meeting.day}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {waktuMulai && waktuSelesai && (
+            {meeting.startTime && meeting.endTime && (
               <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white">
                 <Clock className="size-3" />
-                {`${waktuMulai} - ${waktuSelesai}`}
+                {`${meeting.startTime} - ${meeting.endTime}`}
               </span>
             )}
             <span
@@ -108,10 +106,10 @@ export function PertemuanContent({
                 Materi
               </p>
               <p className="mt-1.5 text-[14px] font-semibold text-[#1E293B]">
-                Judul materi menyusul
+                {meeting.title}
               </p>
               <p className="mt-1 text-[13px] leading-6 text-[#475569]">
-                Tujuan pembelajaran singkat pertemuan ini akan ditampilkan di sini.
+                {meeting.objective}
               </p>
               <div className="mt-3">
                 <PlaceholderBox
