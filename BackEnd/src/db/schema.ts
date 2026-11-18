@@ -101,6 +101,11 @@ export const subjects = pgTable(
     code: varchar("code", { length: 100 }).notNull(),
     description: text("description"),
     capaianPembelajaran: text("capaian_pembelajaran"),
+    courseCode: varchar("course_code", { length: 50 }),
+    sourceSubjectCode: varchar("source_subject_code", { length: 50 }),
+    fase: varchar("fase", { length: 5 }),
+    subjectGroup: varchar("subject_group", { length: 50 }),
+    meetingCount: integer("meeting_count").default(16),
     // Mata pelajaran kejuruan wajib memiliki jurusan; mapel umum harus null.
     majorId: uuid("major_id").references(() => majors.id, {
       onDelete: "set null",
@@ -130,6 +135,9 @@ export const subjects = pgTable(
       ),
     majorIdx: index("subjects_major_idx").on(table.majorId),
     gradeLevelIdx: index("subjects_grade_level_idx").on(table.gradeLevelId),
+    courseCodeUnique: uniqueIndex("subjects_course_code_unique_idx").on(
+      table.courseCode
+    ),
   })
 );
 
@@ -437,6 +445,60 @@ export const jadwalPelajaran = pgTable(
   })
 );
 
+// ── Detail course (materi & pertemuan per kelas) ──────────────────────────
+
+export const courseMaterials = pgTable(
+  "course_materials",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    meetingNumber: integer("meeting_number").notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    objective: text("objective").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    subjectMeetingUnique: uniqueIndex("course_materials_unique_idx").on(
+      table.subjectId,
+      table.meetingNumber
+    ),
+    subjectIdx: index("course_materials_subject_idx").on(table.subjectId),
+  })
+);
+
+export const courseMeetings = pgTable(
+  "course_meetings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    teacherId: uuid("teacher_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    meetingNumber: integer("meeting_number").notNull(),
+    meetingDate: date("meeting_date", { mode: "string" }).notNull(),
+    day: varchar("day", { length: 10 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    subjectClassMeetingUnique: uniqueIndex(
+      "course_meetings_unique_idx"
+    ).on(table.subjectId, table.classId, table.meetingNumber),
+    classSubjectIdx: index("course_meetings_class_subject_idx").on(
+      table.classId,
+      table.subjectId
+    ),
+    teacherIdx: index("course_meetings_teacher_idx").on(table.teacherId),
+    meetingDateIdx: index("course_meetings_date_idx").on(table.meetingDate),
+  })
+);
+
 // ── Relasi (WAJIB: users ↔ roles via user_roles) ───────────────────────
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -494,6 +556,8 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
   modules: many(modules),
   teacherSubjects: many(teacherSubjects),
   teachingAssignments: many(teachingAssignments),
+  courseMaterials: many(courseMaterials),
+  courseMeetings: many(courseMeetings),
 }));
 
 export const modulesRelations = relations(modules, ({ one, many }) => ({
@@ -610,6 +674,7 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
   teachers: many(teacherClassrooms),
   teachingAssignments: many(teachingAssignments),
   jadwalPelajaran: many(jadwalPelajaran),
+  courseMeetings: many(courseMeetings),
 }));
 
 export const teacherSubjectsRelations = relations(teacherSubjects, ({ one }) => ({
@@ -666,3 +731,31 @@ export const jadwalPelajaranRelations = relations(jadwalPelajaran, ({ one }) => 
     references: [users.id],
   }),
 }));
+
+export const courseMaterialsRelations = relations(
+  courseMaterials,
+  ({ one }) => ({
+    subject: one(subjects, {
+      fields: [courseMaterials.subjectId],
+      references: [subjects.id],
+    }),
+  })
+);
+
+export const courseMeetingsRelations = relations(
+  courseMeetings,
+  ({ one }) => ({
+    subject: one(subjects, {
+      fields: [courseMeetings.subjectId],
+      references: [subjects.id],
+    }),
+    class: one(classes, {
+      fields: [courseMeetings.classId],
+      references: [classes.id],
+    }),
+    teacher: one(users, {
+      fields: [courseMeetings.teacherId],
+      references: [users.id],
+    }),
+  })
+);
