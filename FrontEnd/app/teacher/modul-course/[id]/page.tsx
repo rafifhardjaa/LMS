@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import moment from "moment";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
+import { uploadsApi, type UploadedFile } from "@/lib/api/uploads";
 import { useAuthStore } from "@/lib/store/auth-store";
 import type {
   CourseMeeting,
@@ -22,6 +24,26 @@ import {
   type UploadSlot,
 } from "@/components/teacher/modul-management/detail/file-dropzone";
 import { meetings as fallbackMeetings } from "@/components/teacher/modul-management/detail/data";
+
+const UPLOAD_SLOTS: UploadSlot[] = [
+  "materi",
+  "tugasFile",
+  "tugasSubmission",
+  "kuisFile",
+  "kuisSubmission",
+];
+
+function toPendingFile(item: UploadedFile): PendingFile {
+  return {
+    clientId: item.id,
+    name: item.name,
+    size: item.size,
+    mimeType: item.mimeType,
+    status: "saved",
+    id: item.id,
+    fileUrl: item.fileUrl,
+  };
+}
 
 export default function ModulCourseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -44,6 +66,7 @@ export default function ModulCourseDetailPage() {
   const [meetingFiles, setMeetingFiles] = useState<
     Record<string, Record<UploadSlot, PendingFile[]>>
   >({});
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -211,6 +234,119 @@ export default function ModulCourseDetailPage() {
       ? `${classId}__${subjectId}__P${selectedMeeting.meetingNumber}`
       : null);
 
+  const fetchAndMergeMeetingFiles = useCallback(
+    async (key: string, isActive: () => boolean = () => true) => {
+      const results = await Promise.all(
+        UPLOAD_SLOTS.map((slot) => uploadsApi.list(slot, key)),
+      );
+      if (!isActive()) return;
+
+      if (results.some((result) => result.error)) {
+        toast.error("Gagal memuat daftar file pertemuan");
+        return;
+      }
+
+      setMeetingFiles((current) => {
+        const currentEntry = current[key] ?? EMPTY_UPLOAD_FILES;
+        const nextEntry = { ...currentEntry };
+        UPLOAD_SLOTS.forEach((slot, index) => {
+          const saved = (results[index].data?.data ?? []).map(toPendingFile);
+          const unsaved = (currentEntry[slot] ?? []).filter(
+            (item) => item.status !== "saved",
+          );
+          nextEntry[slot] = [...unsaved, ...saved];
+        });
+        return { ...current, [key]: nextEntry };
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!meetingFileKey) return;
+    let active = true;
+    void (async () => {
+      await fetchAndMergeMeetingFiles(meetingFileKey, () => active);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [meetingFileKey, fetchAndMergeMeetingFiles]);
+
+  function updateMeetingFile(
+    slot: UploadSlot,
+    clientId: string,
+    patch: Partial<PendingFile>,
+  ) {
+    if (!meetingFileKey) return;
+    setMeetingFiles((current) => {
+      const slotFiles = current[meetingFileKey]?.[slot] ?? [];
+      return {
+        ...current,
+        [meetingFileKey]: {
+          ...(current[meetingFileKey] ?? EMPTY_UPLOAD_FILES),
+          [slot]: slotFiles.map((item) =>
+            item.clientId === clientId ? { ...item, ...patch } : item,
+          ),
+        },
+      };
+    });
+  }
+
+  async function handleUpload(slot: UploadSlot, items: PendingFile[]) {
+    if (!meetingFileKey) return;
+
+    const targets = items.filter(
+      (item) =>
+        (item.status === "pending" || item.status === "failed") && item.file,
+    );
+
+    if (!targets.length) return;
+
+    setUploading(true);
+    let succeeded = 0;
+
+    try {
+      for (const item of targets) {
+        if (!item.file) continue;
+        updateMeetingFile(slot, item.clientId, {
+          status: "uploading",
+          error: undefined,
+        });
+
+        const result = await uploadsApi.upload(slot, item.file, meetingFileKey);
+
+        if (result.error || !result.data?.success || !result.data.data) {
+          updateMeetingFile(slot, item.clientId, {
+            status: "failed",
+            error: result.error?.message ?? "Upload gagal",
+          });
+          continue;
+        }
+
+        const uploaded = result.data.data;
+        updateMeetingFile(slot, item.clientId, {
+          status: "saved",
+          id: uploaded.id,
+          fileUrl: uploaded.fileUrl,
+        });
+        succeeded += 1;
+      }
+
+      await fetchAndMergeMeetingFiles(meetingFileKey);
+
+      if (succeeded === targets.length) {
+        toast.success(`${succeeded} file berhasil diunggah`);
+      } else {
+        toast.error(
+          `Upload selesai: ${succeeded} berhasil, ${targets.length - succeeded} gagal`,
+        );
+      }
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AnimatePresence mode="wait">
@@ -299,6 +435,8 @@ export default function ModulCourseDetailPage() {
                         },
                       }));
                     }}
+                    onUpload={handleUpload}
+                    uploading={uploading}
                   />
                 ) : meetingsLoading && selectedKey !== "info" && selectedKey !== "peserta" ? (
                   <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">

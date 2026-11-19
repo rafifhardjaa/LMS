@@ -60,6 +60,34 @@ export async function apiFetch<T>(
   return { data: body as T, error: null, status: res.status };
 }
 
+export async function apiUpload<T>(
+  path: string,
+  form: FormData
+): Promise<{ data: T | null; error: ApiError | null; status: number }> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    body: form,
+    credentials: "same-origin",
+  });
+
+  let body: unknown;
+  try {
+    body = await res.json();
+  } catch {
+    body = null;
+  }
+
+  if (!res.ok) {
+    return {
+      data: null,
+      error: (body as ApiError) ?? { error: "Unknown error" },
+      status: res.status,
+    };
+  }
+
+  return { data: body as T, error: null, status: res.status };
+}
+
 // ─── Public API (no auth) ────────────────────────────────────────────────────
 
 export const api = {

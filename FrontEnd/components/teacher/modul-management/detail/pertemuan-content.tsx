@@ -58,6 +58,8 @@ type PertemuanContentProps = {
   onMeetingsChanged: () => void;
   files: Record<UploadSlot, PendingFile[]>;
   onFilesChange: (slot: UploadSlot, files: PendingFile[]) => void;
+  onUpload?: (slot: UploadSlot, files: PendingFile[]) => Promise<void> | void;
+  uploading?: boolean;
 };
 
 export function PertemuanContent({
@@ -69,6 +71,8 @@ export function PertemuanContent({
   onMeetingsChanged,
   files,
   onFilesChange,
+  onUpload,
+  uploading = false,
 }: PertemuanContentProps) {
   const [manageOpen, setManageOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<ManageMode | null>(null);
@@ -121,7 +125,6 @@ export function PertemuanContent({
               <div className="mt-3">
                 <FileDropzone
                   label="Lampiran materi"
-                  hint="PDF, ZIP, RAR · maks 10 MB"
                   files={files.materi}
                   onChange={(next) => onFilesChange("materi", next)}
                   expanded={expandedSlot === "materi"}
@@ -130,6 +133,8 @@ export function PertemuanContent({
                       current === "materi" ? null : "materi",
                     )
                   }
+                  onUploadAll={(items) => onUpload?.("materi", items)}
+                  uploading={uploading}
                 />
               </div>
             </div>
@@ -143,7 +148,6 @@ export function PertemuanContent({
               <div className="mt-2.5 flex flex-col gap-2">
                 <FileDropzone
                   label="File tugas"
-                  hint="PDF, ZIP, RAR · maks 10 MB"
                   files={files.tugasFile}
                   onChange={(next) => onFilesChange("tugasFile", next)}
                   expanded={expandedSlot === "tugasFile"}
@@ -152,19 +156,21 @@ export function PertemuanContent({
                       current === "tugasFile" ? null : "tugasFile",
                     )
                   }
+                  onUploadAll={(items) => onUpload?.("tugasFile", items)}
+                  uploading={uploading}
                 />
                 <FileDropzone
                   label="Pengumpulan tugas"
-                  hint="PDF, ZIP, RAR · maks 10 MB"
                   icon={Upload}
                   files={files.tugasSubmission}
-                  onChange={(next) => onFilesChange("tugasSubmission", next)}
+                  onChange={() => {}}
                   expanded={expandedSlot === "tugasSubmission"}
                   onToggle={() =>
                     setExpandedSlot((current) =>
                       current === "tugasSubmission" ? null : "tugasSubmission",
                     )
                   }
+                  readOnly
                 />
               </div>
             </div>
@@ -178,7 +184,6 @@ export function PertemuanContent({
               <div className="mt-2.5 flex flex-col gap-2">
                 <FileDropzone
                   label="File kuis"
-                  hint="PDF, ZIP, RAR · maks 10 MB"
                   files={files.kuisFile}
                   onChange={(next) => onFilesChange("kuisFile", next)}
                   expanded={expandedSlot === "kuisFile"}
@@ -187,19 +192,21 @@ export function PertemuanContent({
                       current === "kuisFile" ? null : "kuisFile",
                     )
                   }
+                  onUploadAll={(items) => onUpload?.("kuisFile", items)}
+                  uploading={uploading}
                 />
                 <FileDropzone
                   label="Pengumpulan kuis"
-                  hint="PDF, ZIP, RAR · maks 10 MB"
                   icon={Upload}
                   files={files.kuisSubmission}
-                  onChange={(next) => onFilesChange("kuisSubmission", next)}
+                  onChange={() => {}}
                   expanded={expandedSlot === "kuisSubmission"}
                   onToggle={() =>
                     setExpandedSlot((current) =>
                       current === "kuisSubmission" ? null : "kuisSubmission",
                     )
                   }
+                  readOnly
                 />
               </div>
             </div>
