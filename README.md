@@ -332,9 +332,11 @@ Satu server PostgreSQL menyimpan **dua database**:
 | Database | Isi | Config Drizzle | Folder migrasi |
 |---|---|---|---|
 | `simanis` | data utama (users, subjects, modules, lessons, enrollments, ...) | `drizzle.config.ts` | `BackEnd/drizzle/` |
-| `storage_simanis` | file upload (`uploaded_files`) | `drizzle.storage.config.ts` | `BackEnd/drizzle-storage/` |
+| `storage_simanis` | file upload — `public.uploaded_files`, plus schema `guru` (`uploads_materi`, `uploads_tugas`, `submission_tugas`, `uploads_kuis`, `submission_kuis`) dan schema `siswa` (`up_submission_tugas`, `up_submission_kuis`) | `drizzle.storage.config.ts` | `BackEnd/drizzle-storage/` |
 
 Database-nya dibuat otomatis oleh `BackEnd/initdb/01-create-storage-db.sql` ketika volume Docker masih kosong; tabelnya dibuat oleh file migrasi yang ter-commit di repo. Karena itu **jangan** membuat tabel manual di DBeaver/psql — perubahan schema harus lewat migrasi supaya semua orang mendapat struktur yang sama.
+
+`storage_simanis` dibagi dua schema: `guru` memuat file yang diunggah guru dan salinan file submission untuk dipantau, sedangkan `siswa` memuat file submission milik siswa itu sendiri. Tabel `public.uploaded_files` masih dipertahankan sebagai upload generik. Referensi ke database `simanis` (user, meeting) disimpan sebagai UUID logis tanpa foreign key karena kedua database berbeda.
 
 ### Setelah mengubah schema
 
