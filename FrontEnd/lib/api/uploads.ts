@@ -37,6 +37,11 @@ interface UploadResponse {
   };
 }
 
+interface DeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
 export const uploadsApi = {
   upload: (slot: UploadSlot, file: File, meetingId: string) => {
     const form = new FormData();
@@ -48,5 +53,11 @@ export const uploadsApi = {
   list: (slot: UploadSlot, meetingId: string) =>
     apiFetch<UploadListResponse>(
       `/api/v1/uploads/storage/${slot}?meetingId=${encodeURIComponent(meetingId)}`,
+    ),
+
+  remove: (slot: UploadSlot, id: string) =>
+    apiFetch<DeleteResponse>(
+      `/api/v1/uploads/storage/${slot}/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
     ),
 };
