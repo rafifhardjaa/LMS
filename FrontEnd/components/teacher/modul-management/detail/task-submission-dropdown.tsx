@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { toast } from "sonner";
+import Calendar from "./Calendar";
 import {
   Dialog,
   DialogClose,
@@ -77,6 +78,30 @@ function formatDateTime(date: string, time?: string): string {
   return time ? `${base} · ${time}` : base;
 }
 
+function dateToValue(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function valueToDate(value: string): Date | null {
+  if (!value) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function formatTimeInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
+function isValidTime(value: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
 function deadlineTone(deadline: string, deadlineTime?: string): {
   label: string;
   className: string;
@@ -120,7 +145,9 @@ export function TaskSubmissionDropdown({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [openDate, setOpenDate] = useState<"startDate" | "deadline" | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const datePopoverRef = useRef<HTMLDivElement>(null);
 
   const style = KIND_STYLES[kind];
   const Icon = style.icon;
@@ -145,6 +172,22 @@ export function TaskSubmissionDropdown({
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (!openDate) return;
+
+    const handleOutside = (event: MouseEvent) => {
+      if (
+        datePopoverRef.current &&
+        !datePopoverRef.current.contains(event.target as Node)
+      ) {
+        setOpenDate(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [openDate]);
+
   function openAdd() {
     setForm(EMPTY_FORM);
     setModalMode("add");
@@ -165,11 +208,26 @@ export function TaskSubmissionDropdown({
     setMenuOpen(false);
   }
 
+  function handleDateSelect(field: "startDate" | "deadline", date: Date) {
+    setForm((current) => ({ ...current, [field]: dateToValue(date) }));
+    setOpenDate(null);
+  }
+
   function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!form.title.trim() || !form.deadline || !form.deadlineTime) {
       toast.error("Judul, deadline, dan jam deadline wajib diisi");
+      return;
+    }
+
+    if (form.startTime && !isValidTime(form.startTime)) {
+      toast.error("Jam mulai tidak valid");
+      return;
+    }
+
+    if (!isValidTime(form.deadlineTime)) {
+      toast.error("Jam deadline tidak valid");
       return;
     }
 
@@ -500,39 +558,67 @@ export function TaskSubmissionDropdown({
                 />
               </label>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className="flex flex-col gap-1.5">
+              <div
+                ref={datePopoverRef}
+                className="relative grid grid-cols-1 gap-3 sm:grid-cols-2"
+              >
+                <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">
                     Tanggal Mulai
                   </span>
-                  <input
-                    type="date"
-                    value={form.startDate}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        startDate: event.target.value,
-                      }))
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenDate((current) =>
+                        current === "startDate" ? null : "startDate",
+                      )
                     }
-                    className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-[13px] text-[#1E293B] outline-none transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
+                    className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-left text-[13px] text-[#1E293B] transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
+                  >
+                    {form.startDate ? (
+                      formatDate(form.startDate)
+                    ) : (
+                      <span className="text-[#94A3B8]">Pilih tanggal</span>
+                    )}
+                  </button>
+                  {openDate === "startDate" && (
+                    <div className="absolute left-0 top-10 z-30">
+                      <Calendar
+                        value={valueToDate(form.startDate)}
+                        onChange={(date) => handleDateSelect("startDate", date)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">
                     Deadline
                   </span>
-                  <input
-                    type="date"
-                    value={form.deadline}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        deadline: event.target.value,
-                      }))
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenDate((current) =>
+                        current === "deadline" ? null : "deadline",
+                      )
                     }
-                    className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-[13px] text-[#1E293B] outline-none transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
-                  />
-                </label>
+                    className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-left text-[13px] text-[#1E293B] transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
+                  >
+                    {form.deadline ? (
+                      formatDate(form.deadline)
+                    ) : (
+                      <span className="text-[#94A3B8]">Pilih tanggal</span>
+                    )}
+                  </button>
+                  {openDate === "deadline" && (
+                    <div className="absolute left-0 top-10 z-30">
+                      <Calendar
+                        value={valueToDate(form.deadline)}
+                        onChange={(date) => handleDateSelect("deadline", date)}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -541,12 +627,14 @@ export function TaskSubmissionDropdown({
                     Jam Mulai
                   </span>
                   <input
-                    type="time"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="--:--"
                     value={form.startTime}
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        startTime: event.target.value,
+                        startTime: formatTimeInput(event.target.value),
                       }))
                     }
                     className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-[13px] text-[#1E293B] outline-none transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
@@ -557,12 +645,14 @@ export function TaskSubmissionDropdown({
                     Jam Deadline
                   </span>
                   <input
-                    type="time"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="--:--"
                     value={form.deadlineTime}
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        deadlineTime: event.target.value,
+                        deadlineTime: formatTimeInput(event.target.value),
                       }))
                     }
                     className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-[13px] text-[#1E293B] outline-none transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
