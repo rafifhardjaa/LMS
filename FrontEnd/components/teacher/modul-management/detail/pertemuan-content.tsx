@@ -12,7 +12,6 @@ import {
   Settings2,
   Trash2,
   TriangleAlert,
-  Users,
 } from "lucide-react";
 import moment from "moment";
 import { FadeIn, ScaleIn } from "@/components/ui/animations";
@@ -26,6 +25,11 @@ import {
   ManagePertemuanPanel,
   type ManageMode,
 } from "./manage-pertemuan-panel";
+import {
+  TaskSubmissionDropdown,
+  type TaskDraft,
+  type TaskKind,
+} from "./task-submission-dropdown";
 
 function formatDateLabel(date: string): string {
   return moment(date, ["DD-MM-YYYY", "YYYY-MM-DD"])
@@ -66,6 +70,9 @@ type PertemuanContentProps = {
     tugasSubmission: number;
     kuisSubmission: number;
   };
+  tasks: Record<TaskKind, TaskDraft[]>;
+  onTasksChange: (kind: TaskKind, tasks: TaskDraft[]) => void;
+  totalStudents: number;
 };
 
 export function PertemuanContent({
@@ -82,6 +89,9 @@ export function PertemuanContent({
   onDelete,
   deleting = false,
   submissionCounts = { tugasSubmission: 0, kuisSubmission: 0 },
+  tasks,
+  onTasksChange,
+  totalStudents,
 }: PertemuanContentProps) {
   const [manageOpen, setManageOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<ManageMode | null>(null);
@@ -174,19 +184,14 @@ export function PertemuanContent({
                   onDelete={(item) => onDelete?.("tugasFile", item)}
                   deleting={deleting}
                 />
-                <div className="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[#EDF6FF] text-[#006398]">
-                    <Users className="size-3.5" />
-                  </span>
-                  <span className="flex-1 text-[13px] font-semibold text-[#1E293B]">
-                    Pengumpulan tugas
-                  </span>
-                  <span className="shrink-0 rounded-full bg-[#EDF6FF] px-2 py-0.5 text-[11px] font-bold text-[#006398]">
-                    {submissionCounts.tugasSubmission > 0
-                      ? `${submissionCounts.tugasSubmission} siswa mengumpulkan`
-                      : "Belum ada pengumpulan"}
-                  </span>
-                </div>
+                <TaskSubmissionDropdown
+                  kind="tugas"
+                  label="Pengumpulan tugas"
+                  tasks={tasks.tugas}
+                  onTasksChange={(next) => onTasksChange("tugas", next)}
+                  submissionCount={submissionCounts.tugasSubmission}
+                  totalStudents={totalStudents}
+                />
               </div>
             </div>
           </FadeIn>
@@ -213,19 +218,14 @@ export function PertemuanContent({
                   onDelete={(item) => onDelete?.("kuisFile", item)}
                   deleting={deleting}
                 />
-                <div className="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[#EDF6FF] text-[#006398]">
-                    <Users className="size-3.5" />
-                  </span>
-                  <span className="flex-1 text-[13px] font-semibold text-[#1E293B]">
-                    Pengumpulan kuis
-                  </span>
-                  <span className="shrink-0 rounded-full bg-[#EDF6FF] px-2 py-0.5 text-[11px] font-bold text-[#006398]">
-                    {submissionCounts.kuisSubmission > 0
-                      ? `${submissionCounts.kuisSubmission} siswa mengumpulkan`
-                      : "Belum ada pengumpulan"}
-                  </span>
-                </div>
+                <TaskSubmissionDropdown
+                  kind="kuis"
+                  label="Pengumpulan kuis"
+                  tasks={tasks.kuis}
+                  onTasksChange={(next) => onTasksChange("kuis", next)}
+                  submissionCount={submissionCounts.kuisSubmission}
+                  totalStudents={totalStudents}
+                />
               </div>
             </div>
           </FadeIn>
