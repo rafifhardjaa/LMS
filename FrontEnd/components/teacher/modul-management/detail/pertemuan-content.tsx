@@ -7,7 +7,6 @@ import {
   ChevronDown,
   ClipboardCheck,
   Clock,
-  FileText,
   PencilLine,
   PlusCircle,
   Settings2,
@@ -18,6 +17,11 @@ import {
 import moment from "moment";
 import { FadeIn, ScaleIn } from "@/components/ui/animations";
 import type { CourseMeeting } from "@/lib/api/master-data";
+import {
+  FileDropzone,
+  type PendingFile,
+  type UploadSlot,
+} from "./file-dropzone";
 import {
   ManagePertemuanPanel,
   type ManageMode,
@@ -45,21 +49,6 @@ const statusStyle: Record<PertemuanStatus, { label: string; className: string }>
   "akan-datang": { label: "Akan Datang", className: "bg-[#EDF6FF] text-[#006398]" },
 };
 
-function PlaceholderBox({
-  icon: Icon,
-  text,
-}: {
-  icon: typeof FileText;
-  text: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3">
-      <Icon className="size-4 shrink-0 text-[#94A3B8]" />
-      <p className="text-[12px] font-medium text-[#94A3B8]">{text}</p>
-    </div>
-  );
-}
-
 type PertemuanContentProps = {
   meeting: CourseMeeting;
   subjectId: string;
@@ -67,6 +56,8 @@ type PertemuanContentProps = {
   canOpenAttendance: boolean;
   meetings: CourseMeeting[];
   onMeetingsChanged: () => void;
+  files: Record<UploadSlot, PendingFile[]>;
+  onFilesChange: (slot: UploadSlot, files: PendingFile[]) => void;
 };
 
 export function PertemuanContent({
@@ -76,9 +67,12 @@ export function PertemuanContent({
   canOpenAttendance,
   meetings,
   onMeetingsChanged,
+  files,
+  onFilesChange,
 }: PertemuanContentProps) {
   const [manageOpen, setManageOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<ManageMode | null>(null);
+  const [expandedSlot, setExpandedSlot] = useState<UploadSlot | null>(null);
   const status = statusStyle[statusOf(meeting.meetingDate)];
 
   function openMode(mode: ManageMode) {
@@ -125,9 +119,17 @@ export function PertemuanContent({
                 {meeting.objective}
               </p>
               <div className="mt-3">
-                <PlaceholderBox
-                  icon={FileText}
-                  text="Lampiran materi (integrasi menyusul)"
+                <FileDropzone
+                  label="Lampiran materi"
+                  hint="PDF, ZIP, RAR · maks 10 MB"
+                  files={files.materi}
+                  onChange={(next) => onFilesChange("materi", next)}
+                  expanded={expandedSlot === "materi"}
+                  onToggle={() =>
+                    setExpandedSlot((current) =>
+                      current === "materi" ? null : "materi",
+                    )
+                  }
                 />
               </div>
             </div>
@@ -138,11 +140,31 @@ export function PertemuanContent({
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
                 Tugas
               </p>
-              <div className="mt-2.5 flex flex-col gap-2.5">
-                <PlaceholderBox icon={FileText} text="File tugas (integrasi menyusul)" />
-                <PlaceholderBox
+              <div className="mt-2.5 flex flex-col gap-2">
+                <FileDropzone
+                  label="File tugas"
+                  hint="PDF, ZIP, RAR · maks 10 MB"
+                  files={files.tugasFile}
+                  onChange={(next) => onFilesChange("tugasFile", next)}
+                  expanded={expandedSlot === "tugasFile"}
+                  onToggle={() =>
+                    setExpandedSlot((current) =>
+                      current === "tugasFile" ? null : "tugasFile",
+                    )
+                  }
+                />
+                <FileDropzone
+                  label="Pengumpulan tugas"
+                  hint="PDF, ZIP, RAR · maks 10 MB"
                   icon={Upload}
-                  text="Pengumpulan tugas (integrasi menyusul)"
+                  files={files.tugasSubmission}
+                  onChange={(next) => onFilesChange("tugasSubmission", next)}
+                  expanded={expandedSlot === "tugasSubmission"}
+                  onToggle={() =>
+                    setExpandedSlot((current) =>
+                      current === "tugasSubmission" ? null : "tugasSubmission",
+                    )
+                  }
                 />
               </div>
             </div>
@@ -153,11 +175,31 @@ export function PertemuanContent({
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
                 Kuis
               </p>
-              <div className="mt-2.5 flex flex-col gap-2.5">
-                <PlaceholderBox icon={FileText} text="File kuis (integrasi menyusul)" />
-                <PlaceholderBox
+              <div className="mt-2.5 flex flex-col gap-2">
+                <FileDropzone
+                  label="File kuis"
+                  hint="PDF, ZIP, RAR · maks 10 MB"
+                  files={files.kuisFile}
+                  onChange={(next) => onFilesChange("kuisFile", next)}
+                  expanded={expandedSlot === "kuisFile"}
+                  onToggle={() =>
+                    setExpandedSlot((current) =>
+                      current === "kuisFile" ? null : "kuisFile",
+                    )
+                  }
+                />
+                <FileDropzone
+                  label="Pengumpulan kuis"
+                  hint="PDF, ZIP, RAR · maks 10 MB"
                   icon={Upload}
-                  text="Pengumpulan kuis (integrasi menyusul)"
+                  files={files.kuisSubmission}
+                  onChange={(next) => onFilesChange("kuisSubmission", next)}
+                  expanded={expandedSlot === "kuisSubmission"}
+                  onToggle={() =>
+                    setExpandedSlot((current) =>
+                      current === "kuisSubmission" ? null : "kuisSubmission",
+                    )
+                  }
                 />
               </div>
             </div>
