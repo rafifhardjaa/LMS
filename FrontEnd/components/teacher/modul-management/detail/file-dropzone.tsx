@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronDown,
@@ -9,9 +9,18 @@ import {
   Loader2,
   Trash2,
   TriangleAlert,
+  X,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type IconComponent = ComponentType<{ className?: string }>;
 
@@ -32,6 +41,7 @@ export type PendingFile = {
   id?: string;
   fileUrl?: string;
   error?: string;
+  studentId?: string | null;
 };
 
 export const EMPTY_UPLOAD_FILES: Record<UploadSlot, PendingFile[]> = {
@@ -64,6 +74,23 @@ function formatSize(size: number): string {
   }
   return `${Math.max(1, Math.ceil(size / 1024))} KB`;
 }
+
+type DropzoneAccent = "materi" | "tugas" | "kuis";
+
+const ACCENT_STYLES: Record<DropzoneAccent, { header: string; title: string }> = {
+  materi: {
+    header: "bg-[#FFF1F2]",
+    title: "text-[#b71422]",
+  },
+  tugas: {
+    header: "bg-[#EFF6FF]",
+    title: "text-[#006398]",
+  },
+  kuis: {
+    header: "bg-[#F0FDF4]",
+    title: "text-[#5B8C1F]",
+  },
+};
 
 const FILE_TYPE_BADGE: Record<string, string> = {
   PDF: "bg-[#FFEBEB] text-[#b71422]",
@@ -104,6 +131,9 @@ type FileDropzoneProps = {
   onUploadAll?: (files: PendingFile[]) => void;
   uploading?: boolean;
   readOnly?: boolean;
+  onDelete?: (item: PendingFile) => Promise<void> | void;
+  deleting?: boolean;
+  accent?: DropzoneAccent;
 };
 
 export function FileDropzone({
@@ -117,7 +147,11 @@ export function FileDropzone({
   onUploadAll,
   uploading = false,
   readOnly = false,
+  onDelete,
+  deleting = false,
+  accent = "materi",
 }: FileDropzoneProps) {
+  const [pendingDelete, setPendingDelete] = useState<PendingFile | null>(null);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: ACCEPT,
     maxSize: MAX_SIZE,
@@ -181,6 +215,15 @@ export function FileDropzone({
           <span className="shrink-0 font-medium text-[#5B8C1F]">
             {formatSize(item.size)}
           </span>
+          <button
+            type="button"
+            onClick={() => setPendingDelete(item)}
+            disabled={deleting}
+            aria-label={`Hapus ${item.name}`}
+            className="flex size-4 shrink-0 items-center justify-center rounded-full text-[#5B8C1F] transition hover:bg-[#DCFCE7] hover:text-[#b71422] disabled:opacity-50"
+          >
+            <X className="size-3" />
+          </button>
         </motion.li>
       );
     }
@@ -373,6 +416,84 @@ export function FileDropzone({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(next) => {
+          if (!next) setPendingDelete(null);
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-md rounded-2xl border border-[#E2E8F0] bg-white p-0 shadow-[0_24px_64px_-24px_rgba(15,23,42,0.35)] ring-black/5 data-open:animate-none data-closed:animate-none"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col overflow-hidden rounded-2xl"
+          >
+            <div
+              className={`flex items-start gap-3 px-5 py-4 ${ACCENT_STYLES[accent].header}`}
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#64748B] ring-1 ring-[#E2E8F0]">
+                <TriangleAlert className="size-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <DialogTitle
+                  className={`text-[15px] font-bold ${ACCENT_STYLES[accent].title}`}
+                >
+                  Hapus file?
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-[13px] leading-6 text-[#475569]">
+                  File ini akan dihapus permanen dan tidak bisa dikembalikan.
+                </DialogDescription>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 p-5">
+              {pendingDelete && (
+                <div className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+                  <span
+                    className={`flex h-6 shrink-0 items-center justify-center rounded px-1.5 text-[9px] font-extrabold tracking-wide ${fileBadgeClass(
+                      fileExtension(pendingDelete.name),
+                    )}`}
+                  >
+                    {fileExtension(pendingDelete.name)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold text-[#1E293B]">
+                      {pendingDelete.name}
+                    </p>
+                    <p className="text-[12px] text-[#94A3B8]">
+                      {formatSize(pendingDelete.size)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <DialogClose render={<Button variant="outline" />}>
+                  Batal
+                </DialogClose>
+                <Button
+                  variant="destructive"
+                  disabled={deleting}
+                  onClick={() => {
+                    const item = pendingDelete;
+                    setPendingDelete(null);
+                    if (item) void onDelete?.(item);
+                  }}
+                  className="gap-2"
+                >
+                  <Trash2 className="size-4" />
+                  {deleting ? "Menghapus…" : "Hapus"}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
