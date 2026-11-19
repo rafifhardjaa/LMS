@@ -16,6 +16,11 @@ import { CourseSidebar } from "@/components/teacher/modul-management/detail/cour
 import { CourseInfoContent } from "@/components/teacher/modul-management/detail/course-info-content";
 import { PesertaTable } from "@/components/teacher/modul-management/detail/peserta-table";
 import { PertemuanContent } from "@/components/teacher/modul-management/detail/pertemuan-content";
+import {
+  EMPTY_UPLOAD_FILES,
+  type PendingFile,
+  type UploadSlot,
+} from "@/components/teacher/modul-management/detail/file-dropzone";
 import { meetings as fallbackMeetings } from "@/components/teacher/modul-management/detail/data";
 
 export default function ModulCourseDetailPage() {
@@ -36,6 +41,9 @@ export default function ModulCourseDetailPage() {
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
   const [meetingsVersion, setMeetingsVersion] = useState(0);
   const [advisorId, setAdvisorId] = useState<string | null>(null);
+  const [meetingFiles, setMeetingFiles] = useState<
+    Record<string, Record<UploadSlot, PendingFile[]>>
+  >({});
 
   useEffect(() => {
     let active = true;
@@ -197,6 +205,12 @@ export default function ModulCourseDetailPage() {
     [meetings, selectedKey]
   );
 
+  const meetingFileKey =
+    selectedMeeting?.id ??
+    (selectedMeeting && classId && subjectId
+      ? `${classId}__${subjectId}__P${selectedMeeting.meetingNumber}`
+      : null);
+
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AnimatePresence mode="wait">
@@ -270,6 +284,21 @@ export default function ModulCourseDetailPage() {
                     canOpenAttendance={canOpenAttendance}
                     meetings={meetings}
                     onMeetingsChanged={() => setMeetingsVersion((value) => value + 1)}
+                    files={
+                      (meetingFileKey
+                        ? meetingFiles[meetingFileKey]
+                        : undefined) ?? EMPTY_UPLOAD_FILES
+                    }
+                    onFilesChange={(slot, next) => {
+                      if (!meetingFileKey) return;
+                      setMeetingFiles((current) => ({
+                        ...current,
+                        [meetingFileKey]: {
+                          ...(current[meetingFileKey] ?? EMPTY_UPLOAD_FILES),
+                          [slot]: next,
+                        },
+                      }));
+                    }}
                   />
                 ) : meetingsLoading && selectedKey !== "info" && selectedKey !== "peserta" ? (
                   <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
