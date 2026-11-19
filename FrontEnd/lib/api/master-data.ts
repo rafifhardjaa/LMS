@@ -228,7 +228,7 @@ export interface AttendanceDate {
 }
 
 export interface CourseMeeting {
-  id?: string;
+  id: string;
   meetingNumber: number;
   meetingDate: string;
   day: string;
