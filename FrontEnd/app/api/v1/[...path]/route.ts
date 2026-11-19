@@ -48,6 +48,14 @@ async function proxy(
   const responseHeaders = new Headers();
   const upstreamType = upstream.headers.get("content-type");
   if (upstreamType) responseHeaders.set("content-type", upstreamType);
+  for (const headerName of [
+    "content-disposition",
+    "content-length",
+    "cache-control",
+  ]) {
+    const headerValue = upstream.headers.get(headerName);
+    if (headerValue) responseHeaders.set(headerName, headerValue);
+  }
 
   const res = new NextResponse(
     upstream.status === 204 ? null : await upstream.arrayBuffer(),

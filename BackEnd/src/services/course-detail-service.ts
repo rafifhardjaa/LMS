@@ -98,6 +98,7 @@ export async function listCourseMeetings({
 
   const meetingRows = await db
     .select({
+      id: courseMeetings.id,
       meetingNumber: courseMeetings.meetingNumber,
       meetingDate: courseMeetings.meetingDate,
       day: courseMeetings.day,
