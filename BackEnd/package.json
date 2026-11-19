@@ -12,6 +12,7 @@
     "db:backfill-passwords": "bun run scripts/fill-default-passwords.ts",
     "db:fill-capaian": "bun run scripts/fill-capaian.ts",
     "db:import-detail-course": "bun run scripts/import-detail-course.ts",
+    "db:fix-advisor": "bun run scripts/assign-unique-advisors.ts",
     "db:backup": "bash scripts/db-backup.sh",
     "db:import-jadwal": "bun run scripts/import-jadwal-xlsx.ts",
     "db:import-guru": "bun run scripts/import-users-guru-xlsx.ts",

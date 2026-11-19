@@ -6,6 +6,7 @@ import moment from "moment";
 import { AnimatePresence, motion } from "framer-motion";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
+import { useAuthStore } from "@/lib/store/auth-store";
 import type {
   CourseMeeting,
   JadwalPelajaran,
@@ -21,6 +22,7 @@ export default function ModulCourseDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
   const [classId, subjectId] = id.split("--");
+  const user = useAuthStore((state) => state.user);
 
   const [rows, setRows] = useState<JadwalPelajaran[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,7 @@ export default function ModulCourseDetailPage() {
   const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
   const [meetingsVersion, setMeetingsVersion] = useState(0);
+  const [advisorId, setAdvisorId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -103,144 +106,29 @@ export default function ModulCourseDetailPage() {
   const meetingClassId = course?.classId ?? null;
 
   useEffect(() => {
-    if (!meetingSubjectId || !meetingClassId) return;
+    if (!meetingClassId) return;
     let active = true;
-    const loadMeetings = async () => {
+    const loadAdvisor = async () => {
       try {
-        setMeetingsLoading(true);
-        const res = await masterDataApi.courseDetails.meetings.list(
-          meetingSubjectId,
-          meetingClassId
-        );
+        const res = await masterDataApi.classes.list();
         if (!active) return;
-        if (res.error) {
-          throw new Error(res.error.message ?? "Gagal memuat pertemuan");
-        }
-        setMeetings(res.data?.data ?? []);
-        setMeetingsError(null);
-
-        const nextMeetings = res.data?.data ?? [];
-        const stillExists = nextMeetings.some(
-          (meeting) =>
-            `Pertemuan ${meeting.meetingNumber}` === selectedKey
+        if (res.error) return;
+        const found = (res.data?.data ?? []).find(
+          (item) => item.id === meetingClassId,
         );
-        if (
-          selectedKey !== "info" &&
-          selectedKey !== "peserta" &&
-          !stillExists
-        ) {
-          setSelectedKey("info");
-        }
-      } catch (err) {
-        console.error("Error loading course meetings:", err);
-        if (active) {
-          setMeetings([]);
-          setMeetingsError("Tidak dapat memuat daftar pertemuan.");
-        }
-      } finally {
-        if (active) setMeetingsLoading(false);
+        setAdvisorId(found?.advisorId ?? null);
+      } catch {
+        // abaikan, fallback ke false
       }
     };
-    void loadMeetings();
+    void loadAdvisor();
     return () => {
       active = false;
     };
-  }, [meetingClassId, meetingSubjectId, meetingsVersion, selectedKey]);
+  }, [meetingClassId]);
 
-  const sidebarMeetings = useMemo(
-    () =>
-      meetings.length
-        ? meetings.map((meeting) => ({
-            label: `Pertemuan ${meeting.meetingNumber}`,
-            date: moment(meeting.meetingDate, ["YYYY-MM-DD"]).format("DD-MM-YYYY"),
-          }))
-        : fallbackMeetings.map((meeting) => ({
-            label: meeting.label,
-            date: meeting.date,
-          })),
-    [meetings]
-  );
-
-  const selectedMeeting = useMemo(
-    () =>
-      meetings.find(
-        (meeting) => `Pertemuan ${meeting.meetingNumber}` === selectedKey
-      ) ?? null,
-    [meetings, selectedKey]
-  );
-
-  const meetingSubjectId = course?.subjectId ?? null;
-  const meetingClassId = course?.classId ?? null;
-
-  useEffect(() => {
-    if (!meetingSubjectId || !meetingClassId) return;
-    let active = true;
-    const loadMeetings = async () => {
-      try {
-        setMeetingsLoading(true);
-        const res = await masterDataApi.courseDetails.meetings.list(
-          meetingSubjectId,
-          meetingClassId
-        );
-        if (!active) return;
-        if (res.error) {
-          throw new Error(res.error.message ?? "Gagal memuat pertemuan");
-        }
-        setMeetings(res.data?.data ?? []);
-        setMeetingsError(null);
-
-        const nextMeetings = res.data?.data ?? [];
-        const stillExists = nextMeetings.some(
-          (meeting) =>
-            `Pertemuan ${meeting.meetingNumber}` === selectedKey
-        );
-        if (
-          selectedKey !== "info" &&
-          selectedKey !== "peserta" &&
-          !stillExists
-        ) {
-          setSelectedKey("info");
-        }
-      } catch (err) {
-        console.error("Error loading course meetings:", err);
-        if (active) {
-          setMeetings([]);
-          setMeetingsError("Tidak dapat memuat daftar pertemuan.");
-        }
-      } finally {
-        if (active) setMeetingsLoading(false);
-      }
-    };
-    void loadMeetings();
-    return () => {
-      active = false;
-    };
-  }, [meetingClassId, meetingSubjectId, meetingsVersion, selectedKey]);
-
-  const sidebarMeetings = useMemo(
-    () =>
-      meetings.length
-        ? meetings.map((meeting) => ({
-            label: `Pertemuan ${meeting.meetingNumber}`,
-            date: moment(meeting.meetingDate, ["YYYY-MM-DD"]).format("DD-MM-YYYY"),
-          }))
-        : fallbackMeetings.map((meeting) => ({
-            label: meeting.label,
-            date: meeting.date,
-          })),
-    [meetings]
-  );
-
-  const selectedMeeting = useMemo(
-    () =>
-      meetings.find(
-        (meeting) => `Pertemuan ${meeting.meetingNumber}` === selectedKey
-      ) ?? null,
-    [meetings, selectedKey]
-  );
-
-  const meetingSubjectId = course?.subjectId ?? null;
-  const meetingClassId = course?.classId ?? null;
+  const canOpenAttendance =
+    user?.role === "admin" || (advisorId !== null && advisorId === user?.id);
 
   useEffect(() => {
     if (!meetingSubjectId || !meetingClassId) return;
@@ -379,6 +267,7 @@ export default function ModulCourseDetailPage() {
                     meeting={selectedMeeting}
                     subjectId={course.subjectId}
                     classId={course.classId}
+                    canOpenAttendance={canOpenAttendance}
                     meetings={meetings}
                     onMeetingsChanged={() => setMeetingsVersion((value) => value + 1)}
                   />

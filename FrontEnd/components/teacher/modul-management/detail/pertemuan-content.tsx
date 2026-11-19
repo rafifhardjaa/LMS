@@ -12,6 +12,7 @@ import {
   PlusCircle,
   Settings2,
   Trash2,
+  TriangleAlert,
   Upload,
 } from "lucide-react";
 import moment from "moment";
@@ -63,6 +64,7 @@ type PertemuanContentProps = {
   meeting: CourseMeeting;
   subjectId: string;
   classId: string;
+  canOpenAttendance: boolean;
   meetings: CourseMeeting[];
   onMeetingsChanged: () => void;
 };
@@ -71,6 +73,7 @@ export function PertemuanContent({
   meeting,
   subjectId,
   classId,
+  canOpenAttendance,
   meetings,
   onMeetingsChanged,
 }: PertemuanContentProps) {
@@ -179,19 +182,38 @@ export function PertemuanContent({
               <ChevronDown className="size-4" />
             </motion.span>
           </motion.button>
-          <motion.div
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="inline-block"
-          >
-            <Link
-              href="/teacher/presensi-siswa"
-              className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white transition hover:bg-[#8f0f1a]"
-            >
-              <ClipboardCheck className="size-4" />
-              Buka presensi
-            </Link>
-          </motion.div>
+          <div className="flex flex-wrap items-center gap-2">
+            {!canOpenAttendance && (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#FEF3C7] px-2.5 py-1.5 text-[11px] font-bold text-[#D97706]">
+                <TriangleAlert className="size-4" />
+                Hanya bisa diakses wali kelas
+              </span>
+            )}
+            {canOpenAttendance ? (
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-block"
+              >
+                <Link
+                  href="/teacher/presensi-siswa"
+                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white transition hover:bg-[#8f0f1a]"
+                >
+                  <ClipboardCheck className="size-4" />
+                  Buka presensi
+                </Link>
+              </motion.div>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="inline-flex h-9 cursor-not-allowed items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white opacity-60"
+              >
+                <ClipboardCheck className="size-4" />
+                Buka presensi
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
