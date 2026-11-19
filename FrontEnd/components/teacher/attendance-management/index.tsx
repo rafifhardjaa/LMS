@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import moment from "moment";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
@@ -15,6 +16,7 @@ import { AttendancePageHeader } from "./page-header";
 import { AttendanceSummaryGrid } from "./summary-grid";
 import { AttendanceTable } from "./attendance-table";
 import { AttendanceToolbar } from "./attendance-toolbar";
+import { AccessDeniedPlaceholder } from "./access-denied-placeholder";
 import type {
   AttendanceCounts,
   AttendanceStatus,
@@ -209,6 +211,10 @@ export function AttendanceManagement() {
   const canOpen =
     user?.role === "admin" || selectedClass?.advisorId === user?.id;
 
+  const isWaliKelas =
+    user?.role === "admin" ||
+    classes.some((item) => item.advisorId === user?.id);
+
   const counts = useMemo<AttendanceCounts>(
     () =>
       students.reduce<AttendanceCounts>(
@@ -265,6 +271,33 @@ export function AttendanceManagement() {
           : "-"
       } berhasil disimpan.`,
     });
+  }
+
+  if (classesLoading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center bg-[#EBF0F5]">
+        <Loader2 className="size-8 animate-spin text-[#b71422]" />
+      </div>
+    );
+  }
+
+  if (classesError) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center bg-[#EBF0F5] px-6">
+        <p className="rounded-2xl bg-[#FEE2E2] px-4 py-3 text-center text-[13px] text-[#b91c1c]">
+          {classesError}
+        </p>
+      </div>
+    );
+  }
+
+  if (!isWaliKelas) {
+    return (
+      <AccessDeniedPlaceholder
+        userName={user?.full_name}
+        userIdentifier={user?.nomor_induk}
+      />
+    );
   }
 
   return (
