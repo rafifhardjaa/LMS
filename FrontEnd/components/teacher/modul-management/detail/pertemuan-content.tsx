@@ -12,7 +12,7 @@ import {
   Settings2,
   Trash2,
   TriangleAlert,
-  Upload,
+  Users,
 } from "lucide-react";
 import moment from "moment";
 import { FadeIn, ScaleIn } from "@/components/ui/animations";
@@ -60,6 +60,12 @@ type PertemuanContentProps = {
   onFilesChange: (slot: UploadSlot, files: PendingFile[]) => void;
   onUpload?: (slot: UploadSlot, files: PendingFile[]) => Promise<void> | void;
   uploading?: boolean;
+  onDelete?: (slot: UploadSlot, item: PendingFile) => Promise<void> | void;
+  deleting?: boolean;
+  submissionCounts?: {
+    tugasSubmission: number;
+    kuisSubmission: number;
+  };
 };
 
 export function PertemuanContent({
@@ -73,6 +79,9 @@ export function PertemuanContent({
   onFilesChange,
   onUpload,
   uploading = false,
+  onDelete,
+  deleting = false,
+  submissionCounts = { tugasSubmission: 0, kuisSubmission: 0 },
 }: PertemuanContentProps) {
   const [manageOpen, setManageOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<ManageMode | null>(null);
@@ -124,6 +133,7 @@ export function PertemuanContent({
               </p>
               <div className="mt-3">
                 <FileDropzone
+                  accent="materi"
                   label="Lampiran materi"
                   files={files.materi}
                   onChange={(next) => onFilesChange("materi", next)}
@@ -135,6 +145,8 @@ export function PertemuanContent({
                   }
                   onUploadAll={(items) => onUpload?.("materi", items)}
                   uploading={uploading}
+                  onDelete={(item) => onDelete?.("materi", item)}
+                  deleting={deleting}
                 />
               </div>
             </div>
@@ -147,6 +159,7 @@ export function PertemuanContent({
               </p>
               <div className="mt-2.5 flex flex-col gap-2">
                 <FileDropzone
+                  accent="tugas"
                   label="File tugas"
                   files={files.tugasFile}
                   onChange={(next) => onFilesChange("tugasFile", next)}
@@ -158,20 +171,22 @@ export function PertemuanContent({
                   }
                   onUploadAll={(items) => onUpload?.("tugasFile", items)}
                   uploading={uploading}
+                  onDelete={(item) => onDelete?.("tugasFile", item)}
+                  deleting={deleting}
                 />
-                <FileDropzone
-                  label="Pengumpulan tugas"
-                  icon={Upload}
-                  files={files.tugasSubmission}
-                  onChange={() => {}}
-                  expanded={expandedSlot === "tugasSubmission"}
-                  onToggle={() =>
-                    setExpandedSlot((current) =>
-                      current === "tugasSubmission" ? null : "tugasSubmission",
-                    )
-                  }
-                  readOnly
-                />
+                <div className="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[#EDF6FF] text-[#006398]">
+                    <Users className="size-3.5" />
+                  </span>
+                  <span className="flex-1 text-[13px] font-semibold text-[#1E293B]">
+                    Pengumpulan tugas
+                  </span>
+                  <span className="shrink-0 rounded-full bg-[#EDF6FF] px-2 py-0.5 text-[11px] font-bold text-[#006398]">
+                    {submissionCounts.tugasSubmission > 0
+                      ? `${submissionCounts.tugasSubmission} siswa mengumpulkan`
+                      : "Belum ada pengumpulan"}
+                  </span>
+                </div>
               </div>
             </div>
           </FadeIn>
@@ -183,6 +198,7 @@ export function PertemuanContent({
               </p>
               <div className="mt-2.5 flex flex-col gap-2">
                 <FileDropzone
+                  accent="kuis"
                   label="File kuis"
                   files={files.kuisFile}
                   onChange={(next) => onFilesChange("kuisFile", next)}
@@ -194,20 +210,22 @@ export function PertemuanContent({
                   }
                   onUploadAll={(items) => onUpload?.("kuisFile", items)}
                   uploading={uploading}
+                  onDelete={(item) => onDelete?.("kuisFile", item)}
+                  deleting={deleting}
                 />
-                <FileDropzone
-                  label="Pengumpulan kuis"
-                  icon={Upload}
-                  files={files.kuisSubmission}
-                  onChange={() => {}}
-                  expanded={expandedSlot === "kuisSubmission"}
-                  onToggle={() =>
-                    setExpandedSlot((current) =>
-                      current === "kuisSubmission" ? null : "kuisSubmission",
-                    )
-                  }
-                  readOnly
-                />
+                <div className="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[#EDF6FF] text-[#006398]">
+                    <Users className="size-3.5" />
+                  </span>
+                  <span className="flex-1 text-[13px] font-semibold text-[#1E293B]">
+                    Pengumpulan kuis
+                  </span>
+                  <span className="shrink-0 rounded-full bg-[#EDF6FF] px-2 py-0.5 text-[11px] font-bold text-[#006398]">
+                    {submissionCounts.kuisSubmission > 0
+                      ? `${submissionCounts.kuisSubmission} siswa mengumpulkan`
+                      : "Belum ada pengumpulan"}
+                  </span>
+                </div>
               </div>
             </div>
           </FadeIn>

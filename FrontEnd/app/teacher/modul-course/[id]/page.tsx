@@ -42,6 +42,7 @@ function toPendingFile(item: UploadedFile): PendingFile {
     status: "saved",
     id: item.id,
     fileUrl: item.fileUrl,
+    studentId: item.studentId,
   };
 }
 
@@ -67,6 +68,7 @@ export default function ModulCourseDetailPage() {
     Record<string, Record<UploadSlot, PendingFile[]>>
   >({});
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -347,6 +349,55 @@ export default function ModulCourseDetailPage() {
     }
   }
 
+  const submissionCounts = useMemo(() => {
+    const entry = meetingFileKey ? meetingFiles[meetingFileKey] : null;
+    const countBySlot = (slot: "tugasSubmission" | "kuisSubmission") => {
+      const studentIds = new Set(
+        (entry?.[slot] ?? [])
+          .filter((item) => item.status === "saved" && item.studentId)
+          .map((item) => item.studentId),
+      );
+      return studentIds.size;
+    };
+
+    return {
+      tugasSubmission: countBySlot("tugasSubmission"),
+      kuisSubmission: countBySlot("kuisSubmission"),
+    };
+  }, [meetingFiles, meetingFileKey]);
+
+  async function handleDelete(slot: UploadSlot, item: PendingFile) {
+    if (!meetingFileKey || !item.id) return;
+
+    setDeleting(true);
+    try {
+      const result = await uploadsApi.remove(slot, item.id);
+
+      if (result.error || !result.data?.success) {
+        toast.error(result.error?.message ?? "Gagal menghapus file");
+        return;
+      }
+
+      setMeetingFiles((current) => {
+        const currentEntry = current[meetingFileKey] ?? EMPTY_UPLOAD_FILES;
+        return {
+          ...current,
+          [meetingFileKey]: {
+            ...currentEntry,
+            [slot]: (currentEntry[slot] ?? []).filter(
+              (file) => file.id !== item.id && file.clientId !== item.clientId,
+            ),
+          },
+        };
+      });
+
+      toast.success("File berhasil dihapus");
+      await fetchAndMergeMeetingFiles(meetingFileKey);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AnimatePresence mode="wait">
@@ -437,6 +488,9 @@ export default function ModulCourseDetailPage() {
                     }}
                     onUpload={handleUpload}
                     uploading={uploading}
+                    onDelete={handleDelete}
+                    deleting={deleting}
+                    submissionCounts={submissionCounts}
                   />
                 ) : meetingsLoading && selectedKey !== "info" && selectedKey !== "peserta" ? (
                   <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">

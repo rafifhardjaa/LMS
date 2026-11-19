@@ -159,4 +159,31 @@ console.log(JSON.stringify({
   downloadChecksum: downloadedChecksum,
 }, null, 2));
 
+const deleteResponse = await fetch(
+  `${BASE}/uploads/storage/materi/${uploaded.id}`,
+  { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+);
+const deletePayload = (await deleteResponse.json()) as {
+  success: boolean;
+  message?: string;
+};
+
+if (!deleteResponse.ok || !deletePayload.success) {
+  fail(`DELETE gagal (${deleteResponse.status}): ${deletePayload.message ?? "tanpa pesan"}`);
+}
+
+const afterDeleteResponse = await fetch(
+  `${BASE}/uploads/storage/materi?meetingId=${encodeURIComponent(meetingId)}`,
+  { headers: { Authorization: `Bearer ${token}` } },
+);
+const afterDeletePayload = (await afterDeleteResponse.json()) as {
+  success: boolean;
+  data?: { id: string }[];
+};
+
+if (afterDeletePayload.data?.some((item) => item.id === uploaded.id)) {
+  fail("file masih muncul setelah DELETE");
+}
+
+console.log("OK file berhasil dihapus");
 process.exit(0);

@@ -450,6 +450,100 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
       query: t.Object({ meetingId: t.String() }),
     }
   )
+  .delete(
+    "/storage/:slot/:id",
+    async ({ params, user, status }: any) => {
+      try {
+        const slot = params.slot as UploadSlot;
+
+        if (!SLOTS.includes(slot)) {
+          return status(400, {
+            success: false,
+            message: "Slot upload tidak valid",
+          });
+        }
+
+        const role = canonicalRole(user.role);
+        const submission = isSubmissionSlot(slot);
+
+        if (!submission && role === "siswa") {
+          return status(403, {
+            success: false,
+            message: "Akses ditolak: Peran tidak valid",
+          });
+        }
+
+        if (submission) {
+          const mirrorTable = submissionMirrorTables[slot]!;
+          const [mirror] = await storageDb
+            .select({
+              id: mirrorTable.id,
+              studentId: mirrorTable.studentId,
+              studentFileId: mirrorTable.studentFileId,
+            })
+            .from(mirrorTable)
+            .where(eq(mirrorTable.id, params.id))
+            .limit(1);
+
+          if (!mirror) {
+            return status(404, {
+              success: false,
+              message: "File tidak ditemukan",
+            });
+          }
+
+          if (role === "siswa" && mirror.studentId !== user.id) {
+            return status(403, {
+              success: false,
+              message: "Akses ditolak: Peran tidak valid",
+            });
+          }
+
+          const studentTable = slotTables[slot];
+          const [deleted] = await storageDb
+            .delete(studentTable)
+            .where(eq(studentTable.id, mirror.studentFileId))
+            .returning({ id: studentTable.id });
+
+          if (!deleted) {
+            return status(404, {
+              success: false,
+              message: "File tidak ditemukan",
+            });
+          }
+        } else {
+          const table = slotTables[slot];
+          const [deleted] = await storageDb
+            .delete(table)
+            .where(eq(table.id, params.id))
+            .returning({ id: table.id });
+
+          if (!deleted) {
+            return status(404, {
+              success: false,
+              message: "File tidak ditemukan",
+            });
+          }
+        }
+
+        return { success: true, message: "File berhasil dihapus" };
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru", "siswa"]),
+      detail: {
+        tags: ["Uploads"],
+        summary: "Hapus file storage slot pertemuan",
+        description:
+          "Hard delete file. Pada slot submission, baris mirror guru ikut terhapus melalui FK cascade.",
+        security: [{ BearerAuth: [] }],
+      },
+      params: t.Object({ slot: t.String(), id: t.String() }),
+    }
+  )
   .get(
     "/:id",
     async ({ params, status }: any) => {
