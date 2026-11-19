@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import moment from "moment";
 import { AnimatePresence, motion } from "framer-motion";
@@ -24,6 +24,15 @@ import {
   type UploadSlot,
 } from "@/components/teacher/modul-management/detail/file-dropzone";
 import { meetings as fallbackMeetings } from "@/components/teacher/modul-management/detail/data";
+import type {
+  TaskDraft,
+  TaskKind,
+} from "@/components/teacher/modul-management/detail/task-submission-dropdown";
+
+const EMPTY_TASK_DRAFTS: Record<TaskKind, TaskDraft[]> = {
+  tugas: [],
+  kuis: [],
+};
 
 const UPLOAD_SLOTS: UploadSlot[] = [
   "materi",
@@ -69,6 +78,39 @@ export default function ModulCourseDetailPage() {
   >({});
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [taskDrafts, setTaskDrafts] = useState<
+    Record<string, Record<TaskKind, TaskDraft[]>>
+  >({});
+  const taskDraftsLoaded = useRef(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem("simanis_task_drafts_v1");
+        if (raw) {
+          setTaskDrafts(
+            JSON.parse(raw) as Record<string, Record<TaskKind, TaskDraft[]>>,
+          );
+        }
+      } catch {
+        setTaskDrafts({});
+      }
+      taskDraftsLoaded.current = true;
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!taskDraftsLoaded.current) return;
+    try {
+      window.localStorage.setItem(
+        "simanis_task_drafts_v1",
+        JSON.stringify(taskDrafts),
+      );
+    } catch {
+      taskDraftsLoaded.current = false;
+    }
+  }, [taskDrafts]);
 
   useEffect(() => {
     let active = true;
@@ -235,6 +277,17 @@ export default function ModulCourseDetailPage() {
     (selectedMeeting && classId && subjectId
       ? `${classId}__${subjectId}__P${selectedMeeting.meetingNumber}`
       : null);
+
+  function updateTaskDrafts(kind: TaskKind, next: TaskDraft[]) {
+    if (!meetingFileKey) return;
+    setTaskDrafts((current) => ({
+      ...current,
+      [meetingFileKey]: {
+        ...(current[meetingFileKey] ?? EMPTY_TASK_DRAFTS),
+        [kind]: next,
+      },
+    }));
+  }
 
   const fetchAndMergeMeetingFiles = useCallback(
     async (key: string, isActive: () => boolean = () => true) => {
@@ -491,6 +544,13 @@ export default function ModulCourseDetailPage() {
                     onDelete={handleDelete}
                     deleting={deleting}
                     submissionCounts={submissionCounts}
+                    tasks={
+                      meetingFileKey
+                        ? taskDrafts[meetingFileKey] ?? EMPTY_TASK_DRAFTS
+                        : EMPTY_TASK_DRAFTS
+                    }
+                    onTasksChange={updateTaskDrafts}
+                    totalStudents={students.length}
                   />
                 ) : meetingsLoading && selectedKey !== "info" && selectedKey !== "peserta" ? (
                   <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
