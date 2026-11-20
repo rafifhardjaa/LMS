@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         destination: "/student/modules",
         permanent: false,
       },
+      {
+        source: "/teacher/tugas-materi",
+        destination: "/teacher/manage-task",
+        permanent: false,
+      },
     ];
   },
 };

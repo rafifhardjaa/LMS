@@ -1,24 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 
-export type ResourceTab = "all" | "tugas" | "materi" | "kuis";
+export type ResourceTab = "tugas" | "kuis";
 export type ClassFilter = "all" | "VII - A" | "VII - B" | "VIII - A";
 export type SubjectFilter = "all" | "fisika" | "informatika" | "jaringan";
-export type TabCounts = Record<ResourceTab, number>;
-
-export type SummaryMetric = {
-  label: string;
-  value: string;
-  unit: string;
-  unitClassName: string;
-  meta: string;
-  metaClassName?: string;
-  icon: LucideIcon;
-  iconBgClassName: string;
-  iconTextClassName: string;
-  progress: number;
-  progressClassName: string;
-  active?: boolean;
-};
 
 export type Assignment = {
   id: string;
@@ -28,6 +12,7 @@ export type Assignment = {
   classes: Exclude<ClassFilter, "all">[];
   title: string;
   description: string;
+  startLabel: string;
   dueLabel: string;
   dueTone: "urgent" | "normal";
   submitted: number;
@@ -46,21 +31,6 @@ export type Assignment = {
   showArchive?: boolean;
 };
 
-export type MaterialFormat = "pdf" | "slides" | "video";
-
-export type Material = {
-  id: string;
-  title: string;
-  meta: string;
-  subject: string;
-  subjectKey: Exclude<SubjectFilter, "all">;
-  format: MaterialFormat;
-  icon: LucideIcon;
-  iconBgClassName: string;
-  iconTextClassName: string;
-  actionLabel: string;
-};
-
 export type GradingItem = {
   id: string;
   name: string;
@@ -76,15 +46,6 @@ export type GradingItem = {
   submittedAtTone: "urgent" | "neutral";
   conformity: string;
   conformityTone: "success" | "warning";
-};
-
-export type DeadlineItem = {
-  id: string;
-  title: string;
-  note: string;
-  badge: string;
-  badgeClassName: string;
-  dotClassName: string;
 };
 
 export type QuickAction = {

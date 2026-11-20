@@ -466,7 +466,7 @@ export function TaskSubmissionDropdown({
                 </div>
 
                   <Link
-                    href="/teacher/tugas-materi"
+                    href="/teacher/manage-task"
                     className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-[#DCE5EE] bg-[#F8FAFC] text-[12px] font-bold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
                   >
                   Periksa Jawaban
