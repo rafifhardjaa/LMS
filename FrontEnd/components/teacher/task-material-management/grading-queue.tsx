@@ -1,11 +1,15 @@
 "use client";
 
 import { Clock3, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
 import type { GradingItem } from "./types";
 
-export function GradingQueue({ items }: { items: GradingItem[] }) {
+type GradingQueueProps = {
+  items: GradingItem[];
+  onOpenAll: () => void;
+};
+
+export function GradingQueue({ items, onOpenAll }: GradingQueueProps) {
   return (
     <FadeIn>
       <section className="flex flex-col gap-4 rounded-[20px] border border-[#FEE2E2] bg-[#FFF9F9] p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -23,7 +27,7 @@ export function GradingQueue({ items }: { items: GradingItem[] }) {
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-full bg-[#FFEBEB] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-[#b71422]">
+          <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-[#b71422]">
             Prioritas
           </span>
         </div>
@@ -49,13 +53,13 @@ export function GradingQueue({ items }: { items: GradingItem[] }) {
                       {item.name}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
                         item.submittedAtTone === "urgent"
-                          ? "bg-[#FFEBEB] text-[#b71422]"
-                          : "bg-[#F1F5F9] text-[#475569]"
+                          ? "text-[#b71422]"
+                          : "text-[#475569]"
                       }`}
                     >
-                      <Clock3 className="size-3" />
+                      <Clock3 className="size-3 shrink-0" />
                       {item.submittedAt}
                     </span>
                   </div>
@@ -78,12 +82,10 @@ export function GradingQueue({ items }: { items: GradingItem[] }) {
           </span>
           <button
             type="button"
-            onClick={() =>
-              toast.info("Batch grading akan tersedia setelah integrasi API.")
-            }
+            onClick={onOpenAll}
             className="flex items-center gap-1 text-[12px] font-semibold text-[#006398] transition-colors hover:underline"
           >
-            Buka Seluruh Antrean (Batch Grading)
+            Buka Seluruh Antrean
             <ExternalLink className="size-4" />
           </button>
         </div>

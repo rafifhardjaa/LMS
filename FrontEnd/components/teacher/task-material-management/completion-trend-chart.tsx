@@ -40,7 +40,7 @@ export function CompletionTrendChart({
             </p>
           </div>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#E8F4FB] px-2 py-1 text-[9px] font-bold text-[#006398]">
+        <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-[#006398]">
           <TrendingUp className="size-3" />
           {onTimeRate}% tepat waktu
         </span>
