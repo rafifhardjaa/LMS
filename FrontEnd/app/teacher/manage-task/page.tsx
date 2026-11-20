@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { TaskMaterialManagement } from "@/components/teacher/task-material-management";
 
 export const metadata: Metadata = {
-  title: "Tugas & Materi Pembelajaran",
+  title: "Kelola Tugas & Penilaian Siswa",
 };
 
-export default function TugasMateriPage() {
+export default function ManageTaskPage() {
   return <TaskMaterialManagement />;
 }

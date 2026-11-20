@@ -1,117 +1,20 @@
 import {
   Bell,
-  ClipboardCheck,
   ClipboardList,
-  Clock3,
   Code,
   Download,
   FileCheck2,
   FileText,
-  FolderOpen,
   ListChecks,
   Pencil,
-  Presentation,
   Printer,
   RefreshCw,
-  TrendingUp,
-  Video,
 } from "lucide-react";
 import type {
   Assignment,
-  ClassFilter,
-  DeadlineItem,
   GradingItem,
-  Material,
   QuickAction,
-  ResourceTab,
-  SubjectFilter,
-  SummaryMetric,
-  TabCounts,
 } from "./types";
-
-export const tabCounts: TabCounts = {
-  all: 60,
-  tugas: 18,
-  materi: 28,
-  kuis: 14,
-};
-
-export const resourceTabs: { id: ResourceTab; label: string }[] = [
-  { id: "all", label: "Semua Berkas" },
-  { id: "tugas", label: "Tugas & LKPD" },
-  { id: "materi", label: "Materi & Slide" },
-  { id: "kuis", label: "Kuis & Asesmen" },
-];
-
-export const classOptions: { value: ClassFilter; label: string }[] = [
-  { value: "all", label: "Semua Kelas" },
-  { value: "VII - A", label: "VII - A" },
-  { value: "VII - B", label: "VII - B" },
-  { value: "VIII - A", label: "VIII - A" },
-];
-
-export const subjectOptions: { value: SubjectFilter; label: string }[] = [
-  { value: "all", label: "Semua Mapel" },
-  { value: "fisika", label: "Fisika Terapan" },
-  { value: "informatika", label: "Informatika Terapan" },
-  { value: "jaringan", label: "Jaringan Komputer" },
-];
-
-export const summaryMetrics: SummaryMetric[] = [
-  {
-    label: "Tugas Sedang Berjalan",
-    value: "18",
-    unit: "Tugas",
-    unitClassName: "text-[#475569]",
-    meta: "4 mendekati tenggat (< 24 jam)",
-    metaClassName: "text-[#b71422]",
-    icon: ClipboardCheck,
-    iconBgClassName: "bg-[#FFEBEB]",
-    iconTextClassName: "text-[#b71422]",
-    progress: 78,
-    progressClassName: "bg-[#b71422]",
-    active: true,
-  },
-  {
-    label: "Materi & Slide Ajar",
-    value: "42",
-    unit: "Modul",
-    unitClassName: "text-[#475569]",
-    meta: "PDF, PPTX, Video Demo",
-    metaClassName: "text-[#94A3B8]",
-    icon: FolderOpen,
-    iconBgClassName: "bg-[#E0F2FE]",
-    iconTextClassName: "text-[#0284C7]",
-    progress: 64,
-    progressClassName: "bg-[#006398]",
-  },
-  {
-    label: "Rasio Pengumpulan",
-    value: "89.4%",
-    unit: "+4.2%",
-    unitClassName: "text-[#16A34A]",
-    meta: "324 dari 362 total siswa terdaftar",
-    metaClassName: "text-[#475569]",
-    icon: TrendingUp,
-    iconBgClassName: "bg-[#DCFCE7]",
-    iconTextClassName: "text-[#16A34A]",
-    progress: 89.4,
-    progressClassName: "bg-[#22C55E]",
-  },
-  {
-    label: "Menunggu Penilaian",
-    value: "38",
-    unit: "Berkas",
-    unitClassName: "text-[#475569]",
-    meta: "Butuh Pemeriksaan Guru",
-    metaClassName: "text-[#D97706]",
-    icon: Clock3,
-    iconBgClassName: "bg-[#FEF3C7]",
-    iconTextClassName: "text-[#D97706]",
-    progress: 48,
-    progressClassName: "bg-[#F59E0B]",
-  },
-];
 
 export const assignments: Assignment[] = [
   {
@@ -124,6 +27,7 @@ export const assignments: Assignment[] = [
       "Praktikum 04: Implementasi Algoritma Dijkstra pada Topologi Jaringan Komputer",
     description:
       "Siswa menyimulasikan rute pengiriman paket tercepat menggunakan matriks ketetanggaan (adjacency matrix) serta melampirkan berkas source code dan dokumen hasil traceroute.",
+    startLabel: "Mulai: 18 Mar 2025, 08:00 WITA",
     dueLabel: "Tenggat: Besok, 14:00 WITA",
     dueTone: "urgent",
     submitted: 34,
@@ -151,6 +55,7 @@ export const assignments: Assignment[] = [
       "Laporan Praktikum: Asas Black, Hukum Termodinamika & Kalorimeter Sederhana",
     description:
       "Pengukuran kapasitas kalor jenis logam kuningan dan aluminium menggunakan bejana kalorimeter isolator. Laporan disusun dalam template standar PDF LKPD Lab Fisika.",
+    startLabel: "Mulai: 20 Mar 2025, 08:00 WITA",
     dueLabel: "Tenggat: 22 Maret 2025",
     dueTone: "normal",
     submitted: 68,
@@ -177,6 +82,7 @@ export const assignments: Assignment[] = [
       "Desain Arsitektur Jaringan Fiber Optic & Skema IP Subnetting Gedung SMK",
     description:
       "Tugas perancangan bagan topologi menggunakan software Cisco Packet Tracer mencakup VLAN, DHCP Server, serta alokasi bandwidth tiap lab kejuruan.",
+    startLabel: "Mulai: 21 Mar 2025, 08:00 WITA",
     dueLabel: "Tenggat: 25 Maret 2025",
     dueTone: "normal",
     submitted: 28,
@@ -192,45 +98,6 @@ export const assignments: Assignment[] = [
     primaryLabel: "Kelola Asesmen",
     primaryIcon: ClipboardList,
     primaryTone: "neutral",
-  },
-];
-
-export const materials: Material[] = [
-  {
-    id: "modul-teori-graf",
-    title: "Modul 04: Teori Graf & Matriks",
-    meta: "PDF • 4.8 MB • Diunduh 78 siswa",
-    subject: "Informatika Terapan",
-    subjectKey: "informatika",
-    format: "pdf",
-    icon: FileText,
-    iconBgClassName: "bg-[#FEE2E2]",
-    iconTextClassName: "text-[#DC2626]",
-    actionLabel: "Unduh",
-  },
-  {
-    id: "slide-dijkstra",
-    title: "Slide: Komparasi Dijkstra vs Bellman",
-    meta: "PPTX • 14.2 MB • 32 Slide Interaktif",
-    subject: "Informatika Terapan",
-    subjectKey: "informatika",
-    format: "slides",
-    icon: Presentation,
-    iconBgClassName: "bg-[#FEF3C7]",
-    iconTextClassName: "text-[#D97706]",
-    actionLabel: "Unduh",
-  },
-  {
-    id: "video-kalor",
-    title: "Video Demo: Kalibrasi Sensor Kalor",
-    meta: "MP4 Stream • 24 Menit • 95% Ditonton",
-    subject: "Fisika Terapan",
-    subjectKey: "fisika",
-    format: "video",
-    icon: Video,
-    iconBgClassName: "bg-[#E0F2FE]",
-    iconTextClassName: "text-[#0284C7]",
-    actionLabel: "Tonton",
   },
 ];
 
@@ -282,33 +149,6 @@ export const gradingQueue: GradingItem[] = [
     submittedAtTone: "neutral",
     conformity: "Remedial Rev. 1",
     conformityTone: "warning",
-  },
-];
-
-export const deadlines: DeadlineItem[] = [
-  {
-    id: "deadline-dijkstra",
-    title: "Tenggat Praktikum Dijkstra (VIII-A)",
-    note: "Pukul 14:00 WITA • Lab Komputer 2",
-    badge: "Besok",
-    badgeClassName: "text-[#b71422]",
-    dotClassName: "bg-[#b71422]",
-  },
-  {
-    id: "deadline-nilai-termo",
-    title: "Batas Kunci Nilai Harian Termo (VII-B)",
-    note: "Pukul 23:59 WITA • Portal Dapodik",
-    badge: "22 Mar",
-    badgeClassName: "text-[#94A3B8]",
-    dotClassName: "bg-[#F59E0B]",
-  },
-  {
-    id: "deadline-kuis",
-    title: "Kuis Formatif Tengah Semester",
-    note: "Pukul 08:00 WITA • Asesmen Online CBT",
-    badge: "26 Mar",
-    badgeClassName: "text-[#94A3B8]",
-    dotClassName: "bg-[#006398]",
   },
 ];
 
