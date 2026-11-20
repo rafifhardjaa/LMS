@@ -1,19 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { BadgeCheck, Loader2 } from "lucide-react";
+import { BadgeCheck, CalendarDays, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import moment from "moment";
 import { cn } from "@/lib/utils";
 import { SearchableDropdown } from "@/components/admin/searchable-dropdown";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { CourseMeeting } from "@/lib/api/master-data";
+import Calendar from "./Calendar";
 
 export type ManageMode = "add" | "edit" | "delete";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20";
+
+function dateToValue(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function valueToDate(value: string): Date | null {
+  if (!value) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function formatMeetingDate(value: string): string {
+  if (!value) return "";
+  const parsed = moment(value, "YYYY-MM-DD");
+  return parsed.isValid() ? parsed.locale("id").format("D MMM YYYY") : value;
+}
 
 const modeMeta: Record<ManageMode, { label: string; submit: string }> = {
   add: { label: "Tambah Baru", submit: "Simpan Pertemuan" },
@@ -86,10 +108,76 @@ export function ManagePertemuanPanel({
     mode === "add" ? "" : (initialMeeting?.objective ?? "")
   );
   const [loading, setLoading] = useState(false);
+  const [openDate, setOpenDate] = useState(false);
+  const [calendarPosition, setCalendarPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const dateButtonRef = useRef<HTMLButtonElement>(null);
+  const calendarPopoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!openDate) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node;
+      if (
+        dateButtonRef.current?.contains(target) ||
+        calendarPopoverRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpenDate(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpenDate(false);
+    }
+
+    function handleViewportChange() {
+      setOpenDate(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [openDate]);
+
+  function toggleDatePicker() {
+    if (openDate) {
+      setOpenDate(false);
+      return;
+    }
+
+    const rect = dateButtonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const calendarHeight = 360;
+    const top =
+      rect.bottom + 8 + calendarHeight > window.innerHeight
+        ? Math.max(16, rect.top - calendarHeight - 8)
+        : rect.bottom + 8;
+    const left = Math.max(
+      16,
+      Math.min(rect.left, window.innerWidth - 356),
+    );
+
+    setCalendarPosition({ top, left });
+    setOpenDate(true);
+  }
 
   function handleSelectMeeting(value: string) {
     const next = Number(value);
     setSelectedNumber(next);
+    setOpenDate(false);
     const found = sortedMeetings.find(
       (meeting) => meeting.meetingNumber === next
     );
@@ -98,6 +186,11 @@ export function ManagePertemuanPanel({
       setTitle(found.title);
       setObjective(found.objective);
     }
+  }
+
+  function handleDateSelect(next: Date) {
+    setDate(dateToValue(next));
+    setOpenDate(false);
   }
 
   const selectedMeeting = sortedMeetings.find(
@@ -200,12 +293,39 @@ export function ManagePertemuanPanel({
 
               <div>
                 <FieldLabel required>Tanggal</FieldLabel>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(event) => setDate(event.target.value)}
-                  className={inputClass}
-                />
+                <div className="relative">
+                  <button
+                    ref={dateButtonRef}
+                    type="button"
+                    onClick={toggleDatePicker}
+                    aria-expanded={openDate}
+                    aria-haspopup="dialog"
+                    className={`${inputClass} flex items-center justify-between gap-2 text-left`}
+                  >
+                    <span className={date ? "text-slate-800" : "text-slate-400"}>
+                      {date ? formatMeetingDate(date) : "Pilih tanggal"}
+                    </span>
+                    <CalendarDays className="size-4 shrink-0 text-slate-400" />
+                  </button>
+                  {openDate &&
+                    calendarPosition &&
+                    createPortal(
+                      <div
+                        ref={calendarPopoverRef}
+                        className="fixed z-50"
+                        style={{
+                          top: calendarPosition.top,
+                          left: calendarPosition.left,
+                        }}
+                      >
+                        <Calendar
+                          value={valueToDate(date)}
+                          onChange={handleDateSelect}
+                        />
+                      </div>,
+                      document.body,
+                    )}
+                </div>
               </div>
 
               <div className="sm:col-span-2">

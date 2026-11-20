@@ -1,19 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { PieChart as PieChartIcon } from "lucide-react";
-import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import type { GradingStatusSlice } from "./types";
 
 export function GradingStatusChart({ data }: { data: GradingStatusSlice[] }) {
+  const [activeSlice, setActiveSlice] = useState<number | null>(null);
+
   const total = data.reduce((sum, slice) => sum + slice.value, 0);
   const graded = data.find((slice) => slice.id === "graded")?.value ?? 0;
   const gradedRate = total ? Math.round((graded / total) * 100) : 0;
+  const active = activeSlice === null ? null : data[activeSlice];
+  const activeRate = active && total ? Math.round((active.value / total) * 100) : 0;
 
   return (
     <section className="flex flex-col rounded-[20px] border border-[#E2E8F0] bg-white p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -31,7 +30,7 @@ export function GradingStatusChart({ data }: { data: GradingStatusSlice[] }) {
             </p>
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2 py-1 text-[9px] font-semibold text-[#64748B]">
+        <span className="shrink-0 text-[10px] font-semibold text-[#475569]">
           {total} berkas
         </span>
       </div>
@@ -48,19 +47,13 @@ export function GradingStatusChart({ data }: { data: GradingStatusSlice[] }) {
                 outerRadius={68}
                 paddingAngle={3}
                 stroke="none"
+                onMouseEnter={(_, index) => setActiveSlice(index)}
+                onMouseLeave={() => setActiveSlice(null)}
               >
                 {data.map((slice) => (
                   <Cell key={slice.id} fill={slice.color} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  borderRadius: 12,
-                  border: "1px solid #E2E8F0",
-                  fontSize: 11,
-                  boxShadow: "0 8px 24px -12px rgba(15,23,42,0.24)",
-                }}
-              />
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
@@ -92,6 +85,30 @@ export function GradingStatusChart({ data }: { data: GradingStatusSlice[] }) {
             </div>
           ))}
         </div>
+      </div>
+
+      <div
+        className="mt-3 flex min-h-5 items-center gap-1.5 text-[10px]"
+        aria-live="polite"
+      >
+        {active ? (
+          <>
+            <span
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: active.color }}
+            />
+            <span className="truncate font-semibold text-[#334155]">
+              {active.label}
+            </span>
+            <span className="shrink-0 text-[#94A3B8]">
+              {active.value} berkas • {activeRate}%
+            </span>
+          </>
+        ) : (
+          <span className="text-[#94A3B8]">
+            Arahkan kursor ke donut untuk melihat detail.
+          </span>
+        )}
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-[#F1F5F9] pt-3">
