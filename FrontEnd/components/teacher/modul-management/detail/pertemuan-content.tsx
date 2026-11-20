@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { FadeIn, ScaleIn } from "@/components/ui/animations";
-import type { CourseMeeting } from "@/lib/api/master-data";
+import type {
+  AssignmentSummary,
+  CourseMeeting,
+} from "@/lib/api/master-data";
 import {
   FileDropzone,
   type PendingFile,
@@ -66,10 +69,7 @@ type PertemuanContentProps = {
   uploading?: boolean;
   onDelete?: (slot: UploadSlot, item: PendingFile) => Promise<void> | void;
   deleting?: boolean;
-  submissionCounts?: {
-    tugasSubmission: number;
-    kuisSubmission: number;
-  };
+  summaries?: Record<string, AssignmentSummary>;
   tasks: Record<TaskKind, TaskDraft[]>;
   onTasksChange: (kind: TaskKind, tasks: TaskDraft[]) => void;
   totalStudents: number;
@@ -88,7 +88,7 @@ export function PertemuanContent({
   uploading = false,
   onDelete,
   deleting = false,
-  submissionCounts = { tugasSubmission: 0, kuisSubmission: 0 },
+  summaries = {},
   tasks,
   onTasksChange,
   totalStudents,
@@ -189,14 +189,14 @@ export function PertemuanContent({
                   label="Pengumpulan tugas"
                   tasks={tasks.tugas}
                   onTasksChange={(next) => onTasksChange("tugas", next)}
-                  submissionCount={submissionCounts.tugasSubmission}
+                  summaries={summaries}
                   totalStudents={totalStudents}
                 />
               </div>
-            </div>
-          </FadeIn>
+              </div>
+            </FadeIn>
 
-          <FadeIn delay={0.22}>
+            <FadeIn delay={0.22}>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
                 Kuis
@@ -223,7 +223,7 @@ export function PertemuanContent({
                   label="Pengumpulan kuis"
                   tasks={tasks.kuis}
                   onTasksChange={(next) => onTasksChange("kuis", next)}
-                  submissionCount={submissionCounts.kuisSubmission}
+                  summaries={summaries}
                   totalStudents={totalStudents}
                 />
               </div>

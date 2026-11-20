@@ -1,5 +1,7 @@
 import { and, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
+import { storageDb } from "../db/storage";
+import { assignments } from "../db/storage-schema";
 import {
   classes,
   gradeLevels,
@@ -472,6 +474,8 @@ export async function deleteClass(id: string) {
       "Kelas masih memiliki siswa atau guru terkait. Nonaktifkan saja."
     );
   }
+  await storageDb.delete(assignments).where(eq(assignments.classId, id));
+
   const rows = await db
     .delete(classes)
     .where(eq(classes.id, id))

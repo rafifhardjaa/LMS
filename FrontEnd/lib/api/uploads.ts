@@ -16,6 +16,7 @@ export interface UploadedFile {
   fileUrl: string;
   studentId: string | null;
   submissionId: string | null;
+  assignmentId?: string | null;
   createdAt: string;
 }
 
@@ -32,6 +33,7 @@ interface UploadResponse {
     fileUrl: string;
     slot: UploadSlot;
     submissionId?: string;
+    assignmentId?: string | null;
     checksumSha256: string;
     sizeBytes: number;
   };
@@ -43,10 +45,16 @@ interface DeleteResponse {
 }
 
 export const uploadsApi = {
-  upload: (slot: UploadSlot, file: File, meetingId: string) => {
+  upload: (
+    slot: UploadSlot,
+    file: File,
+    meetingId: string,
+    assignmentId?: string,
+  ) => {
     const form = new FormData();
     form.append("file", file, file.name);
     form.append("meetingId", meetingId);
+    if (assignmentId) form.append("assignmentId", assignmentId);
     return apiUpload<UploadResponse>(`/api/v1/uploads/storage/${slot}`, form);
   },
 

@@ -246,6 +246,30 @@ export interface CourseMaterial {
   objective: string;
 }
 
+export interface Assignment {
+  id: string;
+  subjectId: string;
+  classId: string;
+  meetingId: string;
+  type: "tugas" | "kuis";
+  title: string;
+  description: string | null;
+  startAt: string;
+  deadlineAt: string;
+  orderIndex: number;
+  createdBy: string | null;
+  summary: AssignmentSummary | null;
+}
+
+export interface AssignmentSummary {
+  assignmentId: string;
+  totalStudents: number;
+  submitted: number;
+  notSubmitted: number;
+  percent: number;
+  students: Array<{ studentId: string }>;
+}
+
 export interface MajorInput {
   code: string;
   name: string;
@@ -592,13 +616,62 @@ export const masterDataApi = {
           { method: "DELETE" }
         ),
     },
-    materials: {
-      list: (subjectId: string) =>
-        apiFetch<ApiSuccess<CourseMaterial[]>>(
-          `/api/v1/course-details/${subjectId}/materials`
-        ),
+      materials: {
+        list: (subjectId: string) =>
+          apiFetch<ApiSuccess<CourseMaterial[]>>(
+            `/api/v1/course-details/${subjectId}/materials`
+          ),
+      },
+      assignments: {
+        list: (
+          subjectId: string,
+          classId: string,
+          meetingId: string,
+          type?: "tugas" | "kuis",
+        ) =>
+          apiFetch<ApiSuccess<Assignment[]>>(
+            `/api/v1/course-details/${subjectId}/assignments${queryString({
+              classId,
+              meetingId,
+              type,
+            })}`,
+          ),
+        create: (
+          subjectId: string,
+          body: {
+            classId: string;
+            meetingId: string;
+            type: "tugas" | "kuis";
+            title: string;
+            description?: string;
+            startAt?: string;
+            deadlineAt: string;
+          },
+        ) =>
+          apiFetch<ApiSuccess<Assignment>>(
+            `/api/v1/course-details/${subjectId}/assignments`,
+            { method: "POST", body: JSON.stringify(body) },
+          ),
+        update: (
+          subjectId: string,
+          id: string,
+          body: Partial<Assignment & { meetingId?: string; classId?: string }>,
+        ) =>
+          apiFetch<ApiSuccess<Assignment>>(
+            `/api/v1/course-details/${subjectId}/assignments/${id}`,
+            { method: "PUT", body: JSON.stringify(body) },
+          ),
+        remove: (subjectId: string, id: string) =>
+          apiFetch<ApiSuccess<unknown>>(
+            `/api/v1/course-details/${subjectId}/assignments/${id}`,
+            { method: "DELETE" },
+          ),
+        summary: (subjectId: string, id: string) =>
+          apiFetch<ApiSuccess<AssignmentSummary>>(
+            `/api/v1/course-details/${subjectId}/assignments/${id}/summary`,
+          ),
+      },
     },
-  },
   modules: {
     list: () =>
       apiFetch<ApiSuccess<{ id: string; title: string; description?: string }[]>>(
