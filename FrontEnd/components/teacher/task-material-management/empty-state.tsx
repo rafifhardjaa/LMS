@@ -9,6 +9,7 @@ type EmptyStateProps = {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  bare?: boolean;
 };
 
 export function EmptyState({
@@ -17,10 +18,17 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  bare = false,
 }: EmptyStateProps) {
   return (
     <FadeIn>
-      <div className="flex flex-col items-center justify-center rounded-2xl bg-white px-6 py-12 text-center shadow-sm">
+      <div
+        className={`flex flex-col items-center justify-center px-6 py-12 text-center ${
+          bare
+            ? "rounded-2xl bg-[#F8FAFC]"
+            : "rounded-2xl bg-white shadow-sm"
+        }`}
+      >
         <div className="flex size-12 items-center justify-center rounded-2xl bg-[#FFEBEB] text-[#b71422]">
           <Icon className="size-6" />
         </div>
