@@ -9,9 +9,13 @@ import type { Assignment } from "./types";
 
 type AssignmentListProps = {
   assignments: Assignment[];
+  onOpenQueue: (assignment: Assignment) => void;
 };
 
-export function AssignmentList({ assignments }: AssignmentListProps) {
+export function AssignmentList({
+  assignments,
+  onOpenQueue,
+}: AssignmentListProps) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -24,7 +28,7 @@ export function AssignmentList({ assignments }: AssignmentListProps) {
               <h2 className="text-[16px] font-bold tracking-tight text-[#1E293B]">
                 Tugas Praktikum &amp; LKPD Aktif
               </h2>
-              <span className="rounded-full bg-[#FFEBEB] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#b71422]">
+              <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wide text-[#b71422]">
                 {assignments.length} Prioritas
               </span>
             </div>
@@ -51,7 +55,11 @@ export function AssignmentList({ assignments }: AssignmentListProps) {
           className="flex flex-col gap-4"
         >
           {assignments.map((assignment) => (
-            <AssignmentCard key={assignment.id} assignment={assignment} />
+            <AssignmentCard
+              key={assignment.id}
+              assignment={assignment}
+              onOpenQueue={onOpenQueue}
+            />
           ))}
         </StaggerChildren>
       ) : (

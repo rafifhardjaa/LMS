@@ -4,6 +4,7 @@ export type ResourceTab = "tugas" | "kuis";
 export type ClassFilter = "all" | "VII - A" | "VII - B" | "VIII - A";
 export type SubjectFilter = "all" | "fisika" | "informatika" | "jaringan";
 export type AssignmentStatus = "dueSoon" | "active" | "done";
+export type GradingStatus = "pending" | "graded" | "revision";
 
 export type Assignment = {
   id: string;
@@ -34,11 +35,16 @@ export type GradingItem = {
   avatarClassName: string;
   nisn: string;
   className: string;
+  assignmentId: string;
+  taskTitle: string;
+  subject: string;
   fileName: string;
   fileIcon: LucideIcon;
   fileIconClassName: string;
   submittedAt: string;
   submittedAtTone: "urgent" | "neutral";
+  status: GradingStatus;
+  score: number | null;
 };
 
 export type QuickAction = {
