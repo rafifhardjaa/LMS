@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import { toast } from "sonner";
+import type { AssignmentSummary } from "@/lib/api/master-data";
 import Calendar from "./Calendar";
 import {
   Dialog,
@@ -31,6 +32,7 @@ export type TaskKind = "tugas" | "kuis";
 
 export type TaskDraft = {
   id: string;
+  serverId?: string;
   title: string;
   description: string;
   startDate: string;
@@ -44,7 +46,7 @@ type TaskSubmissionDropdownProps = {
   label: string;
   tasks: TaskDraft[];
   onTasksChange: (tasks: TaskDraft[]) => void;
-  submissionCount: number;
+  summaries?: Record<string, AssignmentSummary>;
   totalStudents: number;
 };
 
@@ -137,7 +139,7 @@ export function TaskSubmissionDropdown({
   label,
   tasks,
   onTasksChange,
-  submissionCount,
+  summaries = {},
   totalStudents,
 }: TaskSubmissionDropdownProps) {
   const [expanded, setExpanded] = useState(false);
@@ -155,7 +157,8 @@ export function TaskSubmissionDropdown({
   const selectedTask =
     tasks.find((task) => task.id === selectedTaskId) ?? tasks[0] ?? null;
 
-  const submitted = Math.min(submissionCount, totalStudents);
+  const summary = selectedTask ? summaries[selectedTask.id] : undefined;
+  const submitted = summary ? Math.min(summary.submitted, totalStudents) : 0;
   const notSubmitted = Math.max(totalStudents - submitted, 0);
   const percent = totalStudents > 0 ? Math.round((submitted / totalStudents) * 100) : 0;
 
@@ -280,7 +283,7 @@ export function TaskSubmissionDropdown({
           {label}
         </span>
         <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2.5 py-1 text-[11px] font-bold text-[#475569]">
-          {submissionCount} siswa
+          {summary?.submitted ?? 0} siswa
         </span>
         <motion.span
           animate={{ rotate: expanded ? 180 : 0 }}
@@ -462,10 +465,10 @@ export function TaskSubmissionDropdown({
                   </div>
                 </div>
 
-                <Link
-                  href="/teacher/tugas-materi"
-                  className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-[#DCE5EE] bg-[#F8FAFC] text-[12px] font-bold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
-                >
+                  <Link
+                    href="/teacher/tugas-materi"
+                    className="mt-4 inline-flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-[#DCE5EE] bg-[#F8FAFC] text-[12px] font-bold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
+                  >
                   Periksa Jawaban
                   <ArrowUpRight className="size-4" />
                 </Link>
@@ -518,7 +521,7 @@ export function TaskSubmissionDropdown({
                   {modalMode === "edit" ? "Edit" : "Tambah"} {kind}
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-[13px] leading-6 text-[#475569]">
-                  Data ini disimpan di frontend untuk sementara.
+                      Tugas dan kuis tersimpan di backend, tersedia dalam kurun waktu sebentar.
                 </DialogDescription>
               </div>
 

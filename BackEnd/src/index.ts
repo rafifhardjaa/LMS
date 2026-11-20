@@ -24,6 +24,7 @@ import { reviewsRoute } from "./routes/reviews";
 import { notificationsRoute } from "./routes/notifications";
 import { progressRoute } from "./routes/progress";
 import { uploadsRoute } from "./routes/uploads";
+import { assignmentsRoute } from "./routes/assignments-route";
 
 const documentation = {
   info: {
@@ -137,6 +138,7 @@ const app = new Elysia()
   .use(teachersRoute)
   .use(jadwalPelajaranRoute)
   .use(courseDetailRoute)
+  .use(assignmentsRoute)
   .use(attendanceRoute)
   .use(dashboardRoute)
   .use(studentsRoute)

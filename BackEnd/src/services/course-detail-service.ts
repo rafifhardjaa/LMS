@@ -1,5 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "../db/index";
+import { storageDb } from "../db/storage";
+import { assignments } from "../db/storage-schema";
 import {
   courseMaterials,
   courseMeetings,
@@ -39,7 +41,7 @@ function assertDate(value: string) {
   }
 }
 
-async function assertTeacherHasAssignment(
+export async function assertTeacherHasAssignment(
   teacherId: string | null,
   subjectId: string,
   classId: string
@@ -299,6 +301,23 @@ export async function deleteCourseMeeting({
 }) {
   await assertTeacherHasAssignment(teacherId, subjectId, classId);
   assertPositiveInteger(meetingNumber);
+
+  const [meeting] = await db
+    .select({ id: courseMeetings.id })
+    .from(courseMeetings)
+    .where(
+      and(
+        eq(courseMeetings.subjectId, subjectId),
+        eq(courseMeetings.meetingNumber, meetingNumber)
+      )
+    )
+    .limit(1);
+
+  if (meeting) {
+    await storageDb
+      .delete(assignments)
+      .where(eq(assignments.meetingId, meeting.id));
+  }
 
   await db
     .delete(courseMeetings)

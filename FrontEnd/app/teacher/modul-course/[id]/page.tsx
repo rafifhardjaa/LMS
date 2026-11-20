@@ -10,6 +10,8 @@ import { masterDataApi } from "@/lib/api/master-data";
 import { uploadsApi, type UploadedFile } from "@/lib/api/uploads";
 import { useAuthStore } from "@/lib/store/auth-store";
 import type {
+  Assignment,
+  AssignmentSummary,
   CourseMeeting,
   JadwalPelajaran,
   StudentSummary,
@@ -55,6 +57,67 @@ function toPendingFile(item: UploadedFile): PendingFile {
   };
 }
 
+const WIB_DATE = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const WIB_TIME = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Jakarta",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+function wibIso(dateStr: string, timeStr: string) {
+  return `${dateStr}T${timeStr}:00+07:00`;
+}
+
+function wibDateValue(iso?: string | null): string {
+  if (!iso) return "";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return WIB_DATE.format(parsed);
+}
+
+function wibTimeValue(iso?: string | null): string {
+  if (!iso) return "";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const time = WIB_TIME.format(parsed);
+  return time.startsWith("24:") ? `00:${time.slice(3)}` : time;
+}
+
+function toTaskDraftFromAssignment(assignment: Assignment): TaskDraft {
+  return {
+    id: assignment.id,
+    serverId: assignment.id,
+    title: assignment.title,
+    description: assignment.description ?? "",
+    startDate: wibDateValue(assignment.startAt),
+    startTime: wibTimeValue(assignment.startAt),
+    deadline: wibDateValue(assignment.deadlineAt),
+    deadlineTime: wibTimeValue(assignment.deadlineAt),
+  };
+}
+
+const UUID_RE_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function taskDraftChanged(a: TaskDraft, b: TaskDraft | undefined) {
+  if (!b) return true;
+  return (
+    b.title !== a.title ||
+    b.description !== a.description ||
+    b.startDate !== a.startDate ||
+    (b.startTime ?? "") !== (a.startTime ?? "") ||
+    b.deadline !== a.deadline ||
+    (b.deadlineTime ?? "") !== (a.deadlineTime ?? "")
+  );
+}
+
 export default function ModulCourseDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
@@ -81,36 +144,10 @@ export default function ModulCourseDetailPage() {
   const [taskDrafts, setTaskDrafts] = useState<
     Record<string, Record<TaskKind, TaskDraft[]>>
   >({});
-  const taskDraftsLoaded = useRef(false);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        const raw = window.localStorage.getItem("simanis_task_drafts_v1");
-        if (raw) {
-          setTaskDrafts(
-            JSON.parse(raw) as Record<string, Record<TaskKind, TaskDraft[]>>,
-          );
-        }
-      } catch {
-        setTaskDrafts({});
-      }
-      taskDraftsLoaded.current = true;
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!taskDraftsLoaded.current) return;
-    try {
-      window.localStorage.setItem(
-        "simanis_task_drafts_v1",
-        JSON.stringify(taskDrafts),
-      );
-    } catch {
-      taskDraftsLoaded.current = false;
-    }
-  }, [taskDrafts]);
+  const [taskSummaries, setTaskSummaries] = useState<
+    Record<string, AssignmentSummary>
+  >({});
+  const legacyMigratedRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -278,16 +315,213 @@ export default function ModulCourseDetailPage() {
       ? `${classId}__${subjectId}__P${selectedMeeting.meetingNumber}`
       : null);
 
-  function updateTaskDrafts(kind: TaskKind, next: TaskDraft[]) {
-    if (!meetingFileKey) return;
-    setTaskDrafts((current) => ({
-      ...current,
-      [meetingFileKey]: {
-        ...(current[meetingFileKey] ?? EMPTY_TASK_DRAFTS),
-        [kind]: next,
-      },
-    }));
-  }
+  const fetchAssignments = useCallback(
+    async (key: string) => {
+      if (!meetingSubjectId || !meetingClassId) {
+        setTaskDrafts((current) => ({ ...current, [key]: EMPTY_TASK_DRAFTS }));
+        return;
+      }
+
+      const result = await masterDataApi.courseDetails.assignments.list(
+        meetingSubjectId,
+        meetingClassId,
+        key,
+      );
+
+      if (result.error) {
+        setTaskDrafts((current) => ({
+          ...current,
+          [key]: EMPTY_TASK_DRAFTS,
+        }));
+        return;
+      }
+
+      const nextDrafts: Record<TaskKind, TaskDraft[]> = {
+        tugas: [],
+        kuis: [],
+      };
+      const nextSummaries: Record<string, AssignmentSummary> = {};
+
+      for (const assignment of result.data?.data ?? []) {
+        nextDrafts[assignment.type].push(toTaskDraftFromAssignment(assignment));
+        if (assignment.summary) {
+          nextSummaries[assignment.id] = assignment.summary;
+        }
+      }
+
+      setTaskDrafts((current) => ({ ...current, [key]: nextDrafts }));
+      setTaskSummaries((current) => ({ ...current, ...nextSummaries }));
+    },
+    [meetingSubjectId, meetingClassId],
+  );
+
+  const migrateLegacyTaskDrafts = useCallback(async () => {
+    if (!meetingSubjectId || !meetingClassId) return;
+    const raw = window.localStorage.getItem("simanis_task_drafts_v1");
+    if (!raw) return;
+
+    try {
+      const legacy = JSON.parse(raw) as Record<
+        string,
+        Partial<Record<TaskKind, TaskDraft[]>>
+      >;
+      const nextDrafts: Record<string, Record<TaskKind, TaskDraft[]>> = {};
+      let migrated = false;
+
+      for (const [meetingId, kinds] of Object.entries(legacy)) {
+        if (!meetingId || !meetingId.match(UUID_RE_PATTERN)) continue;
+        nextDrafts[meetingId] = { tugas: [], kuis: [] };
+        for (const kind of ["tugas", "kuis"] as const) {
+          for (const draft of kinds?.[kind] ?? []) {
+            if (!draft.title?.trim()) continue;
+            const res = await masterDataApi.courseDetails.assignments.create(
+              meetingSubjectId,
+              {
+                classId: meetingClassId,
+                meetingId,
+                type: kind,
+                title: draft.title.trim(),
+                description: draft.description?.trim() || undefined,
+                startAt: wibIso(
+                  draft.startDate,
+                  draft.startTime || "08:00",
+                ),
+                deadlineAt: wibIso(
+                  draft.deadline,
+                  draft.deadlineTime || "23:59",
+                ),
+              },
+            );
+            if (res.error) continue;
+            const created = res.data?.data;
+            if (!created) continue;
+            nextDrafts[meetingId][kind].push(toTaskDraftFromAssignment(created));
+            const summary = created.summary;
+            if (summary) {
+              setTaskSummaries((current) => ({
+                ...current,
+                [created.id]: summary,
+              }));
+            }
+            migrated = true;
+          }
+        }
+      }
+
+      if (migrated) setTaskDrafts((current) => ({ ...current, ...nextDrafts }));
+    } catch {
+      // Abaikan data lama yang gagal dimigrasi; sistem masih bisa diisi ulang.
+    } finally {
+      window.localStorage.removeItem("simanis_task_drafts_v1");
+    }
+  }, [meetingSubjectId, meetingClassId]);
+
+  const handleTasksChange = useCallback(
+    async (kind: TaskKind, next: TaskDraft[]) => {
+      const key = meetingFileKey;
+      if (!meetingSubjectId || !meetingClassId || !key) return;
+
+      const current = taskDrafts[key]?.[kind] ?? [];
+      const nextIds = new Set(next.map((draft) => draft.id));
+
+      const baseBody = (draft: TaskDraft) => ({
+        title: draft.title.trim(),
+        description: draft.description.trim(),
+        startAt: draft.startDate
+          ? wibIso(draft.startDate, draft.startTime || "08:00")
+          : undefined,
+        deadlineAt: wibIso(draft.deadline, draft.deadlineTime || "23:59"),
+      });
+
+      try {
+        for (const draft of next) {
+          if (!draft.serverId) {
+            const created = await masterDataApi.courseDetails.assignments.create(
+              meetingSubjectId,
+              {
+                classId: meetingClassId,
+                meetingId: key,
+                type: kind,
+                ...baseBody(draft),
+              },
+            );
+            const createdRow = created.data?.data;
+            if (created.error || !createdRow) {
+              throw new Error(created.error?.message ?? "Gagal membuat tugas");
+            }
+
+            setTaskDrafts((currentDrafts) => {
+              const entry = currentDrafts[key]?.[kind] ?? [];
+              return {
+                ...currentDrafts,
+                [key]: {
+                  ...(currentDrafts[key] ?? EMPTY_TASK_DRAFTS),
+                  [kind]: entry.map((item) =>
+                    item.id === draft.id
+                      ? { ...item, id: createdRow.id, serverId: createdRow.id }
+                      : item,
+                  ),
+                },
+              };
+            });
+
+            const summary = createdRow.summary;
+            if (summary) {
+              setTaskSummaries((currentSummaries) => ({
+                ...currentSummaries,
+                [createdRow.id]: summary,
+              }));
+            }
+            continue;
+          }
+
+          const existing =
+            current.find((item) => item.serverId === draft.serverId) ??
+            current.find((item) => item.id === draft.serverId);
+          if (!taskDraftChanged(draft, existing)) continue;
+
+          const updated = await masterDataApi.courseDetails.assignments.update(
+            meetingSubjectId,
+            draft.serverId,
+            baseBody(draft),
+          );
+          if (updated.error || !updated.data?.data) {
+            throw new Error(updated.error?.message ?? "Gagal memperbarui tugas");
+          }
+        }
+
+        for (const draft of current) {
+          if (!draft.serverId || nextIds.has(draft.id)) continue;
+          const removed = await masterDataApi.courseDetails.assignments.remove(
+            meetingSubjectId,
+            draft.serverId,
+          );
+          if (removed.error) {
+            throw new Error(removed.error.message ?? "Gagal menghapus tugas");
+          }
+        }
+
+        toast.success(
+          `${kind === "tugas" ? "Tugas" : "Kuis"} berhasil disimpan`,
+        );
+      } catch (error) {
+        toast.error(
+          error instanceof Error && error.message
+            ? error.message
+            : `Gagal menyimpan ${kind}; data terlihat di server`,
+        );
+      } finally {
+        void fetchAssignments(key);
+      }
+    },
+    [
+      meetingFileKey,
+      meetingSubjectId,
+      meetingClassId,
+      taskDrafts,
+      fetchAssignments,
+    ],
+  );
 
   const fetchAndMergeMeetingFiles = useCallback(
     async (key: string, isActive: () => boolean = () => true) => {
@@ -321,12 +555,22 @@ export default function ModulCourseDetailPage() {
     if (!meetingFileKey) return;
     let active = true;
     void (async () => {
+      if (!legacyMigratedRef.current) {
+        legacyMigratedRef.current = true;
+        await migrateLegacyTaskDrafts();
+      }
+      await fetchAssignments(meetingFileKey);
       await fetchAndMergeMeetingFiles(meetingFileKey, () => active);
     })();
     return () => {
       active = false;
     };
-  }, [meetingFileKey, fetchAndMergeMeetingFiles]);
+  }, [
+    meetingFileKey,
+    fetchAndMergeMeetingFiles,
+    fetchAssignments,
+    migrateLegacyTaskDrafts,
+  ]);
 
   function updateMeetingFile(
     slot: UploadSlot,
@@ -401,23 +645,6 @@ export default function ModulCourseDetailPage() {
       setUploading(false);
     }
   }
-
-  const submissionCounts = useMemo(() => {
-    const entry = meetingFileKey ? meetingFiles[meetingFileKey] : null;
-    const countBySlot = (slot: "tugasSubmission" | "kuisSubmission") => {
-      const studentIds = new Set(
-        (entry?.[slot] ?? [])
-          .filter((item) => item.status === "saved" && item.studentId)
-          .map((item) => item.studentId),
-      );
-      return studentIds.size;
-    };
-
-    return {
-      tugasSubmission: countBySlot("tugasSubmission"),
-      kuisSubmission: countBySlot("kuisSubmission"),
-    };
-  }, [meetingFiles, meetingFileKey]);
 
   async function handleDelete(slot: UploadSlot, item: PendingFile) {
     if (!meetingFileKey || !item.id) return;
@@ -543,13 +770,13 @@ export default function ModulCourseDetailPage() {
                     uploading={uploading}
                     onDelete={handleDelete}
                     deleting={deleting}
-                    submissionCounts={submissionCounts}
+                      summaries={taskSummaries}
                     tasks={
                       meetingFileKey
                         ? taskDrafts[meetingFileKey] ?? EMPTY_TASK_DRAFTS
                         : EMPTY_TASK_DRAFTS
                     }
-                    onTasksChange={updateTaskDrafts}
+                    onTasksChange={handleTasksChange}
                     totalStudents={students.length}
                   />
                 ) : meetingsLoading && selectedKey !== "info" && selectedKey !== "peserta" ? (
