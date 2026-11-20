@@ -4,14 +4,18 @@ import { useState } from "react";
 import { ClipboardList } from "lucide-react";
 import { FadeIn } from "@/components/ui/animations";
 import { AssignmentList } from "./assignment-list";
+import { CompletionTrendChart } from "./completion-trend-chart";
 import { EmptyState } from "./empty-state";
 import { GradingQueue } from "./grading-queue";
+import { GradingStatusChart } from "./grading-status-chart";
 import { TaskMaterialHeader } from "./page-header";
 import { QuickActions } from "./quick-actions";
 import { ResourceToolbar } from "./resource-toolbar";
 import {
   assignments,
+  completionTrend,
   gradingQueue,
+  gradingStatus,
   quickActions,
 } from "./data";
 import type { ResourceTab } from "./types";
@@ -22,6 +26,15 @@ export function TaskMaterialManagement() {
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <TaskMaterialHeader />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <FadeIn delay={0.06}>
+          <CompletionTrendChart data={completionTrend} />
+        </FadeIn>
+        <FadeIn delay={0.1}>
+          <GradingStatusChart data={gradingStatus} />
+        </FadeIn>
+      </div>
 
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
         <section className="rounded-2xl bg-white p-5 shadow-sm lg:col-span-8">
