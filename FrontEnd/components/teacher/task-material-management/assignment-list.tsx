@@ -15,14 +15,23 @@ export function AssignmentList({ assignments }: AssignmentListProps) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="size-[22px] text-[#b71422]" />
-          <h2 className="text-[20px] font-semibold tracking-tight text-[#1E293B]">
-            Tugas Praktikum &amp; LKPD Aktif
-          </h2>
-          <span className="rounded-full bg-[#FFEBEB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#b71422]">
-            {assignments.length} Prioritas
+        <div className="flex items-center gap-2.5">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FFEBEB] text-[#b71422]">
+            <ClipboardList className="size-4" />
           </span>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-[16px] font-bold tracking-tight text-[#1E293B]">
+                Tugas Praktikum &amp; LKPD Aktif
+              </h2>
+              <span className="rounded-full bg-[#FFEBEB] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#b71422]">
+                {assignments.length} Prioritas
+              </span>
+            </div>
+            <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
+              Pantau pengumpulan dan nilai jawaban siswa.
+            </p>
+          </div>
         </div>
         <button
           type="button"

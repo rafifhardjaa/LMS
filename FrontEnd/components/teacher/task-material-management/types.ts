@@ -3,25 +3,21 @@ import type { LucideIcon } from "lucide-react";
 export type ResourceTab = "tugas" | "kuis";
 export type ClassFilter = "all" | "VII - A" | "VII - B" | "VIII - A";
 export type SubjectFilter = "all" | "fisika" | "informatika" | "jaringan";
+export type AssignmentStatus = "dueSoon" | "active" | "done";
 
 export type Assignment = {
   id: string;
-  badge: string;
   subject: string;
   subjectKey: Exclude<SubjectFilter, "all">;
   classes: Exclude<ClassFilter, "all">[];
+  status: AssignmentStatus;
   title: string;
   description: string;
   startLabel: string;
   dueLabel: string;
-  dueTone: "urgent" | "normal";
   submitted: number;
   total: number;
   percentage: number;
-  accentClassName: string;
-  iconBgClassName: string;
-  iconTextClassName: string;
-  progressClassName: string;
   percentageClassName: string;
   secondaryLabel: string;
   secondaryIcon: LucideIcon;
@@ -39,13 +35,10 @@ export type GradingItem = {
   nisn: string;
   className: string;
   fileName: string;
-  subject: string;
   fileIcon: LucideIcon;
   fileIconClassName: string;
   submittedAt: string;
   submittedAtTone: "urgent" | "neutral";
-  conformity: string;
-  conformityTone: "success" | "warning";
 };
 
 export type QuickAction = {
@@ -54,4 +47,17 @@ export type QuickAction = {
   icon: LucideIcon;
   iconClassName: string;
   hoverClassName: string;
+};
+
+export type CompletionTrendPoint = {
+  day: string;
+  onTime: number;
+  late: number;
+};
+
+export type GradingStatusSlice = {
+  id: string;
+  label: string;
+  value: number;
+  color: string;
 };
