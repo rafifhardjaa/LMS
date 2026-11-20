@@ -26,106 +26,76 @@ export function GradingQueue({ items }: { items: GradingItem[] }) {
           </span>
         </div>
 
-        <div className="overflow-x-auto rounded-xl">
-          <table className="w-full min-w-[760px] border-collapse text-left">
-            <thead>
-              <tr className="bg-[#F8FAFC] text-[10px] font-bold uppercase tracking-[0.06em] text-[#94A3B8]">
-                <th className="px-3 py-3">Siswa &amp; Rombel</th>
-                <th className="px-3 py-3">Mata Pelajaran &amp; Dokumen</th>
-                <th className="px-3 py-3">Waktu Kirim</th>
-                <th className="px-3 py-3">Kesesuaian</th>
-                <th className="px-3 py-3 text-right">Aksi Penilaian</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#F1F5F9] text-[13px] text-[#475569]">
-              {items.map((item) => {
-                const FileIcon = item.fileIcon;
+        <div className="flex flex-col gap-2">
+          {items.map((item) => {
+            const FileIcon = item.fileIcon;
 
-                return (
-                  <tr
-                    key={item.id}
-                    className="group transition-colors hover:bg-[#F8FAFC]"
-                  >
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className={`flex size-8 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${item.avatarClassName}`}
-                        >
-                          {item.initials}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-[#1E293B] transition-colors group-hover:text-[#b71422]">
-                            {item.name}
-                          </span>
-                          <span className="text-[11px] text-[#94A3B8]">
-                            {item.nisn} • {item.className}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
+            return (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-xl border border-[#F1F5F9] bg-[#F8FAFC] p-3 transition-colors hover:border-[#b71422]/20"
+              >
+                <div
+                  className={`flex size-9 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${item.avatarClassName}`}
+                >
+                  {item.initials}
+                </div>
 
-                    <td className="px-3 py-3">
-                      <div className="flex flex-col">
-                        <span className="flex items-center gap-1 font-semibold text-[#1E293B]">
-                          <FileIcon
-                            className={`size-4 ${item.fileIconClassName}`}
-                          />
-                          {item.fileName}
-                        </span>
-                        <span className="text-[11px] text-[#94A3B8]">
-                          {item.subject}
-                        </span>
-                      </div>
-                    </td>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate text-[13px] font-semibold text-[#1E293B]">
+                      {item.name}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                        item.submittedAtTone === "urgent"
+                          ? "bg-[#FFEBEB] text-[#b71422]"
+                          : "bg-[#F1F5F9] text-[#475569]"
+                      }`}
+                    >
+                      <Clock3 className="size-3" />
+                      {item.submittedAt}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 truncate text-[11px] text-[#94A3B8]">
+                    {item.nisn} • {item.className} • {item.subject}
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-semibold">
+                    <span className="inline-flex items-center gap-1 text-[#1E293B]">
+                      <FileIcon className={`size-4 ${item.fileIconClassName}`} />
+                      {item.fileName}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 ${
+                        item.conformityTone === "success"
+                          ? "text-[#16A34A]"
+                          : "text-[#D97706]"
+                      }`}
+                    >
+                      {item.conformityTone === "success" ? (
+                        <Check className="size-4" />
+                      ) : (
+                        <TriangleAlert className="size-4" />
+                      )}
+                      {item.conformity}
+                    </span>
+                  </div>
+                </div>
 
-                    <td className="px-3 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                          item.submittedAtTone === "urgent"
-                            ? "bg-[#FFEBEB] text-[#b71422]"
-                            : "bg-[#F1F5F9] text-[#475569]"
-                        }`}
-                      >
-                        <Clock3 className="size-3" />
-                        {item.submittedAt}
-                      </span>
-                    </td>
-
-                    <td className="px-3 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[12px] font-semibold ${
-                          item.conformityTone === "success"
-                            ? "text-[#16A34A]"
-                            : "text-[#D97706]"
-                        }`}
-                      >
-                        {item.conformityTone === "success" ? (
-                          <Check className="size-4" />
-                        ) : (
-                          <TriangleAlert className="size-4" />
-                        )}
-                        {item.conformity}
-                      </span>
-                    </td>
-
-                    <td className="px-3 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          toast.info(
-                            "Form nilai dan feedback akan dihubungkan ke modul penilaian.",
-                          )
-                        }
-                        className="rounded-lg bg-[#FFEBEB] px-3 py-1.5 text-[12px] font-semibold text-[#b71422] transition-all hover:bg-[#b71422] hover:text-white active:scale-[0.98]"
-                      >
-                        Beri Nilai &amp; Feedback
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                <button
+                  type="button"
+                  onClick={() =>
+                    toast.info(
+                      "Form nilai dan feedback akan dihubungkan ke modul penilaian.",
+                    )
+                  }
+                  className="shrink-0 rounded-lg bg-[#FFEBEB] px-3 py-1.5 text-[12px] font-semibold text-[#b71422] transition-all hover:bg-[#b71422] hover:text-white active:scale-[0.98]"
+                >
+                  Beri Nilai &amp; Feedback
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2">

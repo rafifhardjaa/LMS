@@ -9,13 +9,9 @@ import type { Assignment } from "./types";
 
 type AssignmentListProps = {
   assignments: Assignment[];
-  onReset: () => void;
 };
 
-export function AssignmentList({
-  assignments,
-  onReset,
-}: AssignmentListProps) {
+export function AssignmentList({ assignments }: AssignmentListProps) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -51,11 +47,10 @@ export function AssignmentList({
         </StaggerChildren>
       ) : (
         <EmptyState
+          bare
           icon={ClipboardList}
-          title="Tidak ada tugas yang cocok"
-          description="Ubah filter kelas, mata pelajaran, atau kata kunci untuk menampilkan tugas lain."
-          actionLabel="Reset filter"
-          onAction={onReset}
+          title="Belum ada tugas praktikum"
+          description="Tugas praktikum dan LKPD yang Anda buat akan tampil di sini."
         />
       )}
     </section>

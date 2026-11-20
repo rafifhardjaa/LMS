@@ -29,10 +29,10 @@ const menu = [
     title: "Modul & Course",
   },
   {
-    label: "Tugas & Materi",
+    label: "Kelola Tugas",
     icon: ClipboardList,
-    href: "/teacher/tugas-materi",
-    title: "Tugas & Modul Ajar",
+    href: "/teacher/manage-task",
+    title: "Kelola Tugas & Penilaian Siswa",
   },
   {
     label: "Analitik & Nilai",
