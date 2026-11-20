@@ -10,14 +10,15 @@ import { db } from "../db/index";
 import { courseMeetings } from "../db/schema";
 import { storageDb } from "../db/storage";
 import {
+  assignments,
   uploadedFiles,
-  guruSubmissionKuis,
-  guruSubmissionTugas,
+  guruAssignmentKuis,
+  guruAssignmentTugas,
   guruUploadsKuis,
   guruUploadsMateri,
   guruUploadsTugas,
-  siswaUpSubmissionKuis,
-  siswaUpSubmissionTugas,
+  siswaUpAssignmentKuis,
+  siswaUpAssignmentTugas,
 } from "../db/storage-schema";
 import { handleError } from "../utils/response";
 
@@ -54,14 +55,14 @@ const SLOTS: UploadSlot[] = [
 const slotTables: Record<UploadSlot, any> = {
   materi: guruUploadsMateri,
   tugasFile: guruUploadsTugas,
-  tugasSubmission: siswaUpSubmissionTugas,
+  tugasSubmission: siswaUpAssignmentTugas,
   kuisFile: guruUploadsKuis,
-  kuisSubmission: siswaUpSubmissionKuis,
+  kuisSubmission: siswaUpAssignmentKuis,
 };
 
 const submissionMirrorTables: Partial<Record<UploadSlot, any>> = {
-  tugasSubmission: guruSubmissionTugas,
-  kuisSubmission: guruSubmissionKuis,
+  tugasSubmission: guruAssignmentTugas,
+  kuisSubmission: guruAssignmentKuis,
 };
 
 function isSubmissionSlot(slot: UploadSlot) {
@@ -223,6 +224,18 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
         const blob = new Uint8Array(await file.arrayBuffer());
         const checksumSha256 = createHash("sha256").update(blob).digest("hex");
 
+        const assignmentId = body.assignmentId ?? null;
+        const validateAssignmentId = assignmentId
+          ? UUID_RE.test(assignmentId)
+          : false;
+
+        if (isSubmissionSlot(slot) && !validateAssignmentId) {
+          return status(400, {
+            success: false,
+            message: "assignmentId wajib diisi dan valid",
+          });
+        }
+
         const base = {
           filename: file.name,
           mimeType: file.type,
@@ -231,7 +244,22 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
           uploadedBy: user.id,
           uploaderRole: role,
           meetingId,
+          assignmentId: validateAssignmentId ? assignmentId : null,
         };
+
+        if (base.assignmentId) {
+          const [foundAssignment] = await storageDb
+            .select({ id: assignments.id })
+            .from(assignments)
+            .where(eq(assignments.id, base.assignmentId))
+            .limit(1);
+          if (!foundAssignment) {
+            return status(400, {
+              success: false,
+              message: "Assignment tidak ditemukan",
+            });
+          }
+        }
 
         const origin = new URL(request.url).origin;
         const table = slotTables[slot];
@@ -292,6 +320,7 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
               fileUrl: `${origin}/api/v1/uploads/storage/${slot}/${inserted.id}`,
               slot,
               submissionId,
+              assignmentId: base.assignmentId,
               checksumSha256,
               sizeBytes: blob.byteLength,
             },
@@ -338,6 +367,7 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
         meetingId: t.String(),
         submissionId: t.Optional(t.String()),
         studentId: t.Optional(t.String()),
+        assignmentId: t.Optional(t.String()),
       }),
     }
   )
@@ -382,7 +412,7 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
         const table = submission
           ? submissionMirrorTables[slot]!
           : slotTables[slot];
-        const filters = [eq(table.meetingId, meetingId)];
+        const filters = [eq(table.meetingId, meetingId), eq(table.isDeleted, false)];
 
         if (submission && role === "siswa") {
           filters.push(eq(table.studentId, user.id));
@@ -398,6 +428,7 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
                 checksumSha256: table.checksumSha256,
                 studentId: table.studentId,
                 submissionId: table.submissionId,
+                assignmentId: table.assignmentId,
                 studentFileId: table.studentFileId,
                 createdAt: table.createdAt,
               })
@@ -423,12 +454,13 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
           size: row.size,
           mimeType: row.mimeType,
           checksumSha256: row.checksumSha256,
-          fileUrl: `${origin}/api/v1/uploads/storage/${slot}/${
-            submission ? row.studentFileId : row.id
-          }`,
-          studentId: submission ? row.studentId : null,
-          submissionId: submission ? row.submissionId : null,
-          createdAt: row.createdAt,
+              fileUrl: `${origin}/api/v1/uploads/storage/${slot}/${
+                submission ? row.studentFileId : row.id
+              }`,
+              studentId: submission ? row.studentId : null,
+              submissionId: submission ? row.submissionId : null,
+              assignmentId: submission ? row.assignmentId : null,
+              createdAt: row.createdAt,
         }));
 
         return { success: true, data };

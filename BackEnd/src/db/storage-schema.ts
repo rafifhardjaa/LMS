@@ -8,6 +8,7 @@ import {
   pgEnum,
   pgSchema,
   pgTable,
+  text,
   timestamp,
   uniqueIndex,
   uuid,
@@ -38,6 +39,37 @@ export const uploadedFiles = pgTable("uploaded_files", {
   uploadedBy: uuid("uploaded_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const assignments = pgTable("assignments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  subjectId: uuid("subject_id").notNull(),
+  classId: uuid("class_id").notNull(),
+  meetingId: uuid("meeting_id").notNull(),
+  type: varchar("type", { length: 10 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  startAt: timestamp("start_at", { withTimezone: true }).notNull(),
+  deadlineAt: timestamp("deadline_at", { withTimezone: true }).notNull(),
+  createdBy: uuid("created_by"),
+  orderIndex: integer("order_index").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  meetingIdx: index("assignments_meeting_idx").on(table.meetingId),
+  meetingTypeIdx: index("assignments_meeting_type_idx").on(
+    table.meetingId,
+    table.type,
+  ),
+  subjectClassIdx: index("assignments_subject_class_idx").on(
+    table.subjectId,
+    table.classId,
+  ),
+  teacherIdx: index("assignments_teacher_idx").on(table.createdBy),
+  meetingOrderIdx: index("assignments_meeting_order_idx").on(
+    table.meetingId,
+    table.orderIndex,
+  ),
+}));
 
 function metadataColumns() {
   return {
@@ -73,6 +105,7 @@ function submissionMetaColumns() {
     studentId: uuid("student_id").notNull(),
     submissionId: uuid("submission_id").notNull(),
     submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+    assignmentId: uuid("assignment_id"),
   };
 }
 
@@ -118,72 +151,84 @@ export const guruUploadsKuis = guruStorage.table(
   }),
 );
 
-export const siswaUpSubmissionTugas = siswaStorage.table(
-  "up_submission_tugas",
+export const siswaUpAssignmentTugas = siswaStorage.table(
+  "up_assignment_tugas",
   submissionColumns(),
   (table) => ({
-    submissionIdx: uniqueIndex("siswa_up_submission_tugas_submission_idx").on(
+    submissionIdx: uniqueIndex("siswa_up_assignment_tugas_submission_idx").on(
       table.submissionId,
     ),
-    studentIdx: index("siswa_up_submission_tugas_student_idx").on(
+    studentIdx: index("siswa_up_assignment_tugas_student_idx").on(
       table.studentId,
     ),
-    meetingIdx: index("siswa_up_submission_tugas_meeting_idx").on(
+    meetingIdx: index("siswa_up_assignment_tugas_meeting_idx").on(
       table.meetingId,
     ),
+    assignmentStudentIdx: index(
+      "siswa_up_assignment_tugas_assignment_student_idx",
+    ).on(table.assignmentId, table.studentId),
   }),
 );
-export const siswaUpSubmissionKuis = siswaStorage.table(
-  "up_submission_kuis",
+export const siswaUpAssignmentKuis = siswaStorage.table(
+  "up_assignment_kuis",
   submissionColumns(),
   (table) => ({
-    submissionIdx: uniqueIndex("siswa_up_submission_kuis_submission_idx").on(
+    submissionIdx: uniqueIndex("siswa_up_assignment_kuis_submission_idx").on(
       table.submissionId,
     ),
-    studentIdx: index("siswa_up_submission_kuis_student_idx").on(
+    studentIdx: index("siswa_up_assignment_kuis_student_idx").on(
       table.studentId,
     ),
-    meetingIdx: index("siswa_up_submission_kuis_meeting_idx").on(
+    meetingIdx: index("siswa_up_assignment_kuis_meeting_idx").on(
       table.meetingId,
     ),
+    assignmentStudentIdx: index(
+      "siswa_up_assignment_kuis_assignment_student_idx",
+    ).on(table.assignmentId, table.studentId),
   }),
 );
 
-export const guruSubmissionTugas = guruStorage.table(
-  "submission_tugas",
+export const guruAssignmentTugas = guruStorage.table(
+  "assignment_tugas",
   teacherSubmissionColumns(),
   (table) => ({
-    submissionIdx: uniqueIndex("guru_submission_tugas_submission_idx").on(
+    submissionIdx: uniqueIndex("guru_assignment_tugas_submission_idx").on(
       table.submissionId,
     ),
-    studentIdx: index("guru_submission_tugas_student_idx").on(table.studentId),
-    meetingIdx: index("guru_submission_tugas_meeting_idx").on(table.meetingId),
-    studentFileIdx: index("guru_submission_tugas_student_file_idx").on(
+    studentIdx: index("guru_assignment_tugas_student_idx").on(table.studentId),
+    meetingIdx: index("guru_assignment_tugas_meeting_idx").on(table.meetingId),
+    studentFileIdx: index("guru_assignment_tugas_student_file_idx").on(
       table.studentFileId,
+    ),
+    assignmentIdx: index("guru_assignment_tugas_assignment_idx").on(
+      table.assignmentId,
     ),
     studentFileFk: foreignKey({
       columns: [table.studentFileId],
-      foreignColumns: [siswaUpSubmissionTugas.id],
-      name: "guru_submission_tugas_student_file_fk",
+      foreignColumns: [siswaUpAssignmentTugas.id],
+      name: "guru_assignment_tugas_student_file_fk",
     }).onDelete("cascade"),
   }),
 );
-export const guruSubmissionKuis = guruStorage.table(
-  "submission_kuis",
+export const guruAssignmentKuis = guruStorage.table(
+  "assignment_kuis",
   teacherSubmissionColumns(),
   (table) => ({
-    submissionIdx: uniqueIndex("guru_submission_kuis_submission_idx").on(
+    submissionIdx: uniqueIndex("guru_assignment_kuis_submission_idx").on(
       table.submissionId,
     ),
-    studentIdx: index("guru_submission_kuis_student_idx").on(table.studentId),
-    meetingIdx: index("guru_submission_kuis_meeting_idx").on(table.meetingId),
-    studentFileIdx: index("guru_submission_kuis_student_file_idx").on(
+    studentIdx: index("guru_assignment_kuis_student_idx").on(table.studentId),
+    meetingIdx: index("guru_assignment_kuis_meeting_idx").on(table.meetingId),
+    studentFileIdx: index("guru_assignment_kuis_student_file_idx").on(
       table.studentFileId,
+    ),
+    assignmentIdx: index("guru_assignment_kuis_assignment_idx").on(
+      table.assignmentId,
     ),
     studentFileFk: foreignKey({
       columns: [table.studentFileId],
-      foreignColumns: [siswaUpSubmissionKuis.id],
-      name: "guru_submission_kuis_student_file_fk",
+      foreignColumns: [siswaUpAssignmentKuis.id],
+      name: "guru_assignment_kuis_student_file_fk",
     }).onDelete("cascade"),
   }),
 );
