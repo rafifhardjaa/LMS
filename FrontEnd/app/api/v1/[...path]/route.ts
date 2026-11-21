@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { BACKEND_URL } from "@/lib/auth/backend";
 import { TOKEN_COOKIE } from "@/lib/auth/cookie";
 
-const BODYLESS_METHODS = new Set(["GET", "HEAD"]);
+const BODYLESS_METHODS = new Set(["GET", "HEAD", "DELETE"]);
 
 async function proxy(
   req: NextRequest,
