@@ -55,6 +55,13 @@ export function AnalyticsGrades() {
     setIsLedgerOpen(false);
   }
 
+  function handleBack() {
+    setClassFilter("");
+    setSubjectFilter("");
+    setAssessmentFilter("");
+    setIsLedgerOpen(false);
+  }
+
   function handleScheduleRemedial(student: StudentGrade) {
     toast.success("Sesi bimbingan dibuka", {
       description: `Jadwal remedial ${student.name} telah disiapkan untuk tindak lanjut.`,
@@ -122,6 +129,7 @@ export function AnalyticsGrades() {
               onEditNote={handleEditNote}
               onViewDetail={handleViewDetail}
               onChangeFilter={() => setIsLedgerOpen(false)}
+              onBack={handleBack}
             />
           </section>
 

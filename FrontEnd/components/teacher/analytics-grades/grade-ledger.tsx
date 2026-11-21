@@ -33,6 +33,7 @@ type GradeLedgerProps = {
   onEditNote: (student: StudentGrade) => void;
   onViewDetail: (student: StudentGrade) => void;
   onChangeFilter: () => void;
+  onBack: () => void;
 };
 
 type SortDirection = "asc" | "desc";
@@ -50,6 +51,7 @@ export function GradeLedger({
   onEditNote,
   onViewDetail,
   onChangeFilter,
+  onBack,
 }: GradeLedgerProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
@@ -138,7 +140,7 @@ export function GradeLedger({
             <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-auto">
               <button
                 type="button"
-                onClick={onChangeFilter}
+                onClick={onBack}
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DCE5EE] bg-white px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
               >
                 <ArrowLeft className="size-3.5" />
