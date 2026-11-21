@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -12,23 +13,48 @@ import {
   Settings,
   User,
 } from "lucide-react";
-import {
-  StaggerChildren,
-  StaggerItem,
-} from "@/components/ui/animations";
+import { StaggerChildren, StaggerItem } from "@/components/ui/animations";
 import { useLogout } from "@/hooks/use-logout";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 const menu = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/student/dashboard", title: "Dashboard" },
-  { label: "Modules", icon: BookOpen, href: "/student/modules", title: "Modul Pembelajaran" },
-  { label: "Transcripts", icon: BadgeCheck, href: "/student/transcripts", title: "Rekap Nilai & Transkrip" },
-  { label: "Counseling (BK)", icon: Headset, href: "/student/counseling", title: "Konseling & Bimbingan" },
-  { label: "Settings", icon: Settings, href: "/student/settings", title: "Pengaturan Akun" },
+  {
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    href: "/student/dashboard",
+    title: "Dashboard",
+  },
+  {
+    label: "Modul",
+    icon: BookOpen,
+    href: "/student/modules",
+    title: "Modul Pembelajaran",
+  },
+  {
+    label: "Transkrip",
+    icon: BadgeCheck,
+    href: "/student/transcripts",
+    title: "Rekap Nilai & Transkrip",
+  },
+  {
+    label: "Konseling",
+    icon: Headset,
+    href: "/student/counseling",
+    title: "Konseling & Bimbingan",
+  },
+  {
+    label: "Pengaturan",
+    icon: Settings,
+    href: "/student/settings",
+    title: "Pengaturan Akun",
+  },
 ];
 
 export function MuridSidebar() {
   const pathname = usePathname();
   const handleLogout = useLogout();
+  const user = useAuthStore((state) => state.user);
+
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white z-50 flex flex-col justify-between py-6 px-6 border-r border-[#cee8e1]/60 shadow-[0_1px_8px_rgba(7,31,28,0.03)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex flex-col gap-8 w-full">
@@ -53,23 +79,24 @@ export function MuridSidebar() {
 
         <StaggerChildren staggerDelay={0.06} className="flex flex-col gap-1 w-full">
           {menu.map(({ label, icon: Icon, href, title }) => {
-            const active = href !== "#" && pathname.startsWith(href);
+            const active = pathname.startsWith(href);
+
             return (
-            <StaggerItem key={label}>
-            <a
-              href={href}
-              title={title}
-              aria-current={active ? "page" : undefined}
-              className={`w-full flex h-10 items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 ${
-                active
-                  ? "bg-[#d4eee7] text-[#0d5c52] font-semibold shadow-sm"
-                  : "text-[#404a47] font-semibold hover:bg-[#edf7f4] hover:text-[#0d5c52]"
-              }`}
-            >
-              <Icon className="size-4 flex-shrink-0" />
-              <span className="text-[16px] truncate">{label}</span>
-            </a>
-            </StaggerItem>
+              <StaggerItem key={label}>
+                <Link
+                  href={href}
+                  title={title}
+                  aria-current={active ? "page" : undefined}
+                  className={`w-full flex h-10 items-center gap-4 px-4 py-2 rounded-xl transition-colors duration-200 ${
+                    active
+                      ? "bg-[#d4eee7] text-[#0d5c52] font-semibold shadow-sm"
+                      : "text-[#404a47] font-semibold hover:bg-[#edf7f4] hover:text-[#0d5c52]"
+                  }`}
+                >
+                  <Icon className="size-4 flex-shrink-0" />
+                  <span className="text-[16px] truncate">{label}</span>
+                </Link>
+              </StaggerItem>
             );
           })}
         </StaggerChildren>
@@ -86,15 +113,18 @@ export function MuridSidebar() {
               <User className="size-5" />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-[13px] font-semibold text-[#071f1c] truncate max-w-[90px]">
-                Sebastian
+              <span className="text-[13px] font-semibold text-[#071f1c] truncate max-w-[110px]">
+                {user?.full_name ?? "Siswa"}
               </span>
-              <span className="text-[12px] text-[#536360]">Grade 12</span>
+              <span className="text-[12px] text-[#536360]">
+                {user?.kelas ?? "Kelas belum diisi"}
+              </span>
             </div>
           </div>
           <button
             type="button"
-            title="Logout"
+            title="Keluar"
+            aria-label="Keluar"
             onClick={handleLogout}
             className="p-1 rounded-lg text-[#536360] hover:bg-[#e2f2ee] hover:text-[#ba1a1a] transition-colors"
           >
