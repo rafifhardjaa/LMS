@@ -25,10 +25,10 @@ const menu = [
     title: "Dashboard",
   },
   {
-    label: "Modul",
+    label: "Modul & Course",
     icon: BookOpen,
-    href: "/student/modules",
-    title: "Modul Pembelajaran",
+    href: "/student/module-course",
+    title: "Modul & Course Pembelajaran",
   },
   {
     label: "Transkrip",
