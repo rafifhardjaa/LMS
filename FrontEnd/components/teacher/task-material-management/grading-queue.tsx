@@ -6,10 +6,11 @@ import type { GradingItem } from "./types";
 
 type GradingQueueProps = {
   items: GradingItem[];
+  totalCount: number;
   onOpenAll: () => void;
 };
 
-export function GradingQueue({ items, onOpenAll }: GradingQueueProps) {
+export function GradingQueue({ items, totalCount, onOpenAll }: GradingQueueProps) {
   return (
     <FadeIn>
       <section className="flex flex-col gap-4 rounded-[20px] border border-[#FEE2E2] bg-[#FFF9F9] p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -23,7 +24,7 @@ export function GradingQueue({ items, onOpenAll }: GradingQueueProps) {
                 Antrean Pengumpulan
               </h2>
               <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
-                Siswa yang perlu dinilai segera • 38 tugas
+                Siswa yang perlu dinilai segera • {totalCount} pengumpulan
               </p>
             </div>
           </div>
@@ -78,7 +79,7 @@ export function GradingQueue({ items, onOpenAll }: GradingQueueProps) {
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-[11px] text-[#94A3B8]">
-            Menampilkan {items.length} antrean prioritas dari 38 pengumpulan
+            Menampilkan {items.length} antrean prioritas dari {totalCount} pengumpulan
           </span>
           <button
             type="button"
