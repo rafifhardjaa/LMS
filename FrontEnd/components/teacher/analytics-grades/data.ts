@@ -1,8 +1,9 @@
 import type {
+  AssessmentFilter,
   ClassFilter,
   GradeStatus,
-  RemedialGroup,
   StudentGrade,
+  SubjectFilter,
 } from "./types";
 
 export const kktp = 75;
@@ -10,11 +11,24 @@ export const totalStudents = 35;
 export const pageSize = 6;
 
 export const classOptions: { value: ClassFilter; label: string }[] = [
-  { value: "VII-A", label: "VII - A • Fisika Terapan" },
-  { value: "VII-B", label: "VII - B • Fisika Terapan" },
-  { value: "VI-A", label: "VI - A • IPA Terpadu" },
-  { value: "VI-B", label: "VI - B • IPA Terpadu" },
-  { value: "VIII-A", label: "VIII - A • Sains Rekayasa" },
+  { value: "VII-A", label: "VII - A" },
+  { value: "VII-B", label: "VII - B" },
+  { value: "VI-A", label: "VI - A" },
+  { value: "VI-B", label: "VI - B" },
+  { value: "VIII-A", label: "VIII - A" },
+];
+
+export const subjectOptions: { value: SubjectFilter; label: string }[] = [
+  { value: "Fisika Terapan", label: "Fisika Terapan" },
+  { value: "IPA Terpadu", label: "IPA Terpadu" },
+  { value: "Sains Rekayasa", label: "Sains Rekayasa" },
+];
+
+export const assessmentOptions: { value: AssessmentFilter; label: string }[] = [
+  { value: "all", label: "Semua Asesmen" },
+  { value: "formatif", label: "Formatif" },
+  { value: "sts", label: "Sumatif Tengah Semester" },
+  { value: "praktik", label: "Praktikum Lab" },
 ];
 
 export const students: StudentGrade[] = [
@@ -26,6 +40,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00792014",
     rollNo: "No. 24",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 95,
     sts: 94,
     praktik: 96,
@@ -38,6 +53,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00748291",
     rollNo: "No. 12",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 92,
     sts: 90,
     praktik: 88,
@@ -50,6 +66,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00681923",
     rollNo: "No. 19",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 84,
     sts: 82,
     praktik: 85,
@@ -62,6 +79,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982341",
     rollNo: "No. 17",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 80,
     sts: 78,
     praktik: 82,
@@ -74,6 +92,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982342",
     rollNo: "No. 08",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 70,
     sts: 74,
     praktik: 76,
@@ -87,6 +106,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982341",
     rollNo: "No. 10",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 72,
     sts: 68,
     praktik: 75,
@@ -100,6 +120,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982344",
     rollNo: "No. 22",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 86,
     sts: 84,
     praktik: 88,
@@ -112,6 +133,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982347",
     rollNo: "No. 05",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 76,
     sts: 70,
     praktik: 72,
@@ -125,6 +147,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982351",
     rollNo: "No. 28",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 88,
     sts: 86,
     praktik: 90,
@@ -137,6 +160,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982355",
     rollNo: "No. 30",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 82,
     sts: 80,
     praktik: 84,
@@ -149,6 +173,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982358",
     rollNo: "No. 31",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 91,
     sts: 89,
     praktik: 92,
@@ -161,6 +186,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982361",
     rollNo: "No. 32",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 78,
     sts: 76,
     praktik: 80,
@@ -173,6 +199,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982364",
     rollNo: "No. 33",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 87,
     sts: 85,
     praktik: 89,
@@ -185,6 +212,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982367",
     rollNo: "No. 34",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 74,
     sts: 72,
     praktik: 73,
@@ -198,6 +226,7 @@ export const students: StudentGrade[] = [
     nisn: "NISN: 00982370",
     rollNo: "No. 35",
     className: "VII-A",
+    subject: "Fisika Terapan",
     formatif: 90,
     sts: 88,
     praktik: 91,
@@ -253,22 +282,3 @@ export function getStudentStatus(student: StudentGrade): GradeStatus {
     tone: "success",
   };
 }
-
-export const remedialGroups: RemedialGroup[] = [
-  {
-    id: "john-jim",
-    students: "John Kurt & Jim Anderson",
-    status: "Terjadwal",
-    statusClassName: "bg-[#FFEBEB] text-[#b71422]",
-    schedule: "Kamis, 20 Maret 2025 • 14:30 WITA",
-    room: "Laboratorium Fisika Dasar 1",
-  },
-  {
-    id: "bagus",
-    students: "Bagus Wicaksono (Menunggu)",
-    status: "Izin Sakit",
-    statusClassName: "bg-[#FEF3C7] text-[#D97706]",
-    schedule: "Menunggu Konfirmasi Wali Kelas",
-    waiting: true,
-  },
-];

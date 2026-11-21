@@ -1,4 +1,6 @@
 export type ClassFilter = "VII-A" | "VII-B" | "VI-A" | "VI-B" | "VIII-A";
+export type SubjectFilter = "Fisika Terapan" | "IPA Terpadu" | "Sains Rekayasa";
+export type AssessmentFilter = "all" | "formatif" | "sts" | "praktik";
 export type GradeTone = "success" | "danger";
 
 export type StudentGrade = {
@@ -9,6 +11,7 @@ export type StudentGrade = {
   nisn: string;
   rollNo: string;
   className: ClassFilter;
+  subject: SubjectFilter;
   formatif: number;
   sts: number;
   praktik: number;
@@ -19,14 +22,4 @@ export type GradeStatus = {
   label: string;
   className: string;
   tone: GradeTone;
-};
-
-export type RemedialGroup = {
-  id: string;
-  students: string;
-  status: string;
-  statusClassName: string;
-  schedule: string;
-  room?: string;
-  waiting?: boolean;
 };
