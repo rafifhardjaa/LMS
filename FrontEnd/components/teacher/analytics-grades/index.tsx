@@ -13,6 +13,7 @@ import {
 } from "./data";
 import { GradeLedger } from "./grade-ledger";
 import { AnalyticsPageHeader } from "./page-header";
+import { RemedialPanel } from "./remedial-panel";
 import type { StudentGrade } from "./types";
 import { ValueToolbar } from "./value-toolbar";
 
@@ -84,40 +85,52 @@ export function AnalyticsGrades() {
       </FadeIn>
 
       <FadeIn delay={0.1}>
-        <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-          <ValueToolbar
-            classOptions={classOptions}
-            subjectOptions={subjectOptions}
-            assessmentOptions={assessmentOptions}
-            classFilter={classFilter}
-            subjectFilter={subjectFilter}
-            assessmentFilter={assessmentFilter}
-            opened={isLedgerOpen}
-            studentCount={studentCount}
-            selectedClassLabel={selectedClassLabel}
-            selectedSubjectLabel={selectedSubjectLabel}
-            selectedAssessmentLabel={selectedAssessmentLabel}
-            onClassChange={handleClassChange}
-            onSubjectChange={handleSubjectChange}
-            onAssessmentChange={handleAssessmentChange}
-            onOpen={() => setIsLedgerOpen(true)}
-          />
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+          <section
+            className={`overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${
+              isLedgerOpen ? "lg:col-span-12" : "lg:col-span-8"
+            }`}
+          >
+            <ValueToolbar
+              classOptions={classOptions}
+              subjectOptions={subjectOptions}
+              assessmentOptions={assessmentOptions}
+              classFilter={classFilter}
+              subjectFilter={subjectFilter}
+              assessmentFilter={assessmentFilter}
+              opened={isLedgerOpen}
+              studentCount={studentCount}
+              selectedClassLabel={selectedClassLabel}
+              selectedSubjectLabel={selectedSubjectLabel}
+              selectedAssessmentLabel={selectedAssessmentLabel}
+              onClassChange={handleClassChange}
+              onSubjectChange={handleSubjectChange}
+              onAssessmentChange={handleAssessmentChange}
+              onOpen={() => setIsLedgerOpen(true)}
+            />
 
-          <GradeLedger
-            students={students}
-            classFilter={classFilter}
-            subjectFilter={subjectFilter}
-            assessmentFilter={assessmentFilter}
-            classLabel={selectedClassLabel}
-            subjectLabel={selectedSubjectLabel}
-            assessmentLabel={selectedAssessmentLabel}
-            opened={isLedgerOpen}
-            onScheduleRemedial={handleScheduleRemedial}
-            onEditNote={handleEditNote}
-            onViewDetail={handleViewDetail}
-            onChangeFilter={() => setIsLedgerOpen(false)}
-          />
-        </section>
+            <GradeLedger
+              students={students}
+              classFilter={classFilter}
+              subjectFilter={subjectFilter}
+              assessmentFilter={assessmentFilter}
+              classLabel={selectedClassLabel}
+              subjectLabel={selectedSubjectLabel}
+              assessmentLabel={selectedAssessmentLabel}
+              opened={isLedgerOpen}
+              onScheduleRemedial={handleScheduleRemedial}
+              onEditNote={handleEditNote}
+              onViewDetail={handleViewDetail}
+              onChangeFilter={() => setIsLedgerOpen(false)}
+            />
+          </section>
+
+          {!isLedgerOpen && (
+            <FadeIn delay={0.14} className="lg:col-span-4">
+              <RemedialPanel />
+            </FadeIn>
+          )}
+        </div>
       </FadeIn>
     </div>
   );
