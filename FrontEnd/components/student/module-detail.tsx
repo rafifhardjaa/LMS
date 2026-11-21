@@ -163,7 +163,7 @@ export function StudentModuleDetail({ moduleId }: { moduleId: string }) {
               Coba lagi
             </button>
             <Link
-              href="/student/modules"
+              href="/student/module-course"
               className="rounded-lg bg-[#0d5c52] px-3 py-2 text-[12px] font-semibold text-white hover:bg-[#004d40]"
             >
               Kembali ke daftar modul
@@ -195,7 +195,7 @@ export function StudentModuleDetail({ moduleId }: { moduleId: string }) {
               Dashboard
             </Link>
             <ChevronRight className="size-3.5 text-[#bec9c5]" />
-            <Link href="/student/modules" className="hover:text-[#0d5c52] transition-colors">
+            <Link href="/student/module-course" className="hover:text-[#0d5c52] transition-colors">
               Modules
             </Link>
             <ChevronRight className="size-3.5 text-[#bec9c5]" />
