@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -16,17 +16,14 @@ import {
   Undo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getFinalScore, getStudentStatus, pageSize } from "./data";
+import { getStudentStatus, pageSize } from "./data";
 import type { StudentGrade } from "./types";
 
 type GradeLedgerProps = {
   students: StudentGrade[];
-  classFilter: string;
-  subjectFilter: string;
-  assessmentFilter: string;
   classLabel: string;
   subjectLabel: string;
-  assessmentLabel: string;
+  assignmentLabel: string;
   opened: boolean;
   onScheduleRemedial: (student: StudentGrade) => void;
   onEditNote: (student: StudentGrade) => void;
@@ -41,12 +38,9 @@ type SortDirection = "asc" | "desc";
 
 export function GradeLedger({
   students,
-  classFilter,
-  subjectFilter,
-  assessmentFilter,
   classLabel,
   subjectLabel,
-  assessmentLabel,
+  assignmentLabel,
   opened,
   onScheduleRemedial,
   onEditNote,
@@ -59,31 +53,14 @@ export function GradeLedger({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
 
-  const filteredStudents = useMemo(() => {
-    if (remedialOnly) {
-      return students.filter(
-        (student) => getStudentStatus(student).tone === "danger",
-      );
-    }
+  const sortedStudents = [...students].sort((first, second) => {
+    const firstScore = first.nilai ?? -1;
+    const secondScore = second.nilai ?? -1;
 
-    return students.filter(
-      (student) =>
-        student.className === classFilter && student.subject === subjectFilter,
-    );
-  }, [classFilter, remedialOnly, students, subjectFilter]);
-
-  const sortedStudents = useMemo(
-    () =>
-      [...filteredStudents].sort((first, second) => {
-        const firstScore = getFinalScore(first);
-        const secondScore = getFinalScore(second);
-
-        return sortDirection === "desc"
-          ? secondScore - firstScore
-          : firstScore - secondScore;
-      }),
-    [filteredStudents, sortDirection],
-  );
+    return sortDirection === "desc"
+      ? secondScore - firstScore
+      : firstScore - secondScore;
+  });
 
   const pageCount = Math.max(1, Math.ceil(sortedStudents.length / pageSize));
   const safePage = Math.min(page, pageCount);
@@ -93,10 +70,6 @@ export function GradeLedger({
     startIndex + pageSize,
   );
   const endIndex = Math.min(startIndex + pageSize, sortedStudents.length);
-
-  function isFocusedColumn(column: "formatif" | "sts" | "praktik") {
-    return assessmentFilter === column;
-  }
 
   return (
     <AnimatePresence mode="wait">
@@ -121,8 +94,8 @@ export function GradeLedger({
             Pilih terlebih dahulu filter nilai
           </p>
           <p className="mt-1 max-w-sm text-[11px] leading-5 text-[#94A3B8]">
-            Lengkapi filter kelas, mapel, dan asesmen pada toolbar di atas, lalu
-            klik &quot;Tampilkan nilai&quot;.
+            Lengkapi filter kelas, mapel, dan tugas/kuis pada toolbar di atas,
+            lalu klik &quot;Tampilkan nilai&quot;.
           </p>
         </motion.div>
       ) : (
@@ -144,7 +117,7 @@ export function GradeLedger({
               <p className="mt-0.5 text-[11px] leading-4 text-[#64748B]">
                 {remedialOnly
                   ? "Siswa dengan nilai di bawah KKTP"
-                  : "Bobot: Formatif 30% • STS 30% • Praktik Lab 40%"}
+                  : "Menampilkan seluruh siswa kelas berdasarkan nilai tugas/kuis terpilih"}
               </p>
             </div>
 
@@ -177,31 +150,27 @@ export function GradeLedger({
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DCE5EE] bg-[#F8FAFC] px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
               >
                 <ArrowUpDown className="size-3.5" />
-                Nilai Akhir {sortDirection === "desc" ? "Tertinggi" : "Terendah"}
+                Nilai {sortDirection === "desc" ? "Tertinggi" : "Terendah"}
               </button>
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] table-fixed border-collapse text-left">
+            <table className="w-full min-w-[720px] table-fixed border-collapse text-left">
               <colgroup>
-                <col className="w-[6%]" />
-                <col className="w-[27%]" />
-                <col className="w-[9%]" />
-                <col className="w-[9%]" />
-                <col className="w-[10%]" />
-                <col className="w-[11%]" />
-                <col className="w-[14%]" />
-                <col className="w-[14%]" />
+                <col className="w-[7%]" />
+                <col className="w-[28%]" />
+                <col className="w-[20%]" />
+                <col className="w-[12%]" />
+                <col className="w-[18%]" />
+                <col className="w-[15%]" />
               </colgroup>
               <thead>
                 <tr className="border-b border-[#FECACA] bg-[#FFF1F0] text-[8px] font-bold uppercase tracking-[0.06em] text-[#b71422]">
                   <th className="px-3 py-3 text-center">No</th>
                   <th className="px-4 py-3">Nama Lengkap</th>
-                  <th className="px-3 py-3 text-center">Formatif</th>
-                  <th className="px-3 py-3 text-center">STS</th>
-                  <th className="px-3 py-3 text-center">Praktik Lab</th>
-                  <th className="px-3 py-3 text-center">Nilai Akhir</th>
+                  <th className="px-3 py-3">NISN</th>
+                  <th className="px-3 py-3 text-center">Nilai</th>
                   <th className="px-3 py-3">Status KKTP</th>
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
@@ -209,7 +178,6 @@ export function GradeLedger({
 
               <tbody className="divide-y divide-[#F1F5F9]">
                 {visibleStudents.map((student, index) => {
-                  const finalScore = getFinalScore(student);
                   const status = getStudentStatus(student);
 
                   return (
@@ -239,59 +207,35 @@ export function GradeLedger({
                           >
                             {student.initials}
                           </span>
-                          <div className="min-w-0">
-                            <p className="truncate text-[11px] font-bold text-[#1E293B]">
-                              {student.name}
-                            </p>
-                            <p className="mt-0.5 truncate text-[9px] font-medium text-[#94A3B8]">
-                              {student.nisn} • {student.rollNo}
-                            </p>
-                          </div>
+                          <p className="truncate text-[11px] font-bold text-[#1E293B]">
+                            {student.name}
+                          </p>
                         </div>
                       </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]",
-                          isFocusedColumn("formatif") && "bg-[#FFF8F8]/60 text-[#b71422]",
-                        )}
-                      >
-                        {student.formatif}
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]",
-                          isFocusedColumn("sts") && "bg-[#FFF8F8]/60 text-[#b71422]",
-                        )}
-                      >
-                        {student.sts}
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]",
-                          isFocusedColumn("praktik") && "bg-[#FFF8F8]/60 text-[#b71422]",
-                        )}
-                      >
-                        {student.praktik}
+                      <td className="px-3 py-3 font-mono text-[11px] font-medium text-[#475569]">
+                        {student.nisn}
                       </td>
                       <td className="px-3 py-3 text-center">
                         <span
                           className={cn(
                             "font-mono text-[12px] font-bold tabular-nums",
-                            status.tone === "success"
-                              ? "text-[#15803D]"
-                              : "text-[#b71422]",
+                            student.nilai === null
+                              ? "text-[#94A3B8]"
+                              : status.tone === "success"
+                                ? "text-[#15803D]"
+                                : "text-[#b71422]",
                           )}
                         >
-                          {finalScore.toFixed(1)}
+                          {student.nilai === null
+                            ? "—"
+                            : student.nilai.toFixed(1)}
                         </span>
                       </td>
                       <td className="px-3 py-3">
                         <span
                           className={cn(
                             "text-[9px] font-bold leading-3",
-                            status.tone === "success"
-                              ? "text-[#16A34A]"
-                              : "text-[#b71422]",
+                            status.className,
                           )}
                         >
                           {status.label}
@@ -356,7 +300,7 @@ export function GradeLedger({
               <p className="mt-0.5 max-w-sm text-[10px] leading-4 text-[#94A3B8]">
                 {remedialOnly
                   ? "Semua siswa berada di atas KKTP."
-                  : "Ubah kelas atau mata pelajaran untuk melihat daftar nilai siswa."}
+                  : "Ubah kelas, mapel, atau tugas/kuis untuk melihat daftar nilai siswa."}
               </p>
             </motion.div>
           )}
@@ -370,7 +314,7 @@ export function GradeLedger({
               dari {sortedStudents.length} siswa
               {remedialOnly
                 ? " perlu remidi"
-                : ` · ${classLabel} · ${subjectLabel} · ${assessmentLabel}`}
+                : ` · ${classLabel} · ${subjectLabel} · ${assignmentLabel}`}
             </p>
 
             <div className="flex flex-wrap items-center justify-end gap-2">

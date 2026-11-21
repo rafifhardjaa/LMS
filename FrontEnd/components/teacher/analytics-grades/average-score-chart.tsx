@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { BarChart3 } from "lucide-react";
 import {
   Bar,
@@ -11,49 +10,28 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { classOptions, getFinalScore, kktp, students } from "./data";
 import { cn } from "@/lib/utils";
+import { kktp } from "./data";
+import type { StudentGrade } from "./types";
 
-export function AverageScoreChart() {
-  const data = useMemo(
-    () =>
-      classOptions.map((option) => {
-        const classStudents = students.filter(
-          (student) => student.className === option.value,
-        );
+type AverageScoreChartProps = {
+  students: StudentGrade[];
+  classLabel: string;
+};
 
-        const average = classStudents.length
-          ? Number(
-              (
-                classStudents.reduce(
-                  (total, student) => total + getFinalScore(student),
-                  0,
-                ) / classStudents.length
-              ).toFixed(1),
-            )
-          : 0;
+export function AverageScoreChart({
+  students,
+  classLabel,
+}: AverageScoreChartProps) {
+  const values = students
+    .map((student) => student.nilai)
+    .filter((nilai): nilai is number => nilai !== null);
 
-        return {
-          className: option.value,
-          average,
-          count: classStudents.length,
-        };
-      }),
-    [],
-  );
+  const average = values.length
+    ? Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(1))
+    : 0;
 
-  const overallAverage = useMemo(() => {
-    if (!students.length) return 0;
-
-    return Number(
-      (
-        students.reduce(
-          (total, student) => total + getFinalScore(student),
-          0,
-        ) / students.length
-      ).toFixed(1),
-    );
-  }, []);
+  const data = [{ className: classLabel === "-" ? "Belum ada kelas" : classLabel, average }];
 
   return (
     <section className="flex flex-col rounded-[20px] border border-[#E2E8F0] bg-white p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -67,7 +45,7 @@ export function AverageScoreChart() {
               Rata-Rata Nilai
             </h2>
             <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
-              Nilai akhir siswa per kelas
+              Nilai siswa pada tugas/kuis terpilih
             </p>
           </div>
         </div>
@@ -132,10 +110,10 @@ export function AverageScoreChart() {
         <span
           className={cn(
             "text-[10px] font-bold",
-            overallAverage >= kktp ? "text-[#16A34A]" : "text-[#b71422]",
+            average >= kktp ? "text-[#16A34A]" : "text-[#b71422]",
           )}
         >
-          {overallAverage.toFixed(1)} / 100
+          {average.toFixed(1)} / 100
         </span>
       </div>
     </section>
