@@ -1,5 +1,4 @@
 import {
-  Bell,
   ClipboardList,
   Code,
   Download,
@@ -7,15 +6,12 @@ import {
   FileText,
   ListChecks,
   Pencil,
-  Printer,
-  RefreshCw,
 } from "lucide-react";
 import type {
   Assignment,
   CompletionTrendPoint,
   GradingItem,
   GradingStatusSlice,
-  QuickAction,
 } from "./types";
 
 export const assignments: Assignment[] = [
@@ -291,28 +287,4 @@ export const gradingStatus: GradingStatusSlice[] = [
   { id: "graded", label: "Sudah dinilai", value: 24, color: "#16A34A" },
   { id: "pending", label: "Menunggu penilaian", value: 38, color: "#b71422" },
   { id: "revision", label: "Perlu revisi", value: 6, color: "#94A3B8" },
-];
-
-export const quickActions: QuickAction[] = [
-  {
-    id: "reminder",
-    label: "Kirim Pengingat Tugas via WA Grup",
-    icon: Bell,
-    iconClassName: "text-[#b71422]",
-    hoverClassName: "hover:bg-[#FFEBEB] hover:text-[#b71422]",
-  },
-  {
-    id: "sync",
-    label: "Sinkron Nilai ke Dapodik Pusat",
-    icon: RefreshCw,
-    iconClassName: "text-[#006398]",
-    hoverClassName: "hover:bg-[#F1F5F9] hover:text-[#006398]",
-  },
-  {
-    id: "print",
-    label: "Cetak Berita Acara & Lembar Presensi",
-    icon: Printer,
-    iconClassName: "text-[#16A34A]",
-    hoverClassName: "hover:bg-[#F1F5F9] hover:text-[#16A34A]",
-  },
 ];

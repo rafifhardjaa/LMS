@@ -10,7 +10,6 @@ import { GradingManagementTable } from "./grading-management-table";
 import { GradingQueue } from "./grading-queue";
 import { GradingStatusChart } from "./grading-status-chart";
 import { TaskMaterialHeader } from "./page-header";
-import { QuickActions } from "./quick-actions";
 import { ResourceToolbar } from "./resource-toolbar";
 import {
   assignments,
@@ -18,7 +17,6 @@ import {
   gradingQueue,
   gradingStatus,
   gradingTableRows,
-  quickActions,
 } from "./data";
 import type { Assignment, ResourceTab } from "./types";
 
@@ -63,6 +61,7 @@ export function TaskMaterialManagement() {
       {panelView.mode === "grading" ? (
         <FadeIn delay={0.04}>
           <GradingManagementTable
+            key={activeAssignment?.id ?? "all"}
             rows={gradingRows}
             filter={activeAssignment}
             onBack={() => setPanelView({ mode: "tasks" })}
@@ -107,7 +106,6 @@ export function TaskMaterialManagement() {
                 setPanelView({ mode: "grading", assignment: null })
               }
             />
-            <QuickActions actions={quickActions} />
           </FadeIn>
         </div>
       )}

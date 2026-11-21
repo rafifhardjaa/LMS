@@ -3,7 +3,8 @@
 import { useState } from "react";
 import {
   ArrowLeft,
-  ClipboardList,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Download,
   PencilLine,
@@ -11,7 +12,7 @@ import {
 import { toast } from "sonner";
 import type { Assignment, GradingItem, GradingStatus } from "./types";
 
-const TOTAL_SUBMISSIONS = 38;
+const PAGE_SIZE = 10;
 
 const statusStyles: Record<
   GradingStatus,
@@ -37,6 +38,13 @@ export function GradingManagementTable({
 }: GradingManagementTableProps) {
   const [editingScoreId, setEditingScoreId] = useState<string | null>(null);
   const [scoreDraft, setScoreDraft] = useState("");
+  const [page, setPage] = useState(1);
+
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const startIndex = (safePage - 1) * PAGE_SIZE;
+  const endIndex = Math.min(startIndex + PAGE_SIZE, rows.length);
+  const visibleRows = rows.slice(startIndex, endIndex);
 
   function startEditingScore(item: GradingItem) {
     setEditingScoreId(item.id);
@@ -64,18 +72,14 @@ export function GradingManagementTable({
   return (
     <section className="flex flex-col overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
       <div className="flex flex-col gap-3 border-b border-[#E2E8F0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-2.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FFEBEB] text-[#b71422]">
-            <ClipboardList className="size-4" />
-          </span>
-          <div className="min-w-0">
+        <div className="min-w-0">
             <h2 className="text-sm font-bold text-[#1E293B]">
               Manajemen Antrean Penilaian
             </h2>
             <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
               {filter
-                ? `${rows.length} pengumpulan untuk tugas ini`
-                : `${TOTAL_SUBMISSIONS} pengumpulan • ${rows.length} baris ditampilkan`}
+                ? `${rows.length} pengumpulan untuk tugas ini • halaman ${safePage} dari ${pageCount}`
+                : `${rows.length} pengumpulan • halaman ${safePage} dari ${pageCount}`}
             </p>
             {filter && (
               <div className="mt-1.5 flex max-w-full flex-wrap items-center gap-1.5">
@@ -93,7 +97,6 @@ export function GradingManagementTable({
                 </span>
               </div>
             )}
-          </div>
         </div>
 
         <button
@@ -132,9 +135,10 @@ export function GradingManagementTable({
           </thead>
 
           <tbody className="divide-y divide-[#F1F5F9]">
-            {rows.map((item, index) => {
+            {visibleRows.map((item, index) => {
               const FileIcon = item.fileIcon;
               const status = statusStyles[item.status];
+              const itemNumber = startIndex + index + 1;
 
               return (
                 <tr
@@ -144,7 +148,7 @@ export function GradingManagementTable({
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] font-bold tabular-nums text-[#1E293B]">
-                        {index + 1}
+                        {itemNumber}
                       </span>
                       <button
                         type="button"
@@ -316,14 +320,58 @@ export function GradingManagementTable({
         </table>
       </div>
 
-      <div className="border-t border-[#E2E8F0] px-5 py-3">
+      <div className="flex flex-col gap-3 border-t border-[#E2E8F0] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[11px] font-medium text-[#64748B]">
           Menampilkan{" "}
+          <span className="font-bold text-[#334155]">
+            {rows.length === 0 ? "0" : `${startIndex + 1}-${endIndex}`}
+          </span>{" "}
+          dari{" "}
           <span className="font-bold text-[#334155]">{rows.length}</span>{" "}
-          {filter
-            ? "pengumpulan untuk tugas ini"
-            : `dari ${TOTAL_SUBMISSIONS} pengumpulan`}
+          pengumpulan{filter ? " untuk tugas ini" : ""}
         </p>
+
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="Halaman sebelumnya"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={safePage === 1}
+            className="flex size-7 items-center justify-center rounded-lg border border-[#E2E8F0] text-[#64748B] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft className="size-3.5" />
+          </button>
+
+          {Array.from({ length: pageCount }, (_, index) => index + 1).map(
+            (pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                onClick={() => setPage(pageNumber)}
+                aria-current={safePage === pageNumber ? "page" : undefined}
+                className={`flex size-7 items-center justify-center rounded-lg text-[10px] font-bold transition ${
+                  safePage === pageNumber
+                    ? "bg-[#b71422] text-white shadow-sm"
+                    : "border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            ),
+          )}
+
+          <button
+            type="button"
+            aria-label="Halaman berikutnya"
+            onClick={() =>
+              setPage((current) => Math.min(pageCount, current + 1))
+            }
+            disabled={safePage === pageCount}
+            className="flex size-7 items-center justify-center rounded-lg border border-[#E2E8F0] text-[#64748B] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight className="size-3.5" />
+          </button>
+        </div>
       </div>
     </section>
   );

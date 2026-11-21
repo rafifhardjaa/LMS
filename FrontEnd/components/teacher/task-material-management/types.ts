@@ -47,14 +47,6 @@ export type GradingItem = {
   score: number | null;
 };
 
-export type QuickAction = {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  iconClassName: string;
-  hoverClassName: string;
-};
-
 export type CompletionTrendPoint = {
   day: string;
   onTime: number;
