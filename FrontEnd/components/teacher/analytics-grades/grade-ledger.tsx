@@ -9,28 +9,14 @@ import {
   ChevronRight,
   Eye,
   PencilLine,
-  Search,
   TriangleAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  assessmentOptions,
-  getFinalScore,
-  getStudentStatus,
-  pageSize,
-  totalStudents,
-} from "./data";
-import type {
-  AssessmentFilter,
-  ClassFilter,
-  StudentGrade,
-} from "./types";
+import { getFinalScore, getStudentStatus, pageSize, totalStudents } from "./data";
+import type { StudentGrade } from "./types";
 
 type GradeLedgerProps = {
   students: StudentGrade[];
-  classFilter: ClassFilter;
-  assessmentFilter: AssessmentFilter;
-  search: string;
   onScheduleRemedial: (student: StudentGrade) => void;
   onEditNote: (student: StudentGrade) => void;
   onViewDetail: (student: StudentGrade) => void;
@@ -40,9 +26,6 @@ type SortDirection = "asc" | "desc";
 
 export function GradeLedger({
   students,
-  classFilter,
-  assessmentFilter,
-  search,
   onScheduleRemedial,
   onEditNote,
   onViewDetail,
@@ -50,29 +33,18 @@ export function GradeLedger({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
 
-  const normalizedSearch = search.trim().toLowerCase();
+  const sortedStudents = useMemo(
+    () =>
+      [...students].sort((first, second) => {
+        const firstScore = getFinalScore(first);
+        const secondScore = getFinalScore(second);
 
-  const sortedStudents = useMemo(() => {
-    const filtered = students.filter((student) => {
-      if (student.className !== classFilter) return false;
-      if (!normalizedSearch) return true;
-
-      return (
-        student.name.toLowerCase().includes(normalizedSearch) ||
-        student.nisn.toLowerCase().includes(normalizedSearch) ||
-        student.rollNo.toLowerCase().includes(normalizedSearch)
-      );
-    });
-
-    return [...filtered].sort((first, second) => {
-      const firstScore = getFinalScore(first);
-      const secondScore = getFinalScore(second);
-
-      return sortDirection === "desc"
-        ? secondScore - firstScore
-        : firstScore - secondScore;
-    });
-  }, [classFilter, normalizedSearch, sortDirection, students]);
+        return sortDirection === "desc"
+          ? secondScore - firstScore
+          : firstScore - secondScore;
+      }),
+    [sortDirection, students],
+  );
 
   const pageCount = Math.max(1, Math.ceil(sortedStudents.length / pageSize));
   const safePage = Math.min(page, pageCount);
@@ -82,14 +54,6 @@ export function GradeLedger({
     startIndex + pageSize,
   );
   const endIndex = Math.min(startIndex + pageSize, sortedStudents.length);
-
-  const activeAssessment = assessmentOptions.find(
-    (option) => option.value === assessmentFilter,
-  );
-
-  function isFocusedColumn(column: Exclude<AssessmentFilter, "all">) {
-    return assessmentFilter === column;
-  }
 
   return (
     <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -101,11 +65,6 @@ export function GradeLedger({
           <p className="mt-0.5 text-[11px] leading-4 text-[#64748B]">
             Bobot: Formatif 30% • STS 30% • Praktik Lab 40%
           </p>
-          {assessmentFilter !== "all" && (
-            <p className="mt-1 text-[10px] font-semibold text-[#b71422]">
-              Fokus kolom: {activeAssessment?.label}
-            </p>
-          )}
         </div>
 
         <button
@@ -128,33 +87,9 @@ export function GradeLedger({
           <thead>
             <tr className="bg-[#F8FAFC] text-[9px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
               <th className="px-5 py-3">Nama Siswa</th>
-              <th
-                className={cn(
-                  "px-3 py-3 text-center transition-colors",
-                  isFocusedColumn("formatif") &&
-                    "bg-[#FFF8F8] text-[#b71422]",
-                )}
-              >
-                Formatif
-              </th>
-              <th
-                className={cn(
-                  "px-3 py-3 text-center transition-colors",
-                  isFocusedColumn("sts") &&
-                    "bg-[#FFF8F8] text-[#b71422]",
-                )}
-              >
-                STS
-              </th>
-              <th
-                className={cn(
-                  "px-3 py-3 text-center transition-colors",
-                  isFocusedColumn("praktik") &&
-                    "bg-[#FFF8F8] text-[#b71422]",
-                )}
-              >
-                Praktik Lab
-              </th>
+              <th className="px-3 py-3 text-center">Formatif</th>
+              <th className="px-3 py-3 text-center">STS</th>
+              <th className="px-3 py-3 text-center">Praktik Lab</th>
               <th className="px-3 py-3 text-center">Nilai Akhir</th>
               <th className="px-3 py-3">Status KKTP</th>
               <th className="px-5 py-3 text-right">Aksi</th>
@@ -194,28 +129,13 @@ export function GradeLedger({
                       </div>
                     </div>
                   </td>
-                  <td
-                    className={cn(
-                      "px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]",
-                      isFocusedColumn("formatif") && "bg-[#FFF8F8]/60",
-                    )}
-                  >
+                  <td className="px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]">
                     {student.formatif}
                   </td>
-                  <td
-                    className={cn(
-                      "px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]",
-                      isFocusedColumn("sts") && "bg-[#FFF8F8]/60",
-                    )}
-                  >
+                  <td className="px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]">
                     {student.sts}
                   </td>
-                  <td
-                    className={cn(
-                      "px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]",
-                      isFocusedColumn("praktik") && "bg-[#FFF8F8]/60",
-                    )}
-                  >
+                  <td className="px-3 py-3 text-center font-mono text-[11px] font-medium tabular-nums text-[#475569]">
                     {student.praktik}
                   </td>
                   <td className="px-3 py-3 text-center">
@@ -289,15 +209,11 @@ export function GradeLedger({
 
       {sortedStudents.length === 0 && (
         <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-          <span className="flex size-10 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8]">
-            <Search className="size-4" />
-          </span>
-          <p className="mt-2 text-xs font-semibold text-[#334155]">
-            Tidak ada siswa yang cocok
+          <p className="text-xs font-semibold text-[#334155]">
+            Belum ada data nilai siswa
           </p>
           <p className="mt-0.5 max-w-sm text-[10px] leading-4 text-[#94A3B8]">
-            Ubah kata kunci pencarian atau pilih rombel lain untuk melihat
-            data nilai.
+            Data nilai akan muncul di sini setelah siswa dan asesmen tersedia.
           </p>
         </div>
       )}

@@ -1,5 +1,4 @@
 export type ClassFilter = "VII-A" | "VII-B" | "VI-A" | "VI-B" | "VIII-A";
-export type AssessmentFilter = "all" | "formatif" | "sts" | "praktik";
 export type GradeTone = "success" | "danger";
 
 export type StudentGrade = {
