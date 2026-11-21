@@ -3,10 +3,12 @@ import { authMiddleware, requireRole } from "../middleware/auth-middleware";
 import {
   createAssignment,
   getAssignment,
+  getAssignmentGrading,
   getAssignmentSummary,
   getAssignments,
   removeAssignment,
   updateAssignment,
+  updateAssignmentGrading,
 } from "../services/assignments-service";
 import { handleError } from "../utils/response";
 
@@ -128,6 +130,74 @@ assignmentsRoute.get(
     beforeHandle: requireRole(["admin", "guru", "siswa"]),
     detail: { tags: ["Assignments"], summary: "Ringkasan pengumpulan per assignment", security: [{ BearerAuth: [] }] },
     params: assignmentParams,
+  }
+);
+
+assignmentsRoute.get(
+  "/:id/grading",
+  async ({ params, user, status }: any) => {
+    try {
+      const teacherId = user?.role === "guru" ? user.id : null;
+      const data = await getAssignmentGrading({
+        subjectId: params.subjectId,
+        assignmentId: params.id,
+        teacherId,
+      });
+      return status(200, { success: true, message: "Grading retrieved", data });
+    } catch (error) {
+      const err = handleError(error);
+      return status(err.status, { success: false, message: err.message });
+    }
+  },
+  {
+    beforeHandle: requireRole(["admin", "guru"]),
+    detail: {
+      tags: ["Assignments"],
+      summary: "Daftar penilaian submission tugas/kuis",
+      security: [{ BearerAuth: [] }],
+    },
+    params: assignmentParams,
+  }
+);
+
+assignmentsRoute.put(
+  "/:id/grading/:submissionId",
+  async ({ params, body, user, status }: any) => {
+    try {
+      const teacherId = user?.role === "guru" ? user.id : null;
+      const data = await updateAssignmentGrading({
+        subjectId: params.subjectId,
+        assignmentId: params.id,
+        submissionId: params.submissionId,
+        teacherId,
+        data: body,
+      });
+      return status(200, { success: true, message: "Nilai berhasil disimpan", data });
+    } catch (error) {
+      const err = handleError(error);
+      return status(err.status, { success: false, message: err.message });
+    }
+  },
+  {
+    beforeHandle: requireRole(["admin", "guru"]),
+    detail: {
+      tags: ["Assignments"],
+      summary: "Simpan nilai submission tugas/kuis",
+      security: [{ BearerAuth: [] }],
+    },
+    params: t.Object({
+      subjectId: t.String(),
+      id: t.String(),
+      submissionId: t.String(),
+    }),
+    body: t.Object({
+      score: t.Number({ minimum: 0, maximum: 100 }),
+      status: t.Union([
+        t.Literal("pending"),
+        t.Literal("graded"),
+        t.Literal("revision"),
+      ]),
+    }),
   }
 );
 

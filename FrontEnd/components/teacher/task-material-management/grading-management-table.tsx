@@ -27,7 +27,7 @@ type GradingManagementTableProps = {
   rows: GradingItem[];
   filter: Assignment | null;
   onBack: () => void;
-  onUpdateScore: (id: string, score: number) => void;
+  onUpdateScore: (item: GradingItem, score: number) => Promise<void> | void;
 };
 
 export function GradingManagementTable({
@@ -51,7 +51,7 @@ export function GradingManagementTable({
     setScoreDraft(item.score === null ? "" : String(item.score));
   }
 
-  function commitScore(item: GradingItem) {
+  async function commitScore(item: GradingItem) {
     const parsed = Number(scoreDraft);
 
     if (
@@ -64,9 +64,8 @@ export function GradingManagementTable({
       return;
     }
 
-    onUpdateScore(item.id, Math.round(parsed));
+    await onUpdateScore(item, Math.round(parsed));
     setEditingScoreId(null);
-    toast.success(`Nilai ${item.name} berhasil diperbarui.`);
   }
 
   return (
@@ -150,19 +149,16 @@ export function GradingManagementTable({
                       <span className="text-[12px] font-bold tabular-nums text-[#1E293B]">
                         {itemNumber}
                       </span>
-                      <button
-                        type="button"
+                      <a
+                        href={item.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
                         title={`Unduh ${item.fileName}`}
                         aria-label={`Unduh ${item.fileName}`}
-                        onClick={() =>
-                          toast.info(
-                            `Berkas ${item.fileName} akan diunduh setelah integrasi API.`,
-                          )
-                        }
                         className="flex size-7 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#E8F4FB] hover:text-[#006398]"
                       >
                         <Download className="size-3.5" />
-                      </button>
+                      </a>
                     </div>
                   </td>
 
