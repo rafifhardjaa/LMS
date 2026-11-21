@@ -1,7 +1,4 @@
-export type ClassFilter = "VII-A" | "VII-B" | "VI-A" | "VI-B" | "VIII-A";
-export type SubjectFilter = "Fisika Terapan" | "IPA Terpadu" | "Sains Rekayasa";
-export type AssessmentFilter = "all" | "formatif" | "sts" | "praktik";
-export type GradeTone = "success" | "danger";
+export type GradeTone = "success" | "danger" | "neutral";
 
 export type StudentGrade = {
   id: string;
@@ -9,13 +6,9 @@ export type StudentGrade = {
   initials: string;
   avatarClassName: string;
   nisn: string;
-  rollNo: string;
-  className: ClassFilter;
-  subject: SubjectFilter;
-  formatif: number;
-  sts: number;
-  praktik: number;
-  remedialReason?: string;
+  className: string;
+  subject: string;
+  nilai: number | null;
 };
 
 export type GradeStatus = {

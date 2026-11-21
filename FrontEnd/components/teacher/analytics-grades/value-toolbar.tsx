@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 type ValueToolbarProps = {
   classOptions: JurusanOption[];
   subjectOptions: JurusanOption[];
-  assessmentOptions: JurusanOption[];
+  assignmentOptions: JurusanOption[];
   classFilter: string;
   subjectFilter: string;
-  assessmentFilter: string;
+  assignmentFilter: string;
   opened: boolean;
   studentStats: {
     total: number;
@@ -22,31 +22,31 @@ type ValueToolbarProps = {
   };
   selectedClassLabel: string;
   selectedSubjectLabel: string;
-  selectedAssessmentLabel: string;
+  selectedAssignmentLabel: string;
   onClassChange: (value: string) => void;
   onSubjectChange: (value: string) => void;
-  onAssessmentChange: (value: string) => void;
+  onAssignmentChange: (value: string) => void;
   onOpen: () => void;
 };
 
 export function ValueToolbar({
   classOptions,
   subjectOptions,
-  assessmentOptions,
+  assignmentOptions,
   classFilter,
   subjectFilter,
-  assessmentFilter,
+  assignmentFilter,
   opened,
   studentStats,
   selectedClassLabel,
   selectedSubjectLabel,
-  selectedAssessmentLabel,
+  selectedAssignmentLabel,
   onClassChange,
   onSubjectChange,
-  onAssessmentChange,
+  onAssignmentChange,
   onOpen,
 }: ValueToolbarProps) {
-  const isReady = Boolean(classFilter && subjectFilter && assessmentFilter);
+  const isReady = Boolean(classFilter && subjectFilter && assignmentFilter);
 
   return (
     <div className="flex flex-col gap-3 bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-4 py-4">
@@ -88,19 +88,21 @@ export function ValueToolbar({
                 searchPlaceholder="Cari mapel..."
                 emptyMessage="Mapel tidak ditemukan."
                 variant="ghost"
+                disabled={!classFilter}
                 onChange={onSubjectChange}
               />
             </StaggerItem>
-            <StaggerItem key="assessment">
+            <StaggerItem key="assignment">
               <SearchableDropdown
-                id="value-assessment"
-                value={assessmentFilter}
-                options={assessmentOptions}
-                label="Pilih asesmen"
-                searchPlaceholder="Cari asesmen..."
-                emptyMessage="Asesmen tidak ditemukan."
+                id="value-assignment"
+                value={assignmentFilter}
+                options={assignmentOptions}
+                label="Pilih tugas/kuis"
+                searchPlaceholder="Cari tugas atau kuis..."
+                emptyMessage="Tugas/kuis tidak ditemukan."
                 variant="ghost"
-                onChange={onAssessmentChange}
+                disabled={!classFilter || !subjectFilter}
+                onChange={onAssignmentChange}
               />
             </StaggerItem>
           </StaggerChildren>
@@ -170,8 +172,8 @@ export function ValueToolbar({
                   {selectedSubjectLabel}
                 </p>
                 <p>
-                  <span className="font-semibold text-[#181c20]">Asesmen:</span>{" "}
-                  {selectedAssessmentLabel}
+                  <span className="font-semibold text-[#181c20]">Tugas/Kuis:</span>{" "}
+                  {selectedAssignmentLabel}
                 </p>
                 <p>
                   <span className="font-semibold text-[#181c20]">Siswa:</span>{" "}

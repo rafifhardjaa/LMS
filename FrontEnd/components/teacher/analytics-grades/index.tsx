@@ -1,74 +1,280 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  masterDataApi,
+  type Assignment as ApiAssignment,
+  type AssignmentGradingRow,
+  type StudentSummary,
+  type TeachingAssignment,
+} from "@/lib/api/master-data";
+import { useAuthStore } from "@/lib/store/auth-store";
 import { FadeIn } from "@/components/ui/animations";
-import { exportStudentsToXlsx } from "@/lib/export-xlsx";
 import { AverageScoreChart } from "./average-score-chart";
 import { CompletionStatusChart } from "./completion-status-chart";
-import {
-  assessmentOptions,
-  classOptions,
-  getStudentStatus,
-  students,
-  subjectOptions,
-} from "./data";
+import { getStudentStatus } from "./data";
 import { GradeLedger } from "./grade-ledger";
+import { mapStudentsWithGrades } from "./mappers";
 import { AnalyticsPageHeader } from "./page-header";
 import { RemedialPanel } from "./remedial-panel";
 import type { StudentGrade } from "./types";
 import { ValueToolbar } from "./value-toolbar";
 
+function errorMessage(error: { message?: string | null } | null | undefined) {
+  return error?.message ?? "Terjadi kesalahan saat memuat data.";
+}
+
 export function AnalyticsGrades() {
+  const user = useAuthStore((state) => state.user);
+
+  const [teachingAssignments, setTeachingAssignments] = useState<TeachingAssignment[]>([]);
   const [classFilter, setClassFilter] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
-  const [assessmentFilter, setAssessmentFilter] = useState("");
+  const [assignmentFilter, setAssignmentFilter] = useState("");
+  const [assignments, setAssignments] = useState<ApiAssignment[]>([]);
+  const [students, setStudents] = useState<StudentSummary[]>([]);
+  const [gradingRows, setGradingRows] = useState<AssignmentGradingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
   const [isRemedialOpen, setIsRemedialOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let active = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await masterDataApi.teacherAssignments.list({
+          teacherId: user.id,
+        });
+        if (!active) return;
+        if (res.error) throw new Error(errorMessage(res.error));
+        setTeachingAssignments(res.data?.data ?? []);
+      } catch (err) {
+        if (active) {
+          setTeachingAssignments([]);
+          setError(
+            err instanceof Error ? err.message : "Gagal memuat data course.",
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!classFilter || !subjectFilter) return;
+
+    let active = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const meetingRes = await masterDataApi.courseDetails.meetings.list(
+          subjectFilter,
+          classFilter,
+        );
+        if (!active) return;
+        if (meetingRes.error) throw new Error(errorMessage(meetingRes.error));
+
+        const meetings = meetingRes.data?.data ?? [];
+        const responses = await Promise.all(
+          meetings.map((meeting) =>
+            masterDataApi.courseDetails.assignments.list(
+              subjectFilter,
+              classFilter,
+              meeting.id,
+            ),
+          ),
+        );
+        if (!active) return;
+        setAssignments(responses.flatMap((res) => res.data?.data ?? []));
+      } catch (err) {
+        if (active) {
+          setAssignments([]);
+          setError(
+            err instanceof Error ? err.message : "Gagal memuat tugas/kuis.",
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [classFilter, subjectFilter]);
+
+  useEffect(() => {
+    if (!classFilter) return;
+
+    let active = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await masterDataApi.students.list({ classId: classFilter });
+        if (!active) return;
+        if (res.error) throw new Error(errorMessage(res.error));
+        setStudents(res.data?.data ?? []);
+      } catch (err) {
+        if (active) {
+          setStudents([]);
+          setError(
+            err instanceof Error ? err.message : "Gagal memuat siswa kelas.",
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [classFilter]);
+
+  useEffect(() => {
+    if (!subjectFilter || !assignmentFilter) return;
+
+    let active = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await masterDataApi.courseDetails.assignments.grading(
+          subjectFilter,
+          assignmentFilter,
+        );
+        if (!active) return;
+        if (res.error) throw new Error(errorMessage(res.error));
+        setGradingRows(res.data?.data ?? []);
+      } catch (err) {
+        if (active) {
+          setGradingRows([]);
+          setError(
+            err instanceof Error ? err.message : "Gagal memuat nilai siswa.",
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [assignmentFilter, subjectFilter]);
+
+  const classOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    teachingAssignments.forEach((item) => {
+      if (item.classId && item.className) map.set(item.classId, item.className);
+    });
+    return [...map.entries()].map(([value, label]) => ({ value, label }));
+  }, [teachingAssignments]);
+
+  const subjectOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    teachingAssignments
+      .filter((item) => item.classId === classFilter)
+      .forEach((item) => {
+        if (item.subjectId) {
+          map.set(
+            item.subjectId,
+            item.subjectCode || item.subjectName || "Mata pelajaran",
+          );
+        }
+      });
+    return [...map.entries()].map(([value, label]) => ({ value, label }));
+  }, [classFilter, teachingAssignments]);
+
+  const assignmentOptions = useMemo(
+    () =>
+      assignments.map((assignment) => ({
+        value: assignment.id,
+        label: `${assignment.type === "kuis" ? "Kuis" : "Tugas"}: ${assignment.title}`,
+      })),
+    [assignments],
+  );
 
   const selectedClassLabel =
     classOptions.find((option) => option.value === classFilter)?.label ?? "-";
   const selectedSubjectLabel =
     subjectOptions.find((option) => option.value === subjectFilter)?.label ?? "-";
-  const selectedAssessmentLabel =
-    assessmentOptions.find((option) => option.value === assessmentFilter)?.label ??
+  const selectedAssignmentLabel =
+    assignmentOptions.find((option) => option.value === assignmentFilter)?.label ??
     "-";
 
-  const studentStats = useMemo(() => {
-    const filteredStudents = students.filter(
-      (student) =>
-        student.className === classFilter && student.subject === subjectFilter,
-    );
-    const statuses = filteredStudents.map((student) =>
-      getStudentStatus(student),
-    );
+  const studentRows = useMemo(
+    () =>
+      mapStudentsWithGrades({
+        students,
+        gradingRows,
+        className: selectedClassLabel,
+        subjectLabel: selectedSubjectLabel,
+      }),
+    [gradingRows, selectedClassLabel, selectedSubjectLabel, students],
+  );
 
+  const studentStats = useMemo(() => {
+    const statuses = studentRows.map((student) => getStudentStatus(student));
     return {
-      total: filteredStudents.length,
+      total: studentRows.length,
       tuntas: statuses.filter((status) => status.tone === "success").length,
       remidi: statuses.filter((status) => status.tone === "danger").length,
     };
-  }, [classFilter, subjectFilter]);
+  }, [studentRows]);
+
+  const remedialStudents = useMemo(
+    () =>
+      studentRows.filter(
+        (student) => getStudentStatus(student).tone === "danger",
+      ),
+    [studentRows],
+  );
 
   function handleClassChange(value: string) {
     setClassFilter(value);
+    setSubjectFilter("");
+    setAssignmentFilter("");
     setIsLedgerOpen(false);
+    setIsRemedialOpen(false);
   }
 
   function handleSubjectChange(value: string) {
     setSubjectFilter(value);
+    setAssignmentFilter("");
     setIsLedgerOpen(false);
+    setIsRemedialOpen(false);
   }
 
-  function handleAssessmentChange(value: string) {
-    setAssessmentFilter(value);
+  function handleAssignmentChange(value: string) {
+    setAssignmentFilter(value);
     setIsLedgerOpen(false);
+    setIsRemedialOpen(false);
   }
 
   function handleBack() {
     setClassFilter("");
     setSubjectFilter("");
-    setAssessmentFilter("");
+    setAssignmentFilter("");
     setIsLedgerOpen(false);
     setIsRemedialOpen(false);
   }
@@ -85,11 +291,16 @@ export function AnalyticsGrades() {
   function handleDownload(rows: StudentGrade[]) {
     const filename = isRemedialOpen
       ? "siswa-perlu-remidi.xlsx"
-      : `rekap-nilai-${classFilter || "semua"}-${subjectFilter || "semua"}.xlsx`;
+      : `rekap-nilai-${selectedClassLabel || "kelas"}-${selectedAssignmentLabel || "tugas"}.xlsx`.replace(
+          /[^\w\d-]+/g,
+          "-",
+        );
 
-    exportStudentsToXlsx(rows, filename);
-    toast.success("Berkas XLSX diunduh", {
-      description: `${rows.length} siswa berhasil diekspor.`,
+    import("@/lib/export-xlsx").then(({ exportStudentsToXlsx }) => {
+      exportStudentsToXlsx(rows, filename);
+      toast.success("Berkas XLSX diunduh", {
+        description: `${rows.length} siswa berhasil diekspor.`,
+      });
     });
   }
 
@@ -108,31 +319,41 @@ export function AnalyticsGrades() {
 
   function handleViewDetail(student: StudentGrade) {
     toast.info(`Detail nilai ${student.name}`, {
-      description:
-        "Rincian capaian per butir asesmen dibuka pada Rincian Leger Nilai Siswa.",
+      description: `Rincian nilai ${student.name} pada ${selectedAssignmentLabel}.`,
     });
+  }
+
+  if (loading && !teachingAssignments.length) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center bg-[#EBF0F5]">
+        <Loader2 className="size-7 animate-spin text-[#b71422]" />
+      </div>
+    );
   }
 
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AnalyticsPageHeader />
 
+      {error ? (
+        <div className="rounded-2xl bg-[#FEE2E2] px-5 py-4 text-[13px] font-semibold text-[#b91c1c]">
+          {error}
+        </div>
+      ) : null}
+
       <FadeIn delay={0.06} className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <AverageScoreChart />
-        <CompletionStatusChart />
+        <AverageScoreChart students={studentRows} classLabel={selectedClassLabel} />
+        <CompletionStatusChart students={studentRows} classLabel={selectedClassLabel} />
       </FadeIn>
 
       {isRemedialOpen ? (
         <FadeIn delay={0.1}>
           <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
             <GradeLedger
-              students={students}
-              classFilter=""
-              subjectFilter=""
-              assessmentFilter=""
-              classLabel="Semua Kelas"
-              subjectLabel="Semua Mapel"
-              assessmentLabel="Siswa Perlu Remidi"
+              students={remedialStudents}
+              classLabel={selectedClassLabel}
+              subjectLabel={selectedSubjectLabel}
+              assignmentLabel={selectedAssignmentLabel}
               opened
               remedialOnly
               onScheduleRemedial={handleScheduleRemedial}
@@ -155,29 +376,26 @@ export function AnalyticsGrades() {
               <ValueToolbar
                 classOptions={classOptions}
                 subjectOptions={subjectOptions}
-                assessmentOptions={assessmentOptions}
+                assignmentOptions={assignmentOptions}
                 classFilter={classFilter}
                 subjectFilter={subjectFilter}
-                assessmentFilter={assessmentFilter}
+                assignmentFilter={assignmentFilter}
                 opened={isLedgerOpen}
                 studentStats={studentStats}
                 selectedClassLabel={selectedClassLabel}
                 selectedSubjectLabel={selectedSubjectLabel}
-                selectedAssessmentLabel={selectedAssessmentLabel}
+                selectedAssignmentLabel={selectedAssignmentLabel}
                 onClassChange={handleClassChange}
                 onSubjectChange={handleSubjectChange}
-                onAssessmentChange={handleAssessmentChange}
+                onAssignmentChange={handleAssignmentChange}
                 onOpen={() => setIsLedgerOpen(true)}
               />
 
               <GradeLedger
-                students={students}
-                classFilter={classFilter}
-                subjectFilter={subjectFilter}
-                assessmentFilter={assessmentFilter}
+                students={studentRows}
                 classLabel={selectedClassLabel}
                 subjectLabel={selectedSubjectLabel}
-                assessmentLabel={selectedAssessmentLabel}
+                assignmentLabel={selectedAssignmentLabel}
                 opened={isLedgerOpen}
                 onScheduleRemedial={handleScheduleRemedial}
                 onEditNote={handleEditNote}
@@ -190,7 +408,10 @@ export function AnalyticsGrades() {
 
             {!isLedgerOpen && (
               <FadeIn delay={0.14} className="lg:col-span-4">
-                <RemedialPanel onOpenList={handleOpenRemedial} />
+                <RemedialPanel
+                  students={studentRows}
+                  onOpenList={handleOpenRemedial}
+                />
               </FadeIn>
             )}
           </div>
