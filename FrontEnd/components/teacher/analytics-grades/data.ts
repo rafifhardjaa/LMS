@@ -1,5 +1,4 @@
 import type {
-  AssessmentFilter,
   ClassFilter,
   GradeStatus,
   RemedialGroup,
@@ -16,28 +15,6 @@ export const classOptions: { value: ClassFilter; label: string }[] = [
   { value: "VI-A", label: "VI - A • IPA Terpadu" },
   { value: "VI-B", label: "VI - B • IPA Terpadu" },
   { value: "VIII-A", label: "VIII - A • Sains Rekayasa" },
-];
-
-export const assessmentOptions: {
-  value: AssessmentFilter;
-  label: string;
-}[] = [
-  {
-    value: "all",
-    label: "Semua Asesmen (Formatif, STS, SAS)",
-  },
-  {
-    value: "formatif",
-    label: "Formatif: Rerata Tujuan Pembelajaran (TP)",
-  },
-  {
-    value: "sts",
-    label: "Sumatif Tengah Semester (STS)",
-  },
-  {
-    value: "praktik",
-    label: "Penilaian Unjuk Kerja / Praktikum Lab",
-  },
 ];
 
 export const students: StudentGrade[] = [
