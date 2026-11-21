@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         destination: "/teacher/manage-task",
         permanent: false,
       },
+      {
+        source: "/teacher/analitik-nilai",
+        destination: "/teacher/manage-value",
+        permanent: false,
+      },
     ];
   },
 };
