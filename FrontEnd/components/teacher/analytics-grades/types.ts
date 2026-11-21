@@ -23,3 +23,13 @@ export type GradeStatus = {
   className: string;
   tone: GradeTone;
 };
+
+export type RemedialGroup = {
+  id: string;
+  students: string;
+  status: string;
+  statusClassName: string;
+  schedule: string;
+  room?: string;
+  waiting?: boolean;
+};
