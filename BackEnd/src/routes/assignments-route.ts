@@ -12,6 +12,11 @@ import { handleError } from "../utils/response";
 
 const prefix = "/api/v1/course-details/:subjectId/assignments";
 
+const assignmentParams = t.Object({
+  subjectId: t.String(),
+  id: t.String(),
+});
+
 export const assignmentsRoute = new Elysia({ prefix });
 
 assignmentsRoute.use(authMiddleware).get(
@@ -100,7 +105,7 @@ assignmentsRoute.get(
   {
     beforeHandle: requireRole(["admin", "guru", "siswa"]),
     detail: { tags: ["Assignments"], summary: "Detail satu assignment", security: [{ BearerAuth: [] }] },
-    params: t.Object({ id: t.String() }),
+    params: assignmentParams,
   }
 );
 
@@ -122,7 +127,7 @@ assignmentsRoute.get(
   {
     beforeHandle: requireRole(["admin", "guru", "siswa"]),
     detail: { tags: ["Assignments"], summary: "Ringkasan pengumpulan per assignment", security: [{ BearerAuth: [] }] },
-    params: t.Object({ id: t.String() }),
+    params: assignmentParams,
   }
 );
 
@@ -160,7 +165,7 @@ assignmentsRoute.put(
       deadlineAt: t.Optional(t.String()),
       meetingId: t.Optional(t.String()),
     }),
-    params: t.Object({ id: t.String() }),
+    params: assignmentParams,
   }
 );
 
@@ -188,6 +193,6 @@ assignmentsRoute.delete(
       summary: "Hapus tugas/kuis dari pertemuan",
       security: [{ BearerAuth: [] }],
     },
-    params: t.Object({ id: t.String() }),
+    params: assignmentParams,
   }
 );
