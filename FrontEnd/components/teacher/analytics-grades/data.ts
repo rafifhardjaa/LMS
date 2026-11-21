@@ -2,7 +2,6 @@ import type {
   AssessmentFilter,
   ClassFilter,
   GradeStatus,
-  RemedialGroup,
   StudentGrade,
   SubjectFilter,
 } from "./types";
@@ -283,22 +282,3 @@ export function getStudentStatus(student: StudentGrade): GradeStatus {
     tone: "success",
   };
 }
-
-export const remedialGroups: RemedialGroup[] = [
-  {
-    id: "john-jim",
-    students: "John Kurt & Jim Anderson",
-    status: "Terjadwal",
-    statusClassName: "bg-[#FFEBEB] text-[#b71422]",
-    schedule: "Kamis, 20 Maret 2025 • 14:30 WITA",
-    room: "Laboratorium Fisika Dasar 1",
-  },
-  {
-    id: "bagus",
-    students: "Bagus Wicaksono (Menunggu)",
-    status: "Izin Sakit",
-    statusClassName: "bg-[#FEF3C7] text-[#D97706]",
-    schedule: "Menunggu Konfirmasi Wali Kelas",
-    waiting: true,
-  },
-];
