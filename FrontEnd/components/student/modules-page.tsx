@@ -128,7 +128,7 @@ export function StudentModules() {
       : Math.floor((completedModules / totalModules) * 100);
 
   function openModule(module: ModuleCard) {
-    router.push(`/student/modules/${module.id}`);
+    router.push(`/student/module-course/${module.id}`);
   }
 
   const filteredModules = displayModules.filter((module) => {

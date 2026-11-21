@@ -90,7 +90,7 @@ export function LearningModules() {
           {visibleModules.map((module) => (
             <Link
               key={module.id}
-              href={`/student/modules/${module.id}`}
+              href={`/student/module-course/${module.id}`}
               className="rounded-xl bg-[#f8f9fc] p-4 transition-colors hover:border hover:border-[#0d5c52]/30"
             >
               <div className="flex items-start gap-3">
@@ -117,7 +117,7 @@ export function LearningModules() {
             Status: <span className="font-medium">Belum diakses</span>
           </p>
           <Link
-            href={`/student/modules/${selectedModule.id}`}
+            href={`/student/module-course/${selectedModule.id}`}
             className="mt-3 inline-flex text-sm font-semibold text-[#0d5c52] hover:underline"
           >
             Buka modul

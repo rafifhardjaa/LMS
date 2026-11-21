@@ -5,7 +5,17 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/student/modules/algoritma-pemrograman-optimasi-big-o",
-        destination: "/student/modules",
+        destination: "/student/module-course",
+        permanent: false,
+      },
+      {
+        source: "/student/modules/:moduleId",
+        destination: "/student/module-course/:moduleId",
+        permanent: false,
+      },
+      {
+        source: "/student/modules",
+        destination: "/student/module-course",
         permanent: false,
       },
       {
