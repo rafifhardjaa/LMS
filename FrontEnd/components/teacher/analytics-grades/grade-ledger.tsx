@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Download,
   Eye,
   PencilLine,
   Search,
@@ -32,6 +33,8 @@ type GradeLedgerProps = {
   onViewDetail: (student: StudentGrade) => void;
   onChangeFilter: () => void;
   onBack: () => void;
+  onDownload: (rows: StudentGrade[]) => void;
+  remedialOnly?: boolean;
 };
 
 type SortDirection = "asc" | "desc";
@@ -50,18 +53,24 @@ export function GradeLedger({
   onViewDetail,
   onChangeFilter,
   onBack,
+  onDownload,
+  remedialOnly = false,
 }: GradeLedgerProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
 
-  const filteredStudents = useMemo(
-    () =>
-      students.filter(
-        (student) =>
-          student.className === classFilter && student.subject === subjectFilter,
-      ),
-    [classFilter, students, subjectFilter],
-  );
+  const filteredStudents = useMemo(() => {
+    if (remedialOnly) {
+      return students.filter(
+        (student) => getStudentStatus(student).tone === "danger",
+      );
+    }
+
+    return students.filter(
+      (student) =>
+        student.className === classFilter && student.subject === subjectFilter,
+    );
+  }, [classFilter, remedialOnly, students, subjectFilter]);
 
   const sortedStudents = useMemo(
     () =>
@@ -128,10 +137,14 @@ export function GradeLedger({
           <div className="flex flex-col gap-3 border-b border-[#E2E8F0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-bold text-[#1E293B]">
-                Rincian Leger Nilai Siswa
+                {remedialOnly
+                  ? "Daftar Siswa Perlu Remidi"
+                  : "Rincian Leger Nilai Siswa"}
               </h2>
               <p className="mt-0.5 text-[11px] leading-4 text-[#64748B]">
-                Bobot: Formatif 30% • STS 30% • Praktik Lab 40%
+                {remedialOnly
+                  ? "Siswa dengan nilai di bawah KKTP"
+                  : "Bobot: Formatif 30% • STS 30% • Praktik Lab 40%"}
               </p>
             </div>
 
@@ -143,6 +156,15 @@ export function GradeLedger({
               >
                 <ArrowLeft className="size-3.5" />
                 Kembali
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onDownload(sortedStudents)}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DCE5EE] bg-white px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
+              >
+                <Download className="size-3.5" />
+                Unduh .xlsx
               </button>
 
               <button
@@ -254,10 +276,10 @@ export function GradeLedger({
                       <td className="px-3 py-3 text-center">
                         <span
                           className={cn(
-                            "inline-flex min-w-14 items-center justify-center rounded-lg px-2 py-1 font-mono text-[12px] font-bold tabular-nums",
+                            "font-mono text-[12px] font-bold tabular-nums",
                             status.tone === "success"
-                              ? "bg-[#DCFCE7]/70 text-[#15803D]"
-                              : "bg-[#FEE2E2] text-[#b71422]",
+                              ? "text-[#15803D]"
+                              : "text-[#b71422]",
                           )}
                         >
                           {finalScore.toFixed(1)}
@@ -327,10 +349,14 @@ export function GradeLedger({
                 <Search className="size-4" />
               </span>
               <p className="mt-2 text-xs font-semibold text-[#334155]">
-                Tidak ada siswa pada filter ini
+                {remedialOnly
+                  ? "Tidak ada siswa perlu remidi"
+                  : "Tidak ada siswa pada filter ini"}
               </p>
               <p className="mt-0.5 max-w-sm text-[10px] leading-4 text-[#94A3B8]">
-                Ubah kelas atau mata pelajaran untuk melihat daftar nilai siswa.
+                {remedialOnly
+                  ? "Semua siswa berada di atas KKTP."
+                  : "Ubah kelas atau mata pelajaran untuk melihat daftar nilai siswa."}
               </p>
             </motion.div>
           )}
@@ -341,19 +367,23 @@ export function GradeLedger({
               <span className="font-bold text-[#334155]">
                 {sortedStudents.length === 0 ? "0" : `${startIndex + 1}-${endIndex}`}
               </span>{" "}
-              dari {sortedStudents.length} siswa · {classLabel} · {subjectLabel} ·{" "}
-              {assessmentLabel}
+              dari {sortedStudents.length} siswa
+              {remedialOnly
+                ? " perlu remidi"
+                : ` · ${classLabel} · ${subjectLabel} · ${assessmentLabel}`}
             </p>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={onChangeFilter}
-                className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                <Undo2 className="size-3.5" />
-                Ubah filter
-              </button>
+              {!remedialOnly && (
+                <button
+                  type="button"
+                  onClick={onChangeFilter}
+                  className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  <Undo2 className="size-3.5" />
+                  Ubah filter
+                </button>
+              )}
 
               <div className="flex items-center gap-1">
                 <button

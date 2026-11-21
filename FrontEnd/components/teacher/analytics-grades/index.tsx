@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
+import { exportStudentsToXlsx } from "@/lib/export-xlsx";
 import { AverageScoreChart } from "./average-score-chart";
 import { CompletionStatusChart } from "./completion-status-chart";
 import {
@@ -23,6 +24,7 @@ export function AnalyticsGrades() {
   const [subjectFilter, setSubjectFilter] = useState("");
   const [assessmentFilter, setAssessmentFilter] = useState("");
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
+  const [isRemedialOpen, setIsRemedialOpen] = useState(false);
 
   const selectedClassLabel =
     classOptions.find((option) => option.value === classFilter)?.label ?? "-";
@@ -68,6 +70,27 @@ export function AnalyticsGrades() {
     setSubjectFilter("");
     setAssessmentFilter("");
     setIsLedgerOpen(false);
+    setIsRemedialOpen(false);
+  }
+
+  function handleOpenRemedial() {
+    setIsLedgerOpen(false);
+    setIsRemedialOpen(true);
+  }
+
+  function handleCloseRemedial() {
+    setIsRemedialOpen(false);
+  }
+
+  function handleDownload(rows: StudentGrade[]) {
+    const filename = isRemedialOpen
+      ? "siswa-perlu-remidi.xlsx"
+      : `rekap-nilai-${classFilter || "semua"}-${subjectFilter || "semua"}.xlsx`;
+
+    exportStudentsToXlsx(rows, filename);
+    toast.success("Berkas XLSX diunduh", {
+      description: `${rows.length} siswa berhasil diekspor.`,
+    });
   }
 
   function handleScheduleRemedial(student: StudentGrade) {
@@ -99,55 +122,80 @@ export function AnalyticsGrades() {
         <CompletionStatusChart />
       </FadeIn>
 
-      <FadeIn delay={0.1}>
-        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
-          <section
-            className={`overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${
-              isLedgerOpen ? "lg:col-span-12" : "lg:col-span-8"
-            }`}
-          >
-            <ValueToolbar
-              classOptions={classOptions}
-              subjectOptions={subjectOptions}
-              assessmentOptions={assessmentOptions}
-              classFilter={classFilter}
-              subjectFilter={subjectFilter}
-              assessmentFilter={assessmentFilter}
-              opened={isLedgerOpen}
-              studentStats={studentStats}
-              selectedClassLabel={selectedClassLabel}
-              selectedSubjectLabel={selectedSubjectLabel}
-              selectedAssessmentLabel={selectedAssessmentLabel}
-              onClassChange={handleClassChange}
-              onSubjectChange={handleSubjectChange}
-              onAssessmentChange={handleAssessmentChange}
-              onOpen={() => setIsLedgerOpen(true)}
-            />
-
+      {isRemedialOpen ? (
+        <FadeIn delay={0.1}>
+          <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
             <GradeLedger
               students={students}
-              classFilter={classFilter}
-              subjectFilter={subjectFilter}
-              assessmentFilter={assessmentFilter}
-              classLabel={selectedClassLabel}
-              subjectLabel={selectedSubjectLabel}
-              assessmentLabel={selectedAssessmentLabel}
-              opened={isLedgerOpen}
+              classFilter=""
+              subjectFilter=""
+              assessmentFilter=""
+              classLabel="Semua Kelas"
+              subjectLabel="Semua Mapel"
+              assessmentLabel="Siswa Perlu Remidi"
+              opened
+              remedialOnly
               onScheduleRemedial={handleScheduleRemedial}
               onEditNote={handleEditNote}
               onViewDetail={handleViewDetail}
-              onChangeFilter={() => setIsLedgerOpen(false)}
-              onBack={handleBack}
+              onChangeFilter={handleCloseRemedial}
+              onBack={handleCloseRemedial}
+              onDownload={handleDownload}
             />
           </section>
+        </FadeIn>
+      ) : (
+        <FadeIn delay={0.1}>
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+            <section
+              className={`overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${
+                isLedgerOpen ? "lg:col-span-12" : "lg:col-span-8"
+              }`}
+            >
+              <ValueToolbar
+                classOptions={classOptions}
+                subjectOptions={subjectOptions}
+                assessmentOptions={assessmentOptions}
+                classFilter={classFilter}
+                subjectFilter={subjectFilter}
+                assessmentFilter={assessmentFilter}
+                opened={isLedgerOpen}
+                studentStats={studentStats}
+                selectedClassLabel={selectedClassLabel}
+                selectedSubjectLabel={selectedSubjectLabel}
+                selectedAssessmentLabel={selectedAssessmentLabel}
+                onClassChange={handleClassChange}
+                onSubjectChange={handleSubjectChange}
+                onAssessmentChange={handleAssessmentChange}
+                onOpen={() => setIsLedgerOpen(true)}
+              />
 
-          {!isLedgerOpen && (
-            <FadeIn delay={0.14} className="lg:col-span-4">
-              <RemedialPanel />
-            </FadeIn>
-          )}
-        </div>
-      </FadeIn>
+              <GradeLedger
+                students={students}
+                classFilter={classFilter}
+                subjectFilter={subjectFilter}
+                assessmentFilter={assessmentFilter}
+                classLabel={selectedClassLabel}
+                subjectLabel={selectedSubjectLabel}
+                assessmentLabel={selectedAssessmentLabel}
+                opened={isLedgerOpen}
+                onScheduleRemedial={handleScheduleRemedial}
+                onEditNote={handleEditNote}
+                onViewDetail={handleViewDetail}
+                onChangeFilter={() => setIsLedgerOpen(false)}
+                onBack={handleBack}
+                onDownload={handleDownload}
+              />
+            </section>
+
+            {!isLedgerOpen && (
+              <FadeIn delay={0.14} className="lg:col-span-4">
+                <RemedialPanel onOpenList={handleOpenRemedial} />
+              </FadeIn>
+            )}
+          </div>
+        </FadeIn>
+      )}
     </div>
   );
 }
