@@ -35,10 +35,10 @@ const menu = [
     title: "Kelola Tugas & Penilaian Siswa",
   },
   {
-    label: "Analitik & Nilai",
+    label: "Manage Value",
     icon: BarChart3,
-    href: "/teacher/analitik-nilai",
-    title: "Nilai Siswa & Capaian",
+    href: "/teacher/manage-value",
+    title: "Kelola Nilai Siswa",
   },
   {
     label: "Presensi & Siswa",
