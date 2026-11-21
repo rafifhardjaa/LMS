@@ -2,12 +2,15 @@
 
 import { useMemo } from "react";
 import { ExternalLink, TriangleAlert } from "lucide-react";
-import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
 import { cn } from "@/lib/utils";
 import { getFinalScore, getStudentStatus, students } from "./data";
 
-export function RemedialPanel() {
+type RemedialPanelProps = {
+  onOpenList: () => void;
+};
+
+export function RemedialPanel({ onOpenList }: RemedialPanelProps) {
   const dangerStudents = useMemo(
     () =>
       students
@@ -15,13 +18,6 @@ export function RemedialPanel() {
         .sort((first, second) => getFinalScore(first) - getFinalScore(second)),
     [],
   );
-
-  function handleOpenList() {
-    toast.info("Daftar siswa perlu remidi disiapkan", {
-      description:
-        "Tampilan dan perilaku tombol ini akan dirancang lebih lanjut.",
-    });
-  }
 
   return (
     <FadeIn>
@@ -45,7 +41,7 @@ export function RemedialPanel() {
           </span>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex max-h-[380px] flex-col gap-2 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {dangerStudents.map((student) => {
             const finalScore = getFinalScore(student);
             const status = getStudentStatus(student);
@@ -53,7 +49,7 @@ export function RemedialPanel() {
             return (
               <div
                 key={student.id}
-                className="flex items-center gap-3 rounded-xl border border-white bg-white/80 p-3 shadow-[0_1px_4px_rgba(0,0,0,0.02)] transition-colors hover:border-[#b71422]/20 hover:bg-white"
+                className="flex items-center gap-3 rounded-xl border border-[#FECACA] bg-white p-3 shadow-[0_1px_4px_rgba(0,0,0,0.02)] transition-colors hover:border-[#b71422]/40 hover:bg-white"
               >
                 <div
                   className={cn(
@@ -91,7 +87,7 @@ export function RemedialPanel() {
           </span>
           <button
             type="button"
-            onClick={handleOpenList}
+            onClick={onOpenList}
             className="flex items-center gap-1 text-[12px] font-semibold text-[#006398] transition-colors hover:underline"
           >
             Buka daftar remidi
