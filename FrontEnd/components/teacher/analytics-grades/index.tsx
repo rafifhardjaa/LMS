@@ -1,27 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
 import { AverageScoreChart } from "./average-score-chart";
 import { CompletionStatusChart } from "./completion-status-chart";
-import { AnalyticsFilterBar } from "./filter-bar";
 import { GradeLedger } from "./grade-ledger";
 import { AnalyticsPageHeader } from "./page-header";
 import { RemedialPanel } from "./remedial-panel";
 import { students } from "./data";
-import type {
-  AssessmentFilter,
-  ClassFilter,
-  StudentGrade,
-} from "./types";
+import type { StudentGrade } from "./types";
 
 export function AnalyticsGrades() {
-  const [classFilter, setClassFilter] = useState<ClassFilter>("VII-A");
-  const [assessmentFilter, setAssessmentFilter] =
-    useState<AssessmentFilter>("all");
-  const [search, setSearch] = useState("");
-
   function handleScheduleRemedial(student: StudentGrade) {
     toast.success("Sesi bimbingan dibuka", {
       description: `Jadwal remedial ${student.name} diarahkan ke panel Rekomendasi Remedial.`,
@@ -50,17 +39,6 @@ export function AnalyticsGrades() {
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AnalyticsPageHeader />
 
-      <FadeIn delay={0.02}>
-        <AnalyticsFilterBar
-          classFilter={classFilter}
-          assessmentFilter={assessmentFilter}
-          search={search}
-          onClassChange={setClassFilter}
-          onAssessmentChange={setAssessmentFilter}
-          onSearchChange={setSearch}
-        />
-      </FadeIn>
-
       <FadeIn delay={0.06} className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <AverageScoreChart />
         <CompletionStatusChart />
@@ -70,9 +48,6 @@ export function AnalyticsGrades() {
         <FadeIn delay={0.1} className="lg:col-span-8">
           <GradeLedger
             students={students}
-            classFilter={classFilter}
-            assessmentFilter={assessmentFilter}
-            search={search}
             onScheduleRemedial={handleScheduleRemedial}
             onEditNote={handleEditNote}
             onViewDetail={handleViewDetail}
