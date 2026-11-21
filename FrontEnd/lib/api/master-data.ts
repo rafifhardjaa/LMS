@@ -270,6 +270,29 @@ export interface AssignmentSummary {
   students: Array<{ studentId: string }>;
 }
 
+export interface AssignmentGradingRow {
+  id: string;
+  studentId: string;
+  name: string;
+  nisn: string;
+  className: string;
+  assignmentId: string;
+  taskTitle: string;
+  subject: string;
+  fileName: string;
+  mimeType: string;
+  fileUrl: string;
+  submittedAt: string;
+  submittedAtTone: "urgent" | "neutral";
+  status: "pending" | "graded" | "revision";
+  score: number | null;
+}
+
+export interface AssignmentGradingUpdate {
+  score: number;
+  status: "pending" | "graded" | "revision";
+}
+
 export interface MajorInput {
   code: string;
   name: string;
@@ -669,6 +692,20 @@ export const masterDataApi = {
         summary: (subjectId: string, id: string) =>
           apiFetch<ApiSuccess<AssignmentSummary>>(
             `/api/v1/course-details/${subjectId}/assignments/${id}/summary`,
+          ),
+        grading: (subjectId: string, id: string) =>
+          apiFetch<ApiSuccess<AssignmentGradingRow[]>>(
+            `/api/v1/course-details/${subjectId}/assignments/${id}/grading`,
+          ),
+        updateGrading: (
+          subjectId: string,
+          id: string,
+          submissionId: string,
+          body: AssignmentGradingUpdate,
+        ) =>
+          apiFetch<ApiSuccess<AssignmentGradingUpdate>>(
+            `/api/v1/course-details/${subjectId}/assignments/${id}/grading/${submissionId}`,
+            { method: "PUT", body: JSON.stringify(body) },
           ),
       },
     },

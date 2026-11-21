@@ -5,6 +5,7 @@ import {
   foreignKey,
   index,
   integer,
+  numeric,
   pgEnum,
   pgSchema,
   pgTable,
@@ -120,6 +121,11 @@ function teacherSubmissionColumns() {
   return {
     ...submissionMetaColumns(),
     studentFileId: uuid("student_file_id").notNull(),
+    score: numeric("score", { precision: 5, scale: 2 }),
+    gradingStatus: varchar("grading_status", { length: 16 })
+      .default("pending")
+      .notNull(),
+    gradedAt: timestamp("graded_at", { withTimezone: true }),
   };
 }
 
