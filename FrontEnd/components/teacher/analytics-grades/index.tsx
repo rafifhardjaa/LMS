@@ -1,23 +1,62 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
 import { AverageScoreChart } from "./average-score-chart";
 import { CompletionStatusChart } from "./completion-status-chart";
+import {
+  assessmentOptions,
+  classOptions,
+  students,
+  subjectOptions,
+} from "./data";
 import { GradeLedger } from "./grade-ledger";
 import { AnalyticsPageHeader } from "./page-header";
-import { RemedialPanel } from "./remedial-panel";
-import { students } from "./data";
 import type { StudentGrade } from "./types";
+import { ValueToolbar } from "./value-toolbar";
 
 export function AnalyticsGrades() {
+  const [classFilter, setClassFilter] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState("");
+  const [assessmentFilter, setAssessmentFilter] = useState("");
+  const [isLedgerOpen, setIsLedgerOpen] = useState(false);
+
+  const selectedClassLabel =
+    classOptions.find((option) => option.value === classFilter)?.label ?? "-";
+  const selectedSubjectLabel =
+    subjectOptions.find((option) => option.value === subjectFilter)?.label ?? "-";
+  const selectedAssessmentLabel =
+    assessmentOptions.find((option) => option.value === assessmentFilter)?.label ??
+    "-";
+
+  const studentCount = useMemo(
+    () =>
+      students.filter(
+        (student) =>
+          student.className === classFilter && student.subject === subjectFilter,
+      ).length,
+    [classFilter, subjectFilter],
+  );
+
+  function handleClassChange(value: string) {
+    setClassFilter(value);
+    setIsLedgerOpen(false);
+  }
+
+  function handleSubjectChange(value: string) {
+    setSubjectFilter(value);
+    setIsLedgerOpen(false);
+  }
+
+  function handleAssessmentChange(value: string) {
+    setAssessmentFilter(value);
+    setIsLedgerOpen(false);
+  }
+
   function handleScheduleRemedial(student: StudentGrade) {
     toast.success("Sesi bimbingan dibuka", {
-      description: `Jadwal remedial ${student.name} diarahkan ke panel Rekomendasi Remedial.`,
-    });
-    document.getElementById("remedial-section")?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
+      description: `Jadwal remedial ${student.name} telah disiapkan untuk tindak lanjut.`,
     });
   }
 
@@ -44,22 +83,42 @@ export function AnalyticsGrades() {
         <CompletionStatusChart />
       </FadeIn>
 
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
-        <FadeIn delay={0.1} className="lg:col-span-8">
+      <FadeIn delay={0.1}>
+        <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+          <ValueToolbar
+            classOptions={classOptions}
+            subjectOptions={subjectOptions}
+            assessmentOptions={assessmentOptions}
+            classFilter={classFilter}
+            subjectFilter={subjectFilter}
+            assessmentFilter={assessmentFilter}
+            opened={isLedgerOpen}
+            studentCount={studentCount}
+            selectedClassLabel={selectedClassLabel}
+            selectedSubjectLabel={selectedSubjectLabel}
+            selectedAssessmentLabel={selectedAssessmentLabel}
+            onClassChange={handleClassChange}
+            onSubjectChange={handleSubjectChange}
+            onAssessmentChange={handleAssessmentChange}
+            onOpen={() => setIsLedgerOpen(true)}
+          />
+
           <GradeLedger
             students={students}
+            classFilter={classFilter}
+            subjectFilter={subjectFilter}
+            assessmentFilter={assessmentFilter}
+            classLabel={selectedClassLabel}
+            subjectLabel={selectedSubjectLabel}
+            assessmentLabel={selectedAssessmentLabel}
+            opened={isLedgerOpen}
             onScheduleRemedial={handleScheduleRemedial}
             onEditNote={handleEditNote}
             onViewDetail={handleViewDetail}
+            onChangeFilter={() => setIsLedgerOpen(false)}
           />
-        </FadeIn>
-
-        <FadeIn delay={0.14} className="lg:col-span-4">
-          <div id="remedial-section" className="scroll-mt-24">
-            <RemedialPanel />
-          </div>
-        </FadeIn>
-      </div>
+        </section>
+      </FadeIn>
     </div>
   );
 }
