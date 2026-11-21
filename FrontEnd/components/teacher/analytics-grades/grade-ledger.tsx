@@ -6,14 +6,12 @@ import {
   ArrowLeft,
   ArrowUpDown,
   CalendarClock,
-  Check,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   Eye,
   PencilLine,
   Search,
-  TriangleAlert,
   Undo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -175,7 +173,7 @@ export function GradeLedger({
                 <col className="w-[14%]" />
               </colgroup>
               <thead>
-                <tr className="bg-[#EFF4FF] text-[8px] font-bold uppercase tracking-[0.06em] text-[#94A3B8]">
+                <tr className="border-b border-[#FECACA] bg-[#FFF1F0] text-[8px] font-bold uppercase tracking-[0.06em] text-[#b71422]">
                   <th className="px-3 py-3 text-center">No</th>
                   <th className="px-4 py-3">Nama Lengkap</th>
                   <th className="px-3 py-3 text-center">Formatif</th>
@@ -268,15 +266,12 @@ export function GradeLedger({
                       <td className="px-3 py-3">
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-semibold leading-3",
-                            status.className,
+                            "text-[9px] font-bold leading-3",
+                            status.tone === "success"
+                              ? "text-[#16A34A]"
+                              : "text-[#b71422]",
                           )}
                         >
-                          {status.tone === "success" ? (
-                            <Check className="size-3 shrink-0" />
-                          ) : (
-                            <TriangleAlert className="size-3 shrink-0" />
-                          )}
                           {status.label}
                         </span>
                       </td>

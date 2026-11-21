@@ -8,6 +8,7 @@ import { CompletionStatusChart } from "./completion-status-chart";
 import {
   assessmentOptions,
   classOptions,
+  getStudentStatus,
   students,
   subjectOptions,
 } from "./data";
@@ -31,14 +32,21 @@ export function AnalyticsGrades() {
     assessmentOptions.find((option) => option.value === assessmentFilter)?.label ??
     "-";
 
-  const studentCount = useMemo(
-    () =>
-      students.filter(
-        (student) =>
-          student.className === classFilter && student.subject === subjectFilter,
-      ).length,
-    [classFilter, subjectFilter],
-  );
+  const studentStats = useMemo(() => {
+    const filteredStudents = students.filter(
+      (student) =>
+        student.className === classFilter && student.subject === subjectFilter,
+    );
+    const statuses = filteredStudents.map((student) =>
+      getStudentStatus(student),
+    );
+
+    return {
+      total: filteredStudents.length,
+      tuntas: statuses.filter((status) => status.tone === "success").length,
+      remidi: statuses.filter((status) => status.tone === "danger").length,
+    };
+  }, [classFilter, subjectFilter]);
 
   function handleClassChange(value: string) {
     setClassFilter(value);
@@ -106,7 +114,7 @@ export function AnalyticsGrades() {
               subjectFilter={subjectFilter}
               assessmentFilter={assessmentFilter}
               opened={isLedgerOpen}
-              studentCount={studentCount}
+              studentStats={studentStats}
               selectedClassLabel={selectedClassLabel}
               selectedSubjectLabel={selectedSubjectLabel}
               selectedAssessmentLabel={selectedAssessmentLabel}
