@@ -29,8 +29,8 @@ export function AnalyticsFilterBar({
   onSearchChange,
 }: AnalyticsFilterBarProps) {
   return (
-    <div className="grid gap-3 rounded-[20px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] sm:grid-cols-2 xl:grid-cols-[1.05fr_1.25fr_auto_1fr]">
-      <div className="relative">
+    <div className="flex flex-wrap items-center gap-3 rounded-[20px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+      <div className="relative min-w-[190px] flex-1">
         <Users className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94A3B8]" />
         <label htmlFor="analytics-class" className="sr-only">
           Pilih kelas
@@ -52,7 +52,7 @@ export function AnalyticsFilterBar({
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-[#64748B]" />
       </div>
 
-      <div className="relative">
+      <div className="relative min-w-[190px] flex-1">
         <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94A3B8]" />
         <label htmlFor="analytics-assessment" className="sr-only">
           Jenis asesmen
@@ -74,7 +74,7 @@ export function AnalyticsFilterBar({
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-[#64748B]" />
       </div>
 
-      <div className="flex h-10 items-center gap-2 rounded-xl border border-[#E8D5D4] bg-[#FFF8F8] px-3">
+      <div className="flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[#E8D5D4] bg-[#FFF8F8] px-3">
         <Flag className="size-4 text-[#b71422]" />
         <span className="whitespace-nowrap text-xs font-medium text-[#64748B]">
           Target:{" "}
@@ -84,7 +84,7 @@ export function AnalyticsFilterBar({
         </span>
       </div>
 
-      <div className="relative">
+      <div className="relative min-w-[220px] flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94A3B8]" />
         <label htmlFor="analytics-search" className="sr-only">
           Cari siswa
