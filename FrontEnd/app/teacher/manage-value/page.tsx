@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { AnalyticsGrades } from "@/components/teacher/analytics-grades";
 
 export const metadata: Metadata = {
-  title: "Analitik & Nilai | SIMANIS",
+  title: "Kelola Nilai Siswa | SIMANIS",
   description:
-    "Dasbor analitik capaian, ketuntasan KKTP, dan tindak lanjut remedial siswa.",
+    "Dasbor capaian nilai, ketuntasan KKTP, dan tindak lanjut remedial siswa.",
 };
 
-export default function TeacherAnalyticsPage() {
+export default function TeacherManageValuePage() {
   return <AnalyticsGrades />;
 }

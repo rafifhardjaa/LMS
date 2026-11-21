@@ -1,23 +1,9 @@
-import {
-  BarChart3,
-  Calculator,
-  CheckCircle,
-  FileText,
-  Lock,
-  RefreshCw,
-  TrendingUp,
-  TriangleAlert,
-} from "lucide-react";
 import type {
   AssessmentFilter,
   ClassFilter,
-  DiagnosticTopic,
-  DistributionTier,
   GradeStatus,
-  QuickAction,
   RemedialGroup,
   StudentGrade,
-  SummaryMetric,
 } from "./types";
 
 export const kktp = 75;
@@ -51,126 +37,6 @@ export const assessmentOptions: {
   {
     value: "praktik",
     label: "Penilaian Unjuk Kerja / Praktikum Lab",
-  },
-];
-
-export const summaryMetrics: SummaryMetric[] = [
-  {
-    id: "average",
-    label: "Rata-Rata Nilai Rombel",
-    value: "86.8",
-    suffix: "/ 100",
-    icon: BarChart3,
-    iconBgClassName: "bg-[#FFEBEB]",
-    iconTextClassName: "text-[#b71422]",
-    footerLeft: "+4.2% vs STS lalu",
-    footerLeftClassName: "text-[#16A34A]",
-    footerRight: "Target Tercapai",
-    footerRightClassName: "text-[#16A34A]",
-    footerIcon: TrendingUp,
-  },
-  {
-    id: "completion",
-    label: "Ketuntasan KKTP (≥ 75)",
-    value: "91.4%",
-    suffix: "(32/35 Siswa)",
-    icon: CheckCircle,
-    iconBgClassName: "bg-[#DCFCE7]",
-    iconTextClassName: "text-[#16A34A]",
-    footerLeft: "32 dari 35 siswa tuntas",
-    footerRight: "Aman",
-    footerRightClassName: "text-[#16A34A]",
-    progress: 91.4,
-    progressClassName: "bg-[#22C55E]",
-  },
-  {
-    id: "remedial",
-    label: "Siswa Perlu Remedial",
-    value: "3",
-    suffix: "Siswa",
-    icon: TriangleAlert,
-    iconBgClassName: "bg-[#FEE2E2]",
-    iconTextClassName: "text-[#b71422]",
-    footerLeft: "Modul 04 Kalor",
-    footerRight: "Jadwalkan",
-    footerRightClassName: "text-[#b71422]",
-    active: true,
-  },
-  {
-    id: "sync",
-    label: "Sinkronisasi e-Rapor",
-    value: "100%",
-    suffix: "Valid",
-    icon: RefreshCw,
-    iconBgClassName: "bg-[#E0F2FE]",
-    iconTextClassName: "text-[#006398]",
-    footerLeft: "Dapodik Ditjen Vokasi",
-    footerRight: "Terverifikasi",
-    footerRightClassName: "text-[#16A34A]",
-    footerDotClassName: "bg-[#22C55E]",
-  },
-];
-
-export const distributionTiers: DistributionTier[] = [
-  {
-    id: "very-high",
-    label: "Sangat Mahir",
-    students: 14,
-    range: "Rentang: 90 - 100",
-    share: "40.0%",
-    height: 93,
-    barClassName:
-      "bg-gradient-to-t from-[#006398] to-[#5bb8fe]",
-    labelClassName: "text-[#0284C7]",
-    cardClassName: "bg-[#F8FAFC]",
-    predicate: "Predikat A",
-    status: "Tuntas Sempurna",
-    statusClassName: "text-[#16A34A]",
-  },
-  {
-    id: "high",
-    label: "Mahir",
-    students: 15,
-    range: "Rentang: 80 - 89",
-    share: "42.8%",
-    height: 100,
-    barClassName:
-      "bg-gradient-to-t from-[#16A34A] to-[#62df7d]",
-    labelClassName: "text-[#16A34A]",
-    cardClassName: "bg-[#F8FAFC]",
-    predicate: "Predikat B",
-    status: "Tuntas Baik",
-    statusClassName: "text-[#16A34A]",
-  },
-  {
-    id: "threshold",
-    label: "Ambang KKTP",
-    students: 3,
-    range: "Rentang: 75 - 79",
-    share: "8.6%",
-    height: 20,
-    barClassName:
-      "bg-gradient-to-t from-[#D97706] to-[#FEF3C7]",
-    labelClassName: "text-[#D97706]",
-    cardClassName: "bg-[#F8FAFC]",
-    predicate: "Predikat C",
-    status: "Waspada",
-    statusClassName: "text-[#D97706]",
-  },
-  {
-    id: "remedial",
-    label: "Perlu Remedial",
-    students: 3,
-    range: "Rentang: < 75.0",
-    share: "8.6%",
-    height: 20,
-    barClassName:
-      "bg-gradient-to-t from-[#b71422] to-[#db3237]",
-    labelClassName: "text-[#b71422]",
-    cardClassName: "bg-[#FFEBEB]/30 border-[#FFB3B3]/60",
-    predicate: "Predikat D",
-    status: "Intervensi",
-    statusClassName: "text-[#b71422] font-bold",
   },
 ];
 
@@ -411,38 +277,6 @@ export function getStudentStatus(student: StudentGrade): GradeStatus {
   };
 }
 
-export const diagnosticTopics: DiagnosticTopic[] = [
-  {
-    id: "tp-01",
-    title: "TP 01: Pengukuran & Besaran",
-    percent: 94,
-    percentLabel: "94% Dikuasai",
-    textClassName: "text-[#16A34A]",
-    barClassName: "bg-[#22C55E]",
-    note: "33 dari 35 siswa melampaui kriteria capaian dasar jangka sorong & mikrometer.",
-  },
-  {
-    id: "tp-02",
-    title: "TP 02: Kinematika & Vektor",
-    percent: 88,
-    percentLabel: "88% Dikuasai",
-    textClassName: "text-[#006398]",
-    barClassName: "bg-[#006398]",
-    note: "Pemahaman GLB dan GLBB stabil, grafik percepatan perlu drill kalkulasi.",
-  },
-  {
-    id: "tp-04",
-    title: "TP 04: Termodinamika & Kalor",
-    percent: 68,
-    percentLabel: "68% (Rendah)",
-    textClassName: "text-[#b71422]",
-    barClassName: "bg-[#b71422]",
-    note: "Daya serap di bawah KKTP 75.0! Memerlukan siklus pengulangan konsep dasar.",
-    noteClassName: "text-[#b71422] font-medium",
-    isLow: true,
-  },
-];
-
 export const remedialGroups: RemedialGroup[] = [
   {
     id: "john-jim",
@@ -459,39 +293,5 @@ export const remedialGroups: RemedialGroup[] = [
     statusClassName: "bg-[#FEF3C7] text-[#D97706]",
     schedule: "Menunggu Konfirmasi Wali Kelas",
     waiting: true,
-  },
-];
-
-export const quickActions: QuickAction[] = [
-  {
-    id: "print",
-    title: "Cetak Leger Nilai Resmi",
-    description: "Format PDF tanda tangan digital & QR Dapodik",
-    icon: FileText,
-    iconBgClassName: "bg-[#EFF4FF]",
-    iconTextClassName: "text-[#006398]",
-    hoverGroupClassName:
-      "group-hover:bg-[#006398] group-hover:text-white",
-  },
-  {
-    id: "predicate",
-    title: "Hitung Predikat Otomatis",
-    description: "Konversi interval predikat A, B, C, D skala 100",
-    icon: Calculator,
-    iconBgClassName: "bg-[#EFF4FF]",
-    iconTextClassName: "text-[#006B2C]",
-    hoverGroupClassName:
-      "group-hover:bg-[#006B2C] group-hover:text-white",
-  },
-  {
-    id: "lock",
-    title: "Kunci Nilai Semester",
-    description: "Cegah perubahan nilai sebelum rapat pleno",
-    icon: Lock,
-    iconBgClassName: "bg-[#FFEBEB]",
-    iconTextClassName: "text-[#b71422]",
-    hoverGroupClassName:
-      "group-hover:bg-[#b71422] group-hover:text-white",
-    danger: true,
   },
 ];
