@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { UsersRound } from "lucide-react";
 import {
   Bar,
@@ -11,30 +10,29 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { classOptions, getStudentStatus, students } from "./data";
+import { getStudentStatus } from "./data";
+import type { StudentGrade } from "./types";
 
-export function CompletionStatusChart() {
-  const data = useMemo(
-    () =>
-      classOptions.map((option) => {
-        const classStudents = students.filter(
-          (student) => student.className === option.value,
-        );
-        const statuses = classStudents.map((student) =>
-          getStudentStatus(student),
-        );
+type CompletionStatusChartProps = {
+  students: StudentGrade[];
+  classLabel: string;
+};
 
-        return {
-          className: option.value,
-          tuntas: statuses.filter((status) => status.tone === "success").length,
-          remidi: statuses.filter((status) => status.tone === "danger").length,
-        };
-      }),
-    [],
-  );
+export function CompletionStatusChart({
+  students,
+  classLabel,
+}: CompletionStatusChartProps) {
+  const statuses = students.map((student) => getStudentStatus(student));
+  const tuntas = statuses.filter((status) => status.tone === "success").length;
+  const remidi = statuses.filter((status) => status.tone === "danger").length;
 
-  const totalTuntas = data.reduce((total, item) => total + item.tuntas, 0);
-  const totalRemidi = data.reduce((total, item) => total + item.remidi, 0);
+  const data = [
+    {
+      className: classLabel === "-" ? "Belum ada kelas" : classLabel,
+      tuntas,
+      remidi,
+    },
+  ];
 
   return (
     <section className="flex flex-col rounded-[20px] border border-[#E2E8F0] bg-white p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -48,12 +46,12 @@ export function CompletionStatusChart() {
               Siswa Tuntas &amp; Remidi
             </h2>
             <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
-              Jumlah siswa per kelas berdasarkan KKTP
+              Jumlah siswa pada tugas/kuis terpilih
             </p>
           </div>
         </div>
         <span className="shrink-0 text-[10px] font-bold text-[#16A34A]">
-          {totalTuntas} tuntas
+          {tuntas} tuntas
         </span>
       </div>
 
@@ -122,7 +120,7 @@ export function CompletionStatusChart() {
           </span>
         </div>
         <span className="text-[10px] font-medium text-[#94A3B8]">
-          {totalRemidi} perlu remedial
+          {remidi} perlu remedial
         </span>
       </div>
     </section>

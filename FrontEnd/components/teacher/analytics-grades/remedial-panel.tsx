@@ -1,23 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
 import { ExternalLink, TriangleAlert } from "lucide-react";
 import { FadeIn } from "@/components/ui/animations";
 import { cn } from "@/lib/utils";
-import { getFinalScore, getStudentStatus, students } from "./data";
+import { getStudentStatus } from "./data";
+import type { StudentGrade } from "./types";
 
 type RemedialPanelProps = {
+  students: StudentGrade[];
   onOpenList: () => void;
 };
 
-export function RemedialPanel({ onOpenList }: RemedialPanelProps) {
-  const dangerStudents = useMemo(
-    () =>
-      students
-        .filter((student) => getStudentStatus(student).tone === "danger")
-        .sort((first, second) => getFinalScore(first) - getFinalScore(second)),
-    [],
-  );
+export function RemedialPanel({ students, onOpenList }: RemedialPanelProps) {
+  const dangerStudents = students
+    .filter((student) => getStudentStatus(student).tone === "danger")
+    .sort((first, second) => (first.nilai ?? 0) - (second.nilai ?? 0));
 
   return (
     <FadeIn>
@@ -43,7 +40,6 @@ export function RemedialPanel({ onOpenList }: RemedialPanelProps) {
 
         <div className="flex max-h-[380px] flex-col gap-2 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {dangerStudents.map((student) => {
-            const finalScore = getFinalScore(student);
             const status = getStudentStatus(student);
 
             return (
@@ -66,11 +62,11 @@ export function RemedialPanel({ onOpenList }: RemedialPanelProps) {
                       {student.name}
                     </span>
                     <span className="text-[10px] font-bold text-[#b71422]">
-                      {finalScore.toFixed(1)}
+                      {student.nilai?.toFixed(1) ?? "—"}
                     </span>
                   </div>
                   <div className="mt-0.5 truncate text-[11px] text-[#94A3B8]">
-                    {student.nisn} • {student.rollNo}
+                    {student.nisn}
                   </div>
                   <div className="mt-1.5 truncate text-[12px] font-semibold text-[#b71422]">
                     {status.label}

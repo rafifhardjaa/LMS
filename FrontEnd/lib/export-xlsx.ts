@@ -1,22 +1,15 @@
 import * as XLSX from "xlsx";
-import {
-  getFinalScore,
-  getStudentStatus,
-} from "@/components/teacher/analytics-grades/data";
+import { getStudentStatus } from "@/components/teacher/analytics-grades/data";
 import type { StudentGrade } from "@/components/teacher/analytics-grades/types";
 
 type ExportRow = {
   No: number;
-  "Nama Siswa": string;
   NISN: string;
+  "Nama Siswa": string;
   Kelas: string;
   Mapel: string;
-  Formatif: number;
-  STS: number;
-  "Praktik Lab": number;
-  "Nilai Akhir": number;
+  Nilai: number | string;
   "Status KKTP": string;
-  Keterangan: string;
 };
 
 export function exportStudentsToXlsx(
@@ -28,16 +21,12 @@ export function exportStudentsToXlsx(
 
     return {
       No: index + 1,
-      "Nama Siswa": student.name,
       NISN: student.nisn,
+      "Nama Siswa": student.name,
       Kelas: student.className,
       Mapel: student.subject,
-      Formatif: student.formatif,
-      STS: student.sts,
-      "Praktik Lab": student.praktik,
-      "Nilai Akhir": getFinalScore(student),
+      Nilai: student.nilai === null ? "Belum dinilai" : student.nilai,
       "Status KKTP": status.label,
-      Keterangan: status.tone === "danger" ? "Perlu Remidi" : "Tuntas",
     };
   });
 
