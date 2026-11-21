@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   ArrowUpDown,
   CalendarClock,
   Check,
@@ -134,18 +135,29 @@ export function GradeLedger({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() =>
-                setSortDirection((current) =>
-                  current === "desc" ? "asc" : "desc",
-                )
-              }
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 self-start rounded-lg border border-[#DCE5EE] bg-[#F8FAFC] px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422] sm:self-auto"
-            >
-              <ArrowUpDown className="size-3.5" />
-              Nilai Akhir {sortDirection === "desc" ? "Tertinggi" : "Terendah"}
-            </button>
+            <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={onChangeFilter}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DCE5EE] bg-white px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
+              >
+                <ArrowLeft className="size-3.5" />
+                Kembali
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSortDirection((current) =>
+                    current === "desc" ? "asc" : "desc",
+                  )
+                }
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DCE5EE] bg-[#F8FAFC] px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
+              >
+                <ArrowUpDown className="size-3.5" />
+                Nilai Akhir {sortDirection === "desc" ? "Tertinggi" : "Terendah"}
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
