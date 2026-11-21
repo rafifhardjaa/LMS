@@ -20,7 +20,7 @@ export function ResourceToolbar({
 }: ResourceToolbarProps) {
   return (
     <FadeIn delay={0.08}>
-      <div className="border-b border-[#F1F5F9] pb-3">
+      <div className="border-b border-[#E2E8F0] pb-3">
         <div className="w-56 max-w-full">
           <SearchableDropdown
             value={activeTab}

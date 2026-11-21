@@ -1,7 +1,6 @@
 "use client";
 
-import { ArrowRight, ClipboardList } from "lucide-react";
-import { toast } from "sonner";
+import { ClipboardList } from "lucide-react";
 import { StaggerChildren } from "@/components/ui/animations";
 import { AssignmentCard } from "./assignment-card";
 import { EmptyState } from "./empty-state";
@@ -37,16 +36,6 @@ export function AssignmentList({
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() =>
-            toast.info("Arsip tugas lengkap akan tersedia di tahap berikutnya.")
-          }
-          className="flex items-center gap-1 text-[12px] font-semibold text-[#b71422] transition-colors hover:underline"
-        >
-          Lihat Arsip Tugas
-          <ArrowRight className="size-4" />
-        </button>
       </div>
 
       {assignments.length > 0 ? (

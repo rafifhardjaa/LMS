@@ -1,15 +1,11 @@
 "use client";
 
-import { ClipboardList } from "lucide-react";
 import { FadeIn } from "@/components/ui/animations";
 
 export function TaskMaterialHeader() {
   return (
     <FadeIn>
       <section className="flex items-start gap-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFEBEB] text-[#b71422] shadow-sm">
-          <ClipboardList className="size-6" />
-        </span>
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#b71422]">
             Manajemen Penilaian
