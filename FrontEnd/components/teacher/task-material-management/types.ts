@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 
 export type ResourceTab = "tugas" | "kuis";
-export type ClassFilter = "all" | "VII - A" | "VII - B" | "VIII - A";
+export type ClassFilter = string;
 export type SubjectFilter = "all" | "fisika" | "informatika" | "jaringan";
 export type AssignmentStatus = "dueSoon" | "active" | "done";
 export type GradingStatus = "pending" | "graded" | "revision";
@@ -39,6 +39,7 @@ export type GradingItem = {
   taskTitle: string;
   subject: string;
   fileName: string;
+  fileUrl: string;
   fileIcon: LucideIcon;
   fileIconClassName: string;
   submittedAt: string;
