@@ -74,7 +74,7 @@ export function AssignmentCard({
           </span>
         </div>
 
-        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#F1F5F9] pt-3">
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#E2E8F0] pt-3">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <div
               className={`relative flex size-10 shrink-0 items-center justify-center ${assignment.percentageClassName}`}
