@@ -5,6 +5,7 @@ import { ArrowRight, ClipboardCheck } from "lucide-react";
 import type { JurusanOption } from "@/components/admin/searchable-dropdown";
 import { SearchableDropdown } from "@/components/admin/searchable-dropdown";
 import { StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import { cn } from "@/lib/utils";
 
 type ValueToolbarProps = {
   classOptions: JurusanOption[];
@@ -14,7 +15,11 @@ type ValueToolbarProps = {
   subjectFilter: string;
   assessmentFilter: string;
   opened: boolean;
-  studentCount: number;
+  studentStats: {
+    total: number;
+    tuntas: number;
+    remidi: number;
+  };
   selectedClassLabel: string;
   selectedSubjectLabel: string;
   selectedAssessmentLabel: string;
@@ -32,7 +37,7 @@ export function ValueToolbar({
   subjectFilter,
   assessmentFilter,
   opened,
-  studentCount,
+  studentStats,
   selectedClassLabel,
   selectedSubjectLabel,
   selectedAssessmentLabel,
@@ -55,49 +60,87 @@ export function ValueToolbar({
         </span>
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
-        <StaggerChildren
-          className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-full"
-          staggerDelay={0.08}
-          delayChildren={0.05}
-        >
-          <StaggerItem key="class">
-            <SearchableDropdown
-              id="value-class"
-              value={classFilter}
-              options={classOptions}
-              label="Pilih kelas"
-              searchPlaceholder="Cari kelas..."
-              emptyMessage="Kelas tidak ditemukan."
-              variant="ghost"
-              onChange={onClassChange}
-            />
-          </StaggerItem>
-          <StaggerItem key="subject">
-            <SearchableDropdown
-              id="value-subject"
-              value={subjectFilter}
-              options={subjectOptions}
-              label="Pilih mata pelajaran"
-              searchPlaceholder="Cari mapel..."
-              emptyMessage="Mapel tidak ditemukan."
-              variant="ghost"
-              onChange={onSubjectChange}
-            />
-          </StaggerItem>
-          <StaggerItem key="assessment">
-            <SearchableDropdown
-              id="value-assessment"
-              value={assessmentFilter}
-              options={assessmentOptions}
-              label="Pilih asesmen"
-              searchPlaceholder="Cari asesmen..."
-              emptyMessage="Asesmen tidak ditemukan."
-              variant="ghost"
-              onChange={onAssessmentChange}
-            />
-          </StaggerItem>
-        </StaggerChildren>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+        <div className="flex w-full flex-col gap-2">
+          <StaggerChildren
+            className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-full"
+            staggerDelay={0.08}
+            delayChildren={0.05}
+          >
+            <StaggerItem key="class">
+              <SearchableDropdown
+                id="value-class"
+                value={classFilter}
+                options={classOptions}
+                label="Pilih kelas"
+                searchPlaceholder="Cari kelas..."
+                emptyMessage="Kelas tidak ditemukan."
+                variant="ghost"
+                onChange={onClassChange}
+              />
+            </StaggerItem>
+            <StaggerItem key="subject">
+              <SearchableDropdown
+                id="value-subject"
+                value={subjectFilter}
+                options={subjectOptions}
+                label="Pilih mata pelajaran"
+                searchPlaceholder="Cari mapel..."
+                emptyMessage="Mapel tidak ditemukan."
+                variant="ghost"
+                onChange={onSubjectChange}
+              />
+            </StaggerItem>
+            <StaggerItem key="assessment">
+              <SearchableDropdown
+                id="value-assessment"
+                value={assessmentFilter}
+                options={assessmentOptions}
+                label="Pilih asesmen"
+                searchPlaceholder="Cari asesmen..."
+                emptyMessage="Asesmen tidak ditemukan."
+                variant="ghost"
+                onChange={onAssessmentChange}
+              />
+            </StaggerItem>
+          </StaggerChildren>
+
+          <AnimatePresence>
+            {isReady && (
+              <motion.div
+                key="value-stats"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.25 }}
+                className="grid grid-cols-3 gap-2 rounded-xl border border-white/15 bg-white/10 p-3"
+              >
+                {[
+                  { label: "Total Siswa", value: studentStats.total, dot: "bg-white" },
+                  { label: "Tuntas", value: studentStats.tuntas, dot: "bg-[#86EFAC]" },
+                  {
+                    label: "Perlu Remidi",
+                    value: studentStats.remidi,
+                    dot: "bg-[#FCA5A5]",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-center"
+                  >
+                    <p className="flex items-center justify-center gap-1 text-[9px] font-semibold text-white/75">
+                      <span className={cn("size-1.5 rounded-full", item.dot)} />
+                      {item.label}
+                    </p>
+                    <p className="mt-0.5 text-[13px] font-bold leading-none text-white">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         <AnimatePresence>
           {isReady && (
@@ -132,7 +175,7 @@ export function ValueToolbar({
                 </p>
                 <p>
                   <span className="font-semibold text-[#181c20]">Siswa:</span>{" "}
-                  {studentCount} siswa
+                  {studentStats.total} siswa
                 </p>
               </div>
               <motion.button
