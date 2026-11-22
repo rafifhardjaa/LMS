@@ -524,8 +524,9 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
           )}
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row">
-          <form id="add-teacher-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-6 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+        <div className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${mode === "add" ? "" : "lg:grid-cols-[minmax(0,1fr)_360px]"}`}>
+          <div className="flex min-h-0 min-w-0 flex-col">
+            <form id="add-teacher-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-7 text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {mode === "delete" ? (
               editingId && selectedTeacher ? (
                 <section className="space-y-4">
@@ -714,10 +715,11 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
                 </div>
               </>
             )}
-          </form>
+            </form>
+          </div>
 
           {(mode === "edit" || mode === "delete") && (
-            <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:flex-none lg:border-l lg:border-t-0">
+            <aside className="min-h-0 w-full min-w-0 overflow-y-auto overscroll-contain border-t border-slate-200/70 bg-[#f8f9fc] p-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:w-[360px] lg:min-w-[360px] lg:max-w-[360px] lg:border-l lg:border-t-0">
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-1 gap-2">
                   <div className="flex flex-col gap-1.5">
