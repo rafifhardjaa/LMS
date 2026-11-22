@@ -5,6 +5,7 @@ import {
   deleteClass,
   getClass,
   listClasses,
+  setClassAdvisor,
   updateClass,
 } from "../services/master-data-service";
 import { handleError } from "../utils/response";
@@ -131,6 +132,34 @@ export const classesRoute = new Elysia({ prefix: "/api/v1/classes" })
         capacity: t.Optional(t.Number()),
         isActive: t.Optional(t.Boolean()),
         is_active: t.Optional(t.Boolean()),
+      }),
+    }
+  )
+  .put(
+    "/:id/advisor",
+    async ({ params, body, status }: any) => {
+      try {
+        const data = await setClassAdvisor(params.id, body.advisorId);
+        return status(200, {
+          success: true,
+          message: "Wali kelas berhasil diperbarui",
+          data,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin"]),
+      detail: {
+        tags: ["Classes"],
+        summary: "Tetapkan wali kelas (admin)",
+        security: [{ BearerAuth: [] }],
+      },
+      params: t.Object({ id: t.String() }),
+      body: t.Object({
+        advisorId: t.Union([t.String(), t.Null()]),
       }),
     }
   )

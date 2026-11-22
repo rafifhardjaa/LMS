@@ -407,6 +407,11 @@ export const masterDataApi = {
       apiFetch<ApiSuccess<unknown>>(`/api/v1/classes/${id}`, {
         method: "DELETE",
       }),
+    assignAdvisor: (id: string, advisorId: string | null) =>
+      apiFetch<ApiSuccess<SchoolClass>>(`/api/v1/classes/${id}/advisor`, {
+        method: "PUT",
+        body: JSON.stringify({ advisorId }),
+      }),
   },
   subjects: {
     list: (filters: SubjectFilters = {}) =>
