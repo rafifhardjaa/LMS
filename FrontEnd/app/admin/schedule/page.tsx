@@ -15,12 +15,10 @@ export default function SchedulePage() {
   return (
     <div className="flex w-full flex-col gap-6 pt-2">
       <FadeIn>
-        <SlideIn direction="left">
-          <div className="max-w-[470px]">
+          <SlideIn direction="left">
             <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[30px]">Manajemen Jadwal Pelajaran &amp; Sesi Belajar</h1>
             <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Kelola sesi belajar, alokasi jam, dan validasi jadwal rombel SMK Mataram.</p>
-          </div>
-        </SlideIn>
+          </SlideIn>
       </FadeIn>
       <FadeIn>
         <ScheduleTable

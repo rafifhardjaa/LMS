@@ -31,10 +31,8 @@ export default function StudentsPage() {
       <FadeIn>
         <div className="flex flex-col gap-5">
           <SlideIn direction="left">
-            <div className="max-w-[480px]">
-              <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Siswa &amp; Peserta Didik</h1>
-              <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data {totalStudents !== null ? totalStudents.toLocaleString("id-ID") : "…"} siswa aktif, distribusi rombel kelas, status aktivasi akun SSO Dapodik, dan rekap kelengkapan administrasi peserta didik SMK Mataram.</p>
-            </div>
+            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Siswa &amp; Peserta Didik</h1>
+            <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data {totalStudents !== null ? totalStudents.toLocaleString("id-ID") : "…"} siswa aktif, distribusi rombel kelas, status aktivasi akun SSO Dapodik, dan rekap kelengkapan administrasi peserta didik SMK Mataram.</p>
           </SlideIn>
         </div>
       </FadeIn>
