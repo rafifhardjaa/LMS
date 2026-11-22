@@ -53,7 +53,7 @@ export default function DashboardPage() {
         <div className="flex flex-col">
           <SlideIn direction="left">
             <h1 className="text-[26px] font-bold tracking-tight">
-              Selamat datang, {fullName}! 👋
+              Selamat datang, {fullName}!
             </h1>
             <p className="text-sm text-[#4e566c]">
               Ringkasan pengelolaan LMS SMK Mataram • Tahun Ajaran 2026/2027

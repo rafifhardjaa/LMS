@@ -764,7 +764,7 @@ export function AddStudentPlacementDialog({
                       </span>
                       <span className="font-semibold text-[#5343b9]">{selectedIds.length} dipilih</span>
                     </div>
-                    <div className="max-h-[42vh] space-y-0.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5">
+                    <div className="max-h-[42vh] space-y-0.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {filteredStudents.slice(0, MAX_STUDENT_ROWS).map((s) => {
                         const alreadyPlacedHere = Boolean(form.classId) && s.classId === form.classId;
                         const checked = selectedIds.includes(s.id);
