@@ -15,13 +15,6 @@ import { SearchableDropdown } from "@/components/admin/searchable-dropdown";
 
 const PAGE_SIZE = 15;
 
-function pageWindow(current: number, total: number): number[] {
-  const size = Math.min(5, total);
-  let start = Math.max(1, current - Math.floor(size / 2));
-  start = Math.min(start, total - size + 1);
-  return Array.from({ length: size }, (_, index) => start + index);
-}
-
 export function SubjectsPanel({
   subjects,
   majors,
@@ -88,8 +81,6 @@ export function SubjectsPanel({
     () => rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
     [rows, currentPage]
   );
-  const startRow = rows.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endRow = Math.min(currentPage * PAGE_SIZE, rows.length);
 
   return (
     <PanelCard>
@@ -205,42 +196,39 @@ export function SubjectsPanel({
             </tbody>
           </table>
         </div>
-        <div className="flex flex-col gap-3 bg-[#f8f9fc] px-5 py-3 text-[11px] text-[#4e566c] sm:flex-row sm:items-center sm:justify-between">
-          <span>
-            Menampilkan <b className="font-semibold text-[#181c20]">{startRow}–{endRow}</b> dari{" "}
-            <b className="font-semibold text-[#181c20]">{rows.length} Mapel</b>
-          </span>
-          <nav aria-label="Paginasi mata pelajaran" className="flex items-center gap-1">
+        <div className="flex flex-col gap-2 border-t border-[#eceef3] px-5 py-3 text-[11px] text-[#787584] sm:flex-row sm:items-center sm:justify-between">
+          <span>Halaman {currentPage} dari {totalPages}</span>
+          <nav aria-label="Paginasi mata pelajaran" className="flex items-center gap-2">
             <button
               type="button"
               aria-label="Halaman sebelumnya"
               disabled={currentPage <= 1}
               onClick={() => setPage(currentPage - 1)}
-              className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#eceef3] disabled:opacity-40"
+              className="flex size-8 items-center justify-center rounded-full text-[#787584] hover:bg-[#f1f4f9] disabled:opacity-40"
             >
               <ChevronLeft className="size-4" />
             </button>
-            {pageWindow(currentPage, totalPages).map((n) => (
-              <button
-                key={n}
-                type="button"
-                aria-current={currentPage === n ? "page" : undefined}
-                onClick={() => setPage(n)}
-                className={`size-8 rounded-full font-semibold ${
-                  currentPage === n
-                    ? "bg-[#4331a8] text-white"
-                    : "text-[#181c20] hover:bg-[#eceef3]"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
+            <label className="flex items-center gap-2">
+              <span className="sr-only">Nomor halaman</span>
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={currentPage}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  if (!Number.isFinite(next)) return;
+                  setPage(Math.min(totalPages, Math.max(1, Math.round(next))));
+                }}
+                className="h-8 w-16 rounded-full border border-[#e0e2e7] bg-white px-3 text-center text-[11px] font-semibold text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30"
+              />
+            </label>
             <button
               type="button"
               aria-label="Halaman berikutnya"
               disabled={currentPage >= totalPages}
               onClick={() => setPage(currentPage + 1)}
-              className="flex size-8 items-center justify-center rounded-full text-[#181c20] hover:bg-[#eceef3] disabled:opacity-40"
+              className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#f1f4f9] disabled:opacity-40"
             >
               <ChevronRight className="size-4" />
             </button>
