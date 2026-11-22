@@ -10,6 +10,7 @@ import {
   PlusCircle,
   Trash2,
   TriangleAlert,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -18,6 +19,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
 import {
   masterDataApi,
@@ -274,22 +276,40 @@ export function WaliKelasPlacementDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="flex max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-5xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:w-full sm:max-w-5xl">
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#eceef3] px-6 py-5">
-          <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f4f2ff] text-[#6c5dd3]">
-              <GraduationCap className="size-5" />
-            </span>
-            <div>
-              <DialogTitle className="text-base font-bold text-[#181c20]">
-                Penempatan Wali Kelas
-              </DialogTitle>
-              <DialogDescription className="mt-1 max-w-2xl text-xs leading-5 text-[#787584]">
-                Tambah, perbarui, atau lepas penugasan wali kelas untuk setiap rombel.
-              </DialogDescription>
-            </div>
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="z-[80] bg-slate-900/40 backdrop-blur-sm"
+        className="z-[80] flex max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-5xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:w-full sm:max-w-5xl"
+      >
+        <FadeIn className="shrink-0">
+          <div className="relative flex items-start justify-between gap-3 overflow-hidden bg-gradient-to-r from-[#6c5dd3] via-indigo-600 to-indigo-700 px-6 py-5 text-white">
+            <div className="pointer-events-none absolute -right-12 -top-12 size-40 rounded-full bg-white/10 blur-2xl" />
+            <SlideIn direction="left" className="relative z-10 min-w-0">
+              <div className="flex items-start gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15 text-white shadow-inner backdrop-blur-md">
+                  <GraduationCap className="size-5" />
+                </span>
+                <div>
+                  <DialogTitle className="text-base font-bold text-white">
+                    Penempatan Wali Kelas
+                  </DialogTitle>
+                  <DialogDescription className="mt-1 max-w-2xl text-xs leading-5 text-indigo-100">
+                    Tambah, perbarui, atau lepas penugasan wali kelas untuk setiap rombel.
+                  </DialogDescription>
+                </div>
+              </div>
+            </SlideIn>
+            <button
+              type="button"
+              aria-label="Tutup"
+              onClick={() => onOpenChange(false)}
+              className="relative z-10 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-50"
+              disabled={submitting}
+            >
+              <X className="size-5" />
+            </button>
           </div>
-        </div>
+        </FadeIn>
 
         <div className="shrink-0 border-b border-[#eceef3] bg-[#f8f9fc] px-6 py-4">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
