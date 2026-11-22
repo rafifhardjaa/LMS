@@ -339,31 +339,28 @@ export function ScheduleTable({
               </tbody>
             </table>
           </div>
-          <div className="flex flex-col gap-3 bg-[#f8f9fc] px-5 py-3 text-[11px] text-[#4e566c] sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              Menampilkan <b className="text-[#181c20]">{paged.length ? (safePage - 1) * PAGE_SIZE + 1 : 0} – {(safePage - 1) * PAGE_SIZE + paged.length}</b> dari <b className="text-[#181c20]">{rows.length}</b>
-              <br />Sesi Terjadwal
-            </span>
-            <nav aria-label="Paginasi jadwal" className="flex items-center gap-1">
-              <button type="button" aria-label="Halaman sebelumnya" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] disabled:opacity-40">
+          <div className="flex flex-col gap-2 border-t border-[#eceef3] px-5 py-3 text-[11px] text-[#787584] sm:flex-row sm:items-center sm:justify-between">
+            <span>Halaman {safePage} dari {pageCount}</span>
+            <nav aria-label="Paginasi jadwal" className="flex items-center gap-2">
+              <button type="button" aria-label="Halaman sebelumnya" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] hover:bg-[#f1f4f9] disabled:opacity-40">
                 <ChevronLeft className="size-4" />
               </button>
-              {Array.from({ length: Math.min(pageCount, 3) }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  aria-current={safePage === n ? "page" : undefined}
-                  onClick={() => setPage(n)}
-                  className={`size-8 rounded-full font-semibold ${safePage === n ? "bg-[#5343b9] text-white" : "text-[#181c20] hover:bg-[#eceef3]"}`}
-                >
-                  {n}
-                </button>
-              ))}
-              {pageCount > 3 && <span className="px-1">…</span>}
-              {pageCount > 3 && (
-                <button type="button" onClick={() => setPage(pageCount)} className="size-8 rounded-full text-[#181c20]">{pageCount}</button>
-              )}
-              <button type="button" aria-label="Halaman berikutnya" disabled={safePage >= pageCount} onClick={() => setPage(safePage + 1)} className="flex size-8 items-center justify-center rounded-full text-[#181c20] disabled:opacity-40">
+              <label className="flex items-center gap-2">
+                <span className="sr-only">Nomor halaman</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={pageCount}
+                  value={safePage}
+                  onChange={(event) => {
+                    const next = Number(event.target.value);
+                    if (!Number.isFinite(next)) return;
+                    setPage(Math.min(pageCount, Math.max(1, Math.round(next))));
+                  }}
+                  className="h-8 w-16 rounded-full border border-[#e0e2e7] bg-white px-3 text-center text-[11px] font-semibold text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30"
+                />
+              </label>
+              <button type="button" aria-label="Halaman berikutnya" disabled={safePage >= pageCount} onClick={() => setPage(safePage + 1)} className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#f1f4f9] disabled:opacity-40">
                 <ChevronRight className="size-4" />
               </button>
             </nav>
