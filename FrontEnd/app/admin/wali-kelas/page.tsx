@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { AssignWaliKelasDialog } from "@/components/admin/assign-wali-kelas-dialog";
+import { WaliKelasPlacementDialog } from "@/components/admin/wali-kelas-placement-dialog";
 import { WaliKelasTable } from "@/components/admin/wali-kelas-table";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
-import type { SchoolClass } from "@/lib/api/master-data";
 
 export default function WaliKelasPage() {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [selectedClass, setSelectedClass] = useState<SchoolClass | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [placementOpen, setPlacementOpen] = useState(false);
 
   return (
     <div className="flex w-full flex-col gap-7 pt-4">
@@ -27,17 +25,13 @@ export default function WaliKelasPage() {
       <FadeIn>
         <WaliKelasTable
           key={refreshKey}
-          onAssign={(classItem) => {
-            setSelectedClass(classItem);
-            setDialogOpen(true);
-          }}
+          onPlacement={() => setPlacementOpen(true)}
         />
       </FadeIn>
 
-      <AssignWaliKelasDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        classData={selectedClass}
+      <WaliKelasPlacementDialog
+        open={placementOpen}
+        onOpenChange={setPlacementOpen}
         onSuccess={() => setRefreshKey((key) => key + 1)}
       />
     </div>

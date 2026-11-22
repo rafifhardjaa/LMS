@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
   GraduationCap,
   Loader2,
-  RefreshCw,
   Search,
+  UserRoundCheck,
 } from "lucide-react";
 import { masterDataApi, type SchoolClass, type TeacherSummary } from "@/lib/api/master-data";
 import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
@@ -17,9 +18,9 @@ const PAGE_SIZE = 10;
 type AdvisorStatusFilter = "" | "assigned" | "unassigned";
 
 export function WaliKelasTable({
-  onAssign,
+  onPlacement,
 }: {
-  onAssign: (classItem: SchoolClass) => void;
+  onPlacement: () => void;
 }) {
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [teachers, setTeachers] = useState<TeacherSummary[]>([]);
@@ -147,19 +148,15 @@ export function WaliKelasTable({
             Total {rows.length} Kelas
           </span>
         </div>
-        <button
+        <motion.button
           type="button"
-          onClick={() => void load()}
-          disabled={loading}
-          className="inline-flex h-9 items-center gap-2 rounded-full bg-[#f1f4f9] px-3 text-xs font-semibold text-[#4e566c] hover:bg-[#eceef3] disabled:opacity-60"
+          onClick={onPlacement}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
         >
-          {loading ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <RefreshCw className="size-3.5" />
-          )}
-          Muat ulang
-        </button>
+          <UserRoundCheck className="size-4 text-[#5343b9]" /> Penempatan
+        </motion.button>
       </div>
 
       <div className="grid grid-cols-1 gap-2 border-b border-[#eceef3] px-5 pb-4 sm:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
@@ -218,8 +215,7 @@ export function WaliKelasTable({
               <th className="px-3 py-3 text-[11px] font-semibold text-[#4e566c]">Wali Kelas</th>
               <th className="px-3 py-3 text-[11px] font-semibold text-[#4e566c]">NIP / Kode</th>
               <th className="px-3 py-3 text-[11px] font-semibold text-[#4e566c]">Siswa</th>
-              <th className="px-3 py-3 text-[11px] font-semibold text-[#4e566c]">Status</th>
-              <th className="px-3 py-3 pr-5 text-[11px] font-semibold text-[#4e566c]">Aksi</th>
+              <th className="px-3 py-3 pr-5 text-[11px] font-semibold text-[#4e566c]">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#eceef3]">
@@ -273,28 +269,19 @@ export function WaliKelasTable({
                       {classItem.isActive ? "Aktif" : "Nonaktif"}
                     </span>
                   </td>
-                  <td className="px-3 py-4 pr-5">
-                    <button
-                      type="button"
-                      onClick={() => onAssign(classItem)}
-                      className="inline-flex h-8 items-center rounded-full bg-[#5343b9] px-3 text-[11px] font-semibold text-white hover:bg-[#4331a8]"
-                    >
-                      Atur Wali
-                    </button>
-                  </td>
                 </tr>
               );
             })}
             {!pageRows.length && !loading && (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-sm text-[#787584]">
+                <td colSpan={7} className="px-5 py-12 text-center text-sm text-[#787584]">
                   {error ?? "Tidak ada kelas yang cocok dengan filter."}
                 </td>
               </tr>
             )}
             {loading && !pageRows.length && (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-sm text-[#787584]">
+                <td colSpan={7} className="px-5 py-12 text-center text-sm text-[#787584]">
                   <span className="inline-flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" /> Memuat data wali kelas…
                   </span>
