@@ -9,6 +9,7 @@ import {
   Download,
   LayoutGrid,
   LogOut,
+  MessageSquare,
   School,
   UserCheck,
 } from "lucide-react";
@@ -50,6 +51,12 @@ const menu = [
     icon: Download,
     href: "/teacher/rekap-rapor",
     title: "Rekap Rapor",
+  },
+  {
+    label: "Chat",
+    icon: MessageSquare,
+    href: "/teacher/chat",
+    title: "Chat",
   },
 ];
 
