@@ -40,22 +40,6 @@ function formatDateLabel(date: string): string {
     .format("dddd, D MMMM YYYY");
 }
 
-type PertemuanStatus = "selesai" | "berlangsung" | "akan-datang";
-
-function statusOf(date: string): PertemuanStatus {
-  const meeting = moment(date, ["DD-MM-YYYY", "YYYY-MM-DD"]).startOf("day");
-  const today = moment().startOf("day");
-  if (meeting.isBefore(today)) return "selesai";
-  if (meeting.isSame(today)) return "berlangsung";
-  return "akan-datang";
-}
-
-const statusStyle: Record<PertemuanStatus, { label: string; className: string }> = {
-  selesai: { label: "Selesai", className: "bg-[#F1F5F9] text-[#64748B]" },
-  berlangsung: { label: "Berlangsung", className: "bg-[#EDFFF6] text-[#7A941F]" },
-  "akan-datang": { label: "Akan Datang", className: "bg-[#EDF6FF] text-[#006398]" },
-};
-
 type PertemuanContentProps = {
   meeting: CourseMeeting;
   subjectId: string;
@@ -96,7 +80,6 @@ export function PertemuanContent({
   const [manageOpen, setManageOpen] = useState(false);
   const [activeMode, setActiveMode] = useState<ManageMode | null>(null);
   const [expandedSlot, setExpandedSlot] = useState<UploadSlot | null>(null);
-  const status = statusStyle[statusOf(meeting.meetingDate)];
 
   function openMode(mode: ManageMode) {
     setActiveMode(mode);
@@ -121,11 +104,12 @@ export function PertemuanContent({
                 {`${meeting.startTime} - ${meeting.endTime}`}
               </span>
             )}
-            <span
-              className={`inline-flex h-7 items-center rounded-full px-2.5 text-[11px] font-bold ${status.className}`}
+            <Link
+              href="/teacher/modul-course"
+              className="inline-flex h-7 items-center rounded-full bg-white/15 px-2.5 text-[11px] font-bold text-white transition hover:bg-white/25"
             >
-              {status.label}
-            </span>
+              Kembali
+            </Link>
           </div>
         </FadeIn>
 
@@ -263,7 +247,7 @@ export function PertemuanContent({
                 className="inline-block"
               >
                 <Link
-                  href="/teacher/presensi-siswa"
+                  href={`/teacher/presensi-siswa?classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(meeting.meetingDate)}`}
                   className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white transition hover:bg-[#8f0f1a]"
                 >
                   <ClipboardCheck className="size-4" />
