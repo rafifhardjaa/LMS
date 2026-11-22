@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
+import { AccessDeniedPlaceholder } from "@/components/teacher/attendance-management/access-denied-placeholder";
+import { masterDataApi, type SchoolClass } from "@/lib/api/master-data";
+import { useAuthStore } from "@/lib/store/auth-store";
 import { CustomExportPanel } from "./custom-export-panel";
 import {
   defaultExportFilters,
@@ -55,6 +58,32 @@ function buildFileName(title: string, format: ExportFormat) {
 }
 
 export function ExportRecap() {
+  const user = useAuthStore((state) => state.user);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [accessLoading, setAccessLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await masterDataApi.classes.list();
+        if (!active) return;
+        setClasses(res.error ? [] : res.data?.data ?? []);
+      } catch {
+        if (active) setClasses([]);
+      } finally {
+        if (active) setAccessLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const isWaliKelas =
+    user?.role === "admin" ||
+    classes.some((item) => item.advisorId === user?.id);
+
   const [filters, setFilters] = useState<ExportFiltersState>(
     defaultExportFilters,
   );
@@ -316,6 +345,26 @@ export function ExportRecap() {
       description:
         "Seluruh aktivitas unduhan dan sinkronisasi tersimpan pada pusat aktivitas ekspor sekolah.",
     });
+  }
+
+  if (accessLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center rounded-[20px] border border-[#E2E8F0] bg-white text-sm text-[#64748B] shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        Memeriksa akses…
+      </div>
+    );
+  }
+
+  if (!isWaliKelas) {
+    return (
+      <AccessDeniedPlaceholder
+        userName={user?.full_name}
+        userIdentifier={user?.nomor_induk}
+        title="Hanya wali kelas yang dapat membuka rekap rapor"
+        description="Hanya wali kelas yang dapat mengakses rekap rapor dan paket unduhan akademik. Jika menurut Anda ini kesalahan, silakan hubungi admin."
+        mailSubject="Permintaan akses rekap rapor"
+      />
+    );
   }
 
   return (
