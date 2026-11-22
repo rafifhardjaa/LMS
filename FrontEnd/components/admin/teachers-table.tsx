@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { masterDataApi } from "@/lib/api/master-data";
 import { Subject, TeacherSummary } from "@/lib/api/master-data";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -10,6 +11,8 @@ import {
   ChevronRight,
   RefreshCw,
   Search,
+  UserPlus,
+  UserRoundCheck,
 } from "lucide-react";
 
 const statusStyle: Record<string, string> = {
@@ -64,7 +67,19 @@ function teacherMajors(
   return [...majors];
 }
 
-export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; onTeacherAdded?: () => void }) {
+type TeachersTableProps = {
+  isAdmin: boolean;
+  onTeacherAdded?: () => void;
+  onAddTeacher: () => void;
+  onPlacement: () => void;
+};
+
+export function TeachersTable({
+  isAdmin,
+  onTeacherAdded,
+  onAddTeacher,
+  onPlacement,
+}: TeachersTableProps) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [fieldFilter, setFieldFilter] = useState("");
@@ -189,6 +204,26 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
           <h2 className="text-lg font-bold text-[#181c20]">Daftar Pendidik & Pengampu</h2>
           <span className="rounded-full bg-[#e5deff] px-2.5 py-1 text-[11px] font-semibold text-[#4331a8]">Total {rows.length} Guru</span>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <motion.button
+            type="button"
+            onClick={onPlacement}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
+          >
+            <UserRoundCheck className="size-4 text-[#6c5dd3]" /> Penempatan
+          </motion.button>
+          <motion.button
+            type="button"
+            onClick={onAddTeacher}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
+          >
+            <UserPlus className="size-4" /> + Tambah Guru Baru
+          </motion.button>
+        </div>
       </div>
       <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 md:flex-row md:flex-wrap md:items-center">
         <label className="relative min-w-0 flex-1">
@@ -240,7 +275,28 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
             </tbody>
           </table>
         </div>
-        <div className="flex flex-col gap-2 border-t border-[#eceef3] px-5 py-3 text-[11px] text-[#787584] sm:flex-row sm:items-center sm:justify-between"><span className="flex items-center gap-2"><RefreshCw className="size-3.5 text-[#059669]" /> Terakhir disinkronkan dengan Dapodik Kemendikbud</span><nav aria-label="Paginasi guru" className="flex items-center gap-1"><button type="button" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage(page - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronLeft className="size-4" /></button>{Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => <button key={n} type="button" aria-current={page === n ? "page" : undefined} onClick={() => setPage(n)} className={`size-8 rounded-full font-semibold ${page === n ? "bg-[#e5deff] text-[#6c5dd3]" : "text-[#4e566c] hover:bg-[#f1f4f9]"}`}>{n}</button>)}<button type="button" aria-label="Halaman berikutnya" disabled={page >= pageCount} onClick={() => setPage(page + 1)} className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronRight className="size-4" /></button></nav></div>
+        <div className="flex flex-col gap-2 border-t border-[#eceef3] px-5 py-3 text-[11px] text-[#787584] sm:flex-row sm:items-center sm:justify-between">
+          <span>Halaman {page} dari {pageCount}</span>
+          <nav aria-label="Paginasi guru" className="flex items-center gap-2">
+            <button type="button" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage(page - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronLeft className="size-4" /></button>
+            <label className="flex items-center gap-2">
+              <span className="sr-only">Nomor halaman</span>
+              <input
+                type="number"
+                min={1}
+                max={pageCount}
+                value={page}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  if (!Number.isFinite(next)) return;
+                  setPage(Math.min(pageCount, Math.max(1, Math.round(next))));
+                }}
+                className="h-8 w-16 rounded-full border border-[#e0e2e7] bg-white px-3 text-center text-[11px] font-semibold text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30"
+              />
+            </label>
+            <button type="button" aria-label="Halaman berikutnya" disabled={page >= pageCount} onClick={() => setPage(page + 1)} className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronRight className="size-4" /></button>
+          </nav>
+        </div>
     </section>
   );
 }
