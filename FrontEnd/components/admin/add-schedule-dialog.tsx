@@ -4,19 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertTriangle,
-  BookOpen,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
-  Clock,
-  GraduationCap,
   Info,
   Loader2,
   PencilLine,
   PlusCircle,
-  School,
-  Search,
-  Sparkles,
   Timer,
   Trash2,
   TriangleAlert,
@@ -126,16 +119,17 @@ export function AddScheduleDialog({
   const subGradeChosen = jurusanChosen && filterSubGrade !== "Semua Sub Grade";
   const hariChosen = subGradeChosen && filterHari !== "Semua Hari";
   const sesiChosen = hariChosen && filterSesi !== "Semua Sesi";
-  const editLocked = submitting || loadingSchedules || !sesiChosen;
   const scheduleConflict = mode !== "delete" && form.classId
     ? scheduleList.find((s) => s.id !== editingId && s.classId === form.classId && s.hari === form.hari && s.sesi === form.sesi)
     : undefined;
   const selectedSchedule = editingId
     ? scheduleList.find((s) => s.id === editingId) ?? initialSchedule ?? undefined
     : undefined;
+  const selectedScheduleForProfile = mode === "delete"
+    ? scheduleList.find((s) => s.id === deletingId) ?? undefined
+    : selectedSchedule;
   const isDirty = Boolean(editingId && baseline && FORM_KEYS.some((key) => form[key] !== baseline[key]));
   const dirtyConfirm = async (message: string) => !isDirty || (await askConfirm(message));
-  const dialogTitle = mode === "edit" ? "Perbarui Sesi Jadwal Pelajaran" : mode === "delete" ? "Hapus Sesi Jadwal Pelajaran" : "Tambah Sesi Jadwal Pelajaran";
 
   const reset = () => {
     setForm(EMPTY);
@@ -287,19 +281,6 @@ export function AddScheduleDialog({
     setBaseline(next);
   };
 
-  const handleClearSelection = async () => {
-    const ok = await dirtyConfirm("Perubahan belum disimpan. Lepas jadwal terpilih dan buang perubahan?");
-    setConfirmOpen(false);
-    if (!ok) return;
-    setEditingId(null);
-    setForm(EMPTY);
-    setBaseline(null);
-  };
-
-  const handleRevert = () => {
-    if (baseline) setForm(baseline);
-  };
-
   const handleDelete = async () => {
     const target = scheduleList.find((s) => s.id === deletingId);
     if (!target) {
@@ -385,8 +366,16 @@ export function AddScheduleDialog({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <DialogTitle className="text-lg font-bold tracking-tight text-white">{dialogTitle}</DialogTitle>
+                <DialogTitle className="text-lg font-bold tracking-tight text-white">
+                  Manajemen Jadwal Pelajaran
+                </DialogTitle>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm">
+                  SMK Mataram SSO
+                </span>
               </div>
+              <DialogDescription className="mt-0.5 text-xs text-indigo-100">
+                Tambah, perbarui, atau hapus sesi belajar pada timetable rombel.
+              </DialogDescription>
             </div>
           </div>
           <button type="button" aria-label="Tutup" onClick={handleCancel} disabled={submitting} className="relative z-10 flex size-9 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-50">
@@ -397,86 +386,125 @@ export function AddScheduleDialog({
         {/* Mode bar */}
         <div className="shrink-0 border-b border-slate-200/70 bg-[#f1f4f9] px-7 py-4">
           <div className="rounded-2xl border border-slate-200/70 bg-white p-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#787584]"><GraduationCap className="size-4 text-[#5343b9]" /> Metode Tindakan / Manajemen Sesi</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7c8495]">
+              Metode Tindakan / Manajemen Data
+            </span>
+            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => switchMode("add")}
+                disabled={submitting}
+                aria-pressed={mode === "add"}
+                className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all ${
+                  mode === "add"
+                    ? "border-[#86efac] bg-[#f0fdf4]"
+                    : "border-[#E2E8F0] bg-white hover:border-[#86efac]/70"
+                }`}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#dcfce7] text-[#16a34a]">
+                  <PlusCircle className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold text-[#181c20]">Tambah Baru</span>
+                  <span className="mt-0.5 block text-[11px] leading-4 text-[#7c8495]">Buat sesi jadwal baru</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("edit")}
+                disabled={submitting}
+                aria-pressed={mode === "edit"}
+                className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all ${
+                  mode === "edit"
+                    ? "border-[#93c5fd] bg-[#eff6ff]"
+                    : "border-[#E2E8F0] bg-white hover:border-[#93c5fd]/70"
+                }`}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#dbeafe] text-[#3b82f6]">
+                  <PencilLine className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold text-[#181c20]">Perbarui</span>
+                  <span className="mt-0.5 block text-[11px] leading-4 text-[#7c8495]">Ubah sesi jadwal</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("delete")}
+                disabled={submitting}
+                aria-pressed={mode === "delete"}
+                className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all ${
+                  mode === "delete"
+                    ? "border-[#fecaca] bg-[#fef2f2]"
+                    : "border-[#E2E8F0] bg-white hover:border-[#fecaca]/80"
+                }`}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fee2e2] text-[#ba1a1a]">
+                  <Trash2 className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold text-[#181c20]">Hapus</span>
+                  <span className="mt-0.5 block text-[11px] leading-4 text-[#7c8495]">Hapus sesi jadwal</span>
+                </span>
+              </button>
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              <button type="button" onClick={() => switchMode("add")} disabled={submitting} className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${mode === "add" ? "bg-[#6c5dd3] text-white shadow-[0_4px_12px_rgba(108,93,211,0.25)]" : "border border-slate-200 bg-white font-semibold text-[#4e566c] hover:text-[#181c20]"}`}><PlusCircle className="size-4" /> Tambah Baru </button>
-              <button type="button" onClick={() => switchMode("edit")} disabled={submitting} className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${mode === "edit" ? "bg-[#6c5dd3] text-white shadow-[0_4px_12px_rgba(108,93,211,0.25)]" : "border border-slate-200 bg-white font-semibold text-[#4e566c] hover:text-[#181c20]"}`}><PencilLine className="size-4 text-[#5343b9]" /> Perbarui </button>
-              <button type="button" onClick={() => switchMode("delete")} disabled={submitting} className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${mode === "delete" ? "bg-[#ba1a1a] text-white shadow-[0_4px_12px_rgba(186,26,26,0.25)]" : "border border-slate-200 bg-white font-semibold text-[#4e566c] hover:text-[#181c20]"}`}><Trash2 className="size-4 text-[#ba1a1a]" /> Hapus </button>
-            </div>
-            {mode === "delete" ? (
-              <div className="mt-2 rounded-2xl border border-red-200/70 bg-white p-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
-                  <SearchableDropdown value={filterTingkat === "Semua Tingkat" ? "" : filterTingkat} onChange={handleFilterTingkatChange} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
-                  <SearchableDropdown value={filterJurusan === "Semua Jurusan" ? "" : filterJurusan} onChange={handleFilterJurusanChange} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterTingkat === "Semua Tingkat" ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={loadingSchedules || !tingkatChosen} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
-                  <SearchableDropdown value={filterSubGrade === "Semua Sub Grade" ? "" : filterSubGrade} onChange={handleFilterSubGradeChange} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterJurusan === "Semua Jurusan" ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={loadingSchedules || !jurusanChosen} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
-                    <SearchableDropdown value={filterHari === "Semua Hari" ? "" : filterHari} onChange={handleFilterHariChange} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterSubGrade === "Semua Sub Grade" ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={loadingSchedules || !subGradeChosen} />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
-                    <SearchableDropdown value={filterSesi === "Semua Sesi" ? "" : filterSesi} onChange={handleFilterSesiChange} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterHari === "Semua Hari" ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={loadingSchedules || !hariChosen} />
-                  </div>
-                </div>
-                <div className="mt-1 flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Jadwal yang akan dihapus <span className="text-[#c0262d]">*</span></label>
-                  <SearchableDropdown
-                    value={deletingId === "" || !filteredSchedules.some((s) => s.id === deletingId) ? "" : deletingId}
-                    onChange={setDeletingId}
-                    options={deleteScheduleOptions}
-                    label={loadingSchedules ? "Memuat data jadwal..." : !sesiChosen ? "Pilih sesi terlebih dahulu" : deleteScheduleOptions.length ? "Pilih jadwal yang akan dihapus" : "Tidak ada jadwal yang cocok"}
-                    disabled={submitting || loadingSchedules || !sesiChosen || !deleteScheduleOptions.length}
-                  />
-                </div>
-                {deletingId && (
-                  <div className="mt-2 rounded-xl border border-[#d9d3f0] bg-[#faf8ff] p-3 max-h-60 overflow-y-auto">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#e5deff] text-xs font-bold text-[#5343b9]"><Trash2 className="size-3.5" /></span>
-                      <p className="text-xs font-bold text-[#181c20]">Data yang akan dihapus</p>
-                    </div>
-                    <div className="text-[11px] leading-5 text-[#787584]">
-                      {(() => {
-                        const s = filteredSchedules.find((item) => item.id === deletingId);
-                        if (!s) return <p className="text-[#ba1a1a]">Pilih jadwal terlebih dahulu</p>;
-                        return (
-                          <>
-                            <p><span className="font-semibold text-[#181c20]">Tingkat:</span> {s.gradeLevelId}</p>
-                            <p><span className="font-semibold text-[#181c20]">Jurusan:</span> {s.majorId}</p>
-                            <p><span className="font-semibold text-[#181c20]">Sub Grade:</span> {s.classSection || "-"}</p>
-                            <p><span className="font-semibold text-[#181c20]">Hari:</span> {s.hari}</p>
-                            <p><span className="font-semibold text-[#181c20]">Sesi:</span> {s.sesi}</p>
-                            <p><span className="font-semibold text-[#181c20]">Waktu:</span> {String(s.waktuMulai ?? "").slice(0, 5)} - {String(s.waktuSelesai ?? "").slice(0, 5)} WIB</p>
-                            <p><span className="font-semibold text-[#181c20]">Mapel:</span> {s.subjectName}</p>
-                            <p><span className="font-semibold text-[#181c20]">Durasi:</span> {s.durasi} menit</p>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                )}
-                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-[#ba1a1a]"><Info className="size-3.5" /> Mode Aktif: menghapus sesi jadwal dari Timetable Master. Tindakan ini tidak bisa dibatalkan.</p>
-              </div>
-            ) : mode === "edit" ? (
-              <p className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white px-2.5 py-1.5 text-[11px] text-[#4e566c]"><Info className="size-3.5 shrink-0 text-[#5343b9]" /><span><strong>Mode Aktif:</strong> {editingId ? "ubah detail jadwal terpilih lalu simpan ke Timetable Master." : "pilih jadwal pada panel kanan untuk mulai mengubah."}</span></p>
-            ) : (
-              <p className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white px-2.5 py-1.5 text-[11px] text-[#4e566c]"><Info className="size-3.5 shrink-0 text-[#5343b9]" /><span><strong>Mode Aktif:</strong> Tambah sesi belajar baru ke timetable rombel tanpa menimpa slot lain.</span></p>
-            )}
+            <p className="mt-3 flex items-center gap-1.5 text-[11px] leading-4 text-[#7c8495]">
+              <Info className="size-3.5 shrink-0 text-[#5343b9]" />
+              <span>
+                <strong>Mode Aktif:</strong>{" "}
+                {mode === "add"
+                  ? "Tambah sesi belajar baru ke timetable rombel tanpa menimpa slot lain."
+                  : mode === "edit"
+                    ? editingId
+                      ? "Ubah sesi jadwal terpilih lalu simpan."
+                      : "Pilih jadwal pada panel kanan untuk mulai mengubah."
+                    : "Hapus sesi jadwal terpilih dari timetable rombel."}
+              </span>
+            </p>
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row">
-          <form id="add-schedule-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-6 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+        <div className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${mode === "add" ? "" : "lg:grid-cols-[minmax(0,1fr)_360px]"}`}>
+          <div className="flex min-h-0 min-w-0 flex-col">
+            {mode !== "add" ? (
+              <section className="mx-7 mt-4 shrink-0 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7c8495]">
+                  Profil Jadwal Terpilih
+                </span>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="relative">
+                    <div className="flex size-10 items-center justify-center rounded-full border-2 border-[#d9d3f0] bg-[#e5deff] text-[12px] font-bold text-[#4331a8] shadow-sm">
+                      {selectedScheduleForProfile ? `S${selectedScheduleForProfile.sesi}` : "?"}
+                    </div>
+                    <span className={`absolute bottom-0 right-0 size-2.5 rounded-full ring-2 ring-white ${selectedScheduleForProfile ? "bg-emerald-500" : "bg-slate-300"}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate text-[13px] font-bold text-slate-800">
+                        {selectedScheduleForProfile?.subjectName ?? "Pilih jadwal terlebih dahulu"}
+                      </h3>
+                      {selectedScheduleForProfile ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+                          Sesi {selectedScheduleForProfile.sesi}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                      {selectedScheduleForProfile
+                        ? `${selectedScheduleForProfile.className} • ${selectedScheduleForProfile.hari} • ${String(selectedScheduleForProfile.waktuMulai ?? "").slice(0, 5)}-${String(selectedScheduleForProfile.waktuSelesai ?? "").slice(0, 5)} • ${selectedScheduleForProfile.subjectName}`
+                        : "Pilih jadwal pada panel kanan untuk menampilkan profil."}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            <form
+              id="add-schedule-form"
+              onSubmit={handleSubmit}
+              className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-7 text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
           {mode === "delete" ? null : (
             <>
           {mode === "edit" && !editingId ? (
@@ -496,11 +524,11 @@ export function AddScheduleDialog({
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center text-xs font-semibold text-[#181c20]">Hari <span className="text-[#c0262d]">*</span></label>
-                <SearchableDropdown value={form.hari} onChange={(v) => setForm((p) => ({ ...p, hari: v }))} options={hariOptions} label="Pilih hari" />
+                <SearchableDropdown value={form.hari} onChange={(v) => setForm((p) => ({ ...p, hari: v }))} options={hariOptions} label="Pilih hari" textClassName="text-[#64748B]" />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center text-xs font-semibold text-[#181c20]">Sesi &amp; Jam Standar <span className="text-[#c0262d]">*</span></label>
-                <SearchableDropdown value={String(form.sesi)} onChange={(v) => { const n = Number(v); setForm((p) => ({ ...p, sesi: n, durasi: SESI_LIST.find((s) => s.sesi === n)?.durasi ?? 60 })); }} options={sesiOptions} label="Pilih sesi" />
+                <SearchableDropdown value={String(form.sesi)} onChange={(v) => { const n = Number(v); setForm((p) => ({ ...p, sesi: n, durasi: SESI_LIST.find((s) => s.sesi === n)?.durasi ?? 60 })); }} options={sesiOptions} label="Pilih sesi" textClassName="text-[#64748B]" />
               </div>
             </div>
             <div className="mt-3 flex flex-col gap-1.5">
@@ -524,16 +552,16 @@ export function AddScheduleDialog({
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-[#181c20]">Tingkat<span className="text-[#c0262d]">*</span></label>
-                <SearchableDropdown value={form.gradeLevelId} onChange={(v) => setForm((p) => ({ ...p, gradeLevelId: v, majorId: "", classId: "", subjectId: "" }))} options={gradeOptions} label={loading ? "Memuat..." : "Pilih tingkat kelas"} disabled={loading} />
+                <SearchableDropdown value={form.gradeLevelId} onChange={(v) => setForm((p) => ({ ...p, gradeLevelId: v, majorId: "", classId: "", subjectId: "" }))} options={gradeOptions} label={loading ? "Memuat..." : "Pilih tingkat kelas"} disabled={loading} textClassName="text-[#64748B]" />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-[#181c20]">Jurusan / Konsentrasi <span className="text-[#c0262d]">*</span></label>
-                <SearchableDropdown value={form.majorId} onChange={(v) => setForm((p) => ({ ...p, majorId: v, classId: "", subjectId: "" }))} options={majorOptions} label={!form.gradeLevelId ? "Pilih tingkat dulu" : "Pilih jurusan"} disabled={!form.gradeLevelId || loading} />
+                <SearchableDropdown value={form.majorId} onChange={(v) => setForm((p) => ({ ...p, majorId: v, classId: "", subjectId: "" }))} options={majorOptions} label={!form.gradeLevelId ? "Pilih tingkat dulu" : "Pilih jurusan"} disabled={!form.gradeLevelId || loading} textClassName="text-[#64748B]" />
               </div>
             </div>
             <div className="mt-3 flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-[#181c20]">Rombel<span className="text-[#c0262d]">*</span></label>
-              <SearchableDropdown value={form.classId} onChange={(v) => setForm((p) => ({ ...p, classId: v }))} options={classOptions} label={!form.majorId ? "Pilih jurusan dulu" : classes.length ? "Pilih rombel kelas" : "Tidak ada kelas"} disabled={!form.majorId} />
+              <SearchableDropdown value={form.classId} onChange={(v) => setForm((p) => ({ ...p, classId: v }))} options={classOptions} label={!form.majorId ? "Pilih jurusan dulu" : classes.length ? "Pilih rombel kelas" : "Tidak ada kelas"} disabled={!form.majorId} textClassName="text-[#64748B]" />
             </div>
           </section>
 
@@ -546,7 +574,7 @@ export function AddScheduleDialog({
             </div>
             <div className="mt-3 flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-[#181c20]">Pilihan Mata Pelajaran <span className="text-[#c0262d]">*</span></label>
-              <SearchableDropdown value={form.subjectId} onChange={(v) => setForm((p) => ({ ...p, subjectId: v }))} options={subjectOptions} label={!form.gradeLevelId ? "Pilih tingkat dulu" : loadingSubjects ? "Memuat..." : subjects.length ? "Pilih mata pelajaran" : "Tidak ada mata pelajaran"} disabled={!form.gradeLevelId || loadingSubjects} />
+              <SearchableDropdown value={form.subjectId} onChange={(v) => setForm((p) => ({ ...p, subjectId: v }))} options={subjectOptions} label={!form.gradeLevelId ? "Pilih tingkat dulu" : loadingSubjects ? "Memuat..." : subjects.length ? "Pilih mata pelajaran" : "Tidak ada mata pelajaran"} disabled={!form.gradeLevelId || loadingSubjects} textClassName="text-[#64748B]" />
               <p className="flex items-center gap-1.5 text-[10px] text-[#787584]"><Info className="size-3.5" /> {summary}</p>
             </div>
           </section>
@@ -561,51 +589,94 @@ export function AddScheduleDialog({
           )}
           </>
           )}
-        </form>
-        {mode === "edit" ? (
-          <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[360px] lg:flex-none lg:border-l lg:border-t-0">
-            <div className="flex flex-col gap-2 pb-40">
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
-                  <SearchableDropdown value={filterTingkat === "Semua Tingkat" ? "" : filterTingkat} onChange={setFilterTingkat} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
-                  <SearchableDropdown value={filterJurusan === "Semua Jurusan" ? "" : filterJurusan} onChange={setFilterJurusan} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterTingkat === "Semua Tingkat" ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={loadingSchedules || !tingkatChosen} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
-                  <SearchableDropdown value={filterSubGrade === "Semua Sub Grade" ? "" : filterSubGrade} onChange={setFilterSubGrade} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterJurusan === "Semua Jurusan" ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={loadingSchedules || !jurusanChosen} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
+            </form>
+          </div>
+
+          {mode !== "add" ? (
+            <aside className="min-h-0 w-full min-w-0 overflow-y-auto overscroll-contain border-t border-slate-200/70 bg-[#f8f9fc] p-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:w-[360px] lg:min-w-[360px] lg:max-w-[360px] lg:border-l lg:border-t-0">
+              <div className="flex flex-col gap-2 pb-40">
+                <div className="grid grid-cols-1 gap-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
-                    <SearchableDropdown value={filterHari === "Semua Hari" ? "" : filterHari} onChange={setFilterHari} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterSubGrade === "Semua Sub Grade" ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={loadingSchedules || !subGradeChosen} />
+                    <label className="text-[11px] font-bold text-[#181c20]">Tingkat</label>
+                    <SearchableDropdown value={filterTingkat === "Semua Tingkat" ? "" : filterTingkat} onChange={handleFilterTingkatChange} options={filterTingkatOptions} label="Pilih tingkat terlebih dahulu" disabled={loadingSchedules} textClassName="text-[#64748B]" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
-                    <SearchableDropdown value={filterSesi === "Semua Sesi" ? "" : filterSesi} onChange={setFilterSesi} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterHari === "Semua Hari" ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={loadingSchedules || !hariChosen} />
+                    <label className="text-[11px] font-bold text-[#181c20]">Jurusan</label>
+                    <SearchableDropdown value={filterJurusan === "Semua Jurusan" ? "" : filterJurusan} onChange={handleFilterJurusanChange} options={filterJurusanOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterTingkat === "Semua Tingkat" ? "Pilih tingkat terlebih dahulu" : "Pilih jurusan terlebih dahulu"} disabled={loadingSchedules || !tingkatChosen} textClassName="text-[#64748B]" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Sub Grade (A,B,C,D)</label>
+                    <SearchableDropdown value={filterSubGrade === "Semua Sub Grade" ? "" : filterSubGrade} onChange={handleFilterSubGradeChange} options={filterSubGradeOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterJurusan === "Semua Jurusan" ? "Pilih jurusan terlebih dahulu" : "Pilih sub grade terlebih dahulu"} disabled={loadingSchedules || !jurusanChosen} textClassName="text-[#64748B]" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] font-bold text-[#181c20]">Hari</label>
+                      <SearchableDropdown value={filterHari === "Semua Hari" ? "" : filterHari} onChange={handleFilterHariChange} options={filterHariOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterSubGrade === "Semua Sub Grade" ? "Pilih sub grade terlebih dahulu" : "Pilih hari terlebih dahulu"} disabled={loadingSchedules || !subGradeChosen} textClassName="text-[#64748B]" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] font-bold text-[#181c20]">Sesi</label>
+                      <SearchableDropdown value={filterSesi === "Semua Sesi" ? "" : filterSesi} onChange={handleFilterSesiChange} options={filterSesiOptions} label={loadingSchedules ? "Memuat data jadwal..." : filterHari === "Semua Hari" ? "Pilih hari terlebih dahulu" : "Pilih sesi terlebih dahulu"} disabled={loadingSchedules || !hariChosen} textClassName="text-[#64748B]" />
+                    </div>
                   </div>
                 </div>
+                {mode === "edit" ? (
+                  <div className="mt-1 flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Pilih jadwal <span className="text-[#c0262d]">*</span></label>
+                    <SearchableDropdown
+                      value={editingId ?? ""}
+                      onChange={(v) => {
+                        const s = filteredSchedules.find((item) => item.subjectName === v);
+                        if (s) handleSelectEdit(s);
+                      }}
+                      options={editScheduleOptions}
+                      label={loadingSchedules ? "Memuat data jadwal..." : !sesiChosen ? "Pilih sesi terlebih dahulu" : filteredSchedules.length ? "Pilih jadwal yang akan diubah" : "Tidak ada jadwal yang cocok"}
+                      disabled={submitting || loadingSchedules || !sesiChosen || !filteredSchedules.length}
+                      textClassName="text-[#64748B]"
+                    />
+                    <p className="text-[11px] text-[#787584]">Isi form di sebelah kiri akan mengikuti jadwal yang dipilih.</p>
+                  </div>
+                ) : (
+                  <div className="mt-1 flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-[#181c20]">Jadwal yang akan dihapus <span className="text-[#c0262d]">*</span></label>
+                    <SearchableDropdown
+                      value={deletingId === "" || !filteredSchedules.some((s) => s.id === deletingId) ? "" : deletingId}
+                      onChange={setDeletingId}
+                      options={deleteScheduleOptions}
+                      label={loadingSchedules ? "Memuat data jadwal..." : !sesiChosen ? "Pilih sesi terlebih dahulu" : deleteScheduleOptions.length ? "Pilih jadwal yang akan dihapus" : "Tidak ada jadwal yang cocok"}
+                      disabled={submitting || loadingSchedules || !sesiChosen || !deleteScheduleOptions.length}
+                      textClassName="text-[#64748B]"
+                    />
+                    {deletingId ? (
+                      <div className="mt-2 rounded-xl border border-[#d9d3f0] bg-[#faf8ff] p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#e5deff] text-xs font-bold text-[#5343b9]"><Trash2 className="size-3.5" /></span>
+                          <p className="text-xs font-bold text-[#181c20]">Data yang akan dihapus</p>
+                        </div>
+                        <div className="text-[11px] leading-5 text-[#787584]">
+                          {(() => {
+                            const s = filteredSchedules.find((item) => item.id === deletingId);
+                            if (!s) return <p className="text-[#ba1a1a]">Pilih jadwal terlebih dahulu</p>;
+                            return (
+                              <>
+                                <p><span className="font-semibold text-[#181c20]">Tingkat:</span> {s.gradeLevelId}</p>
+                                <p><span className="font-semibold text-[#181c20]">Jurusan:</span> {s.majorId}</p>
+                                <p><span className="font-semibold text-[#181c20]">Sub Grade:</span> {s.classSection || "-"}</p>
+                                <p><span className="font-semibold text-[#181c20]">Hari:</span> {s.hari}</p>
+                                <p><span className="font-semibold text-[#181c20]">Sesi:</span> {s.sesi}</p>
+                                <p><span className="font-semibold text-[#181c20]">Waktu:</span> {String(s.waktuMulai ?? "").slice(0, 5)} - {String(s.waktuSelesai ?? "").slice(0, 5)} WIB</p>
+                                <p><span className="font-semibold text-[#181c20]">Mapel:</span> {s.subjectName}</p>
+                                <p><span className="font-semibold text-[#181c20]">Durasi:</span> {s.durasi} menit</p>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
-              <div className="mt-1 flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#181c20]">pilih mata pelajaran <span className="text-[#c0262d]">*</span></label>
-                <SearchableDropdown
-                  value={editingId ?? ""}
-                  onChange={(v) => {
-                    const s = filteredSchedules.find((item) => item.subjectName === v);
-                    if (s) handleSelectEdit(s);
-                  }}
-                  options={editScheduleOptions}
-                  label={loadingSchedules ? "Memuat data mata pelajaran..." : !sesiChosen ? "Pilih sesi terlebih dahulu" : filteredSchedules.length ? "Pilih mata pelajaran" : "Tidak ada mata pelajaran yang cocok"}
-                  disabled={submitting || loadingSchedules || !sesiChosen || !filteredSchedules.length}
-                />
-                <p className="text-[11px] text-[#787584]">Isi form di sebelah kiri akan mengikuti mata pelajaran yang dipilih.</p>
-              </div>
-            </div>
-          </aside>
-        ) : null}
+            </aside>
+          ) : null}
         </div>
 
         <DialogFooter className="mx-0 mb-0 flex flex-row shrink-0 items-center justify-between gap-3 border-t border-slate-200/80 bg-slate-50 px-7 py-4">
