@@ -21,7 +21,7 @@ export function GradingQueue({ items, totalCount, onOpenAll }: GradingQueueProps
             </span>
             <div>
               <h2 className="text-[13px] font-bold leading-4 text-[#1E293B]">
-                Antrean Pengumpulan
+                Riwayat Pengumpulan
               </h2>
               <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
                 Siswa yang perlu dinilai segera • {totalCount} pengumpulan
