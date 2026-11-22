@@ -3,6 +3,7 @@
 import {
   BookOpen,
   CalendarDays,
+  GraduationCap,
   LayoutGrid,
   LogOut,
   School,
@@ -18,6 +19,7 @@ const mainMenu = [
   { label: "Dashboard", icon: LayoutGrid, href: "/admin/dashboard" },
   { label: "Teachers (Guru)", icon: User, href: "/admin/teachers" },
   { label: "Students (Siswa)", icon: Users, href: "/admin/students" },
+  { label: "Wali Kelas", icon: GraduationCap, href: "/admin/wali-kelas" },
   { label: "Course (Mapel)", icon: BookOpen, href: "/admin/course" },
   { label: "Jadwal Pelajaran", icon: CalendarDays, href: "/admin/schedule" },
 ];
