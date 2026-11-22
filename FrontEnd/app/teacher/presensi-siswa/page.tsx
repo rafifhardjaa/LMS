@@ -7,6 +7,16 @@ export const metadata: Metadata = {
     "Pencatatan kehadiran kelas, monitoring sakit dan dispensasi, serta finalisasi presensi siswa.",
 };
 
-export default function TeacherAttendancePage() {
-  return <AttendanceManagement />;
+export default async function TeacherAttendancePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ classId?: string; date?: string }>;
+}) {
+  const params = await searchParams;
+  return (
+    <AttendanceManagement
+      initialClassId={params.classId}
+      initialDate={params.date}
+    />
+  );
 }

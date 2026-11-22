@@ -85,15 +85,21 @@ function toAttendance(
   };
 }
 
-export function AttendanceManagement() {
+export function AttendanceManagement({
+  initialClassId,
+  initialDate,
+}: {
+  initialClassId?: string;
+  initialDate?: string;
+} = {}) {
   const user = useAuthStore((state) => state.user);
 
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError, setClassesError] = useState<string | null>(null);
 
-  const [classFilter, setClassFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [classFilter, setClassFilter] = useState(initialClassId ?? "");
+  const [dateFilter, setDateFilter] = useState(initialDate ?? "");
   const [isSessionOpened, setIsSessionOpened] = useState(false);
 
   const [dates, setDates] = useState<AttendanceDate[]>([]);
