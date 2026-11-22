@@ -13,46 +13,16 @@ type Course = {
   className: string;
   majorName: string;
   subjectName: string;
-  badge: string;
-  badgeClassName: string;
   hari: string;
   sesi: number;
   waktuLabel: string;
   isToday: boolean;
 };
 
-const BADGE_PALETTE = [
-  "bg-[#E0F2FE] text-[#0284C7]",
-  "bg-[#FEF3C7] text-[#D97706]",
-  "bg-[#F3E8FF] text-[#9333EA]",
-  "bg-[#DCFCE7] text-[#16A34A]",
-  "bg-[#FEE2E2] text-[#DC2626]",
-];
-
 const DAY_ORDER = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 
 function formatTime(value: string) {
   return moment(value, ["HH:mm:ss", "HH:mm"]).format("HH:mm");
-}
-
-function badgeText(j: JadwalPelajaran) {
-  const code = j.subjectCode?.trim();
-  if (code) return code.slice(0, 3).toUpperCase();
-  const words = (j.subjectName ?? "").trim().split(/\s+/);
-  return (
-    words
-      .slice(0, 2)
-      .map((w) => w[0] ?? "")
-      .join("")
-      .toUpperCase() || "?"
-  );
-}
-
-function badgeColor(subjectCode: string | null) {
-  const source = (subjectCode ?? "").trim() || "?";
-  let hash = 0;
-  for (let i = 0; i < source.length; i++) hash = (hash * 31 + source.charCodeAt(i)) >>> 0;
-  return BADGE_PALETTE[hash % BADGE_PALETTE.length];
 }
 
 function classLabel(j: JadwalPelajaran) {
@@ -66,8 +36,6 @@ function mapCourses(jadwal: JadwalPelajaran[], todayName: string): Course[] {
       className: classLabel(j),
       majorName: j.majorName || "-",
       subjectName: j.subjectName,
-      badge: badgeText(j),
-      badgeClassName: badgeColor(j.subjectCode),
       hari: j.hari,
       sesi: j.sesi,
       waktuLabel: `${formatTime(j.waktuMulai)} - ${formatTime(j.waktuSelesai)}`,
@@ -142,8 +110,7 @@ export function CourseCards() {
               ? Array.from({ length: 8 }).map((_, i) => (
                   <StaggerItem key={`skeleton-${i}`}>
                     <div className="bg-[#F8FAFC] rounded-xl p-2 shadow-sm h-full animate-pulse">
-                      <div className="flex items-start justify-between">
-                        <span className="w-7 h-7 rounded-lg bg-[#E2E8F0]" />
+                      <div className="flex items-start justify-end">
                         <Bookmark className="size-[18px] text-[#E2E8F0]" />
                       </div>
                       <div className="mt-2 space-y-2">
@@ -169,12 +136,7 @@ export function CourseCards() {
                       }}
                       transition={{ type: "spring", stiffness: 300, damping: 22 }}
                     >
-                      <div className="flex items-start justify-between">
-                        <span
-                          className={`w-7 h-7 rounded-lg text-[11px] font-bold flex items-center justify-center ${course.badgeClassName}`}
-                        >
-                          {course.badge}
-                        </span>
+                      <div className="flex items-start justify-end">
                         <motion.div whileHover={{ scale: 1.2, color: "#b71422" }}>
                           <Bookmark className="size-[18px] text-[#94A3B8] cursor-pointer" />
                         </motion.div>
