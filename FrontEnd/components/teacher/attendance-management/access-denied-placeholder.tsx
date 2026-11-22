@@ -101,11 +101,17 @@ function initials(name: string): string {
 type AccessDeniedPlaceholderProps = {
   userName?: string | null;
   userIdentifier?: string | null;
+  title?: string;
+  description?: string;
+  mailSubject?: string;
 };
 
 export function AccessDeniedPlaceholder({
   userName,
   userIdentifier,
+  title = "Hanya wali kelas yang dapat membuka presensi",
+  description = "Hanya wali kelas yang dapat membuka sesi presensi. Jika menurut Anda ini kesalahan, silakan hubungi admin.",
+  mailSubject = "Permintaan akses presensi",
 }: AccessDeniedPlaceholderProps) {
   const reduceMotion = useReducedMotion();
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
@@ -396,14 +402,13 @@ export function AccessDeniedPlaceholder({
                   id="akses-denied-title"
                   className="text-[22px] font-bold leading-tight tracking-[-0.02em] text-[#1E293B]"
                 >
-                  Hanya wali kelas yang dapat membuka presensi
+                  {title}
                 </h1>
               </StaggerItem>
 
               <StaggerItem>
                 <p className="max-w-xl text-[13px] leading-6 text-[#475569]">
-                  Hanya wali kelas yang dapat membuka sesi presensi. Jika menurut
-                  Anda ini kesalahan, silakan hubungi admin.
+                  {description}
                 </p>
               </StaggerItem>
 
@@ -443,7 +448,7 @@ export function AccessDeniedPlaceholder({
 
               <StaggerItem>
                 <a
-                  href={`mailto:${ADMIN_EMAIL}?subject=Permintaan%20akses%20presensi`}
+                  href={`mailto:${ADMIN_EMAIL}?subject=${encodeURIComponent(mailSubject)}`}
                   className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#b71422] px-5 text-xs font-semibold text-white shadow-[0_10px_24px_-12px_rgba(183,20,34,0.8)] transition hover:bg-[#8f0f1a]"
                 >
                   <Mail className="size-4" />
