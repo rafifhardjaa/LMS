@@ -438,105 +438,126 @@ export function AddStudentPlacementDialog({
           </div>
 
           <div className="shrink-0 border-b border-slate-200/70 bg-[#f1f4f9] px-7 py-4">
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-3">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#787584]">
-                <GraduationCap className="size-4 text-[#5343b9]" /> Metode Tindakan / Manajemen Penempatan
-              </span>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("add")}
-                  disabled={submitting}
-                  className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                    mode === "add"
-                      ? "bg-[#6c5dd3] text-white shadow-[0_4px_12px_rgba(108,93,211,0.25)]"
-                      : "border border-slate-200 bg-white font-semibold text-[#4e566c] hover:text-[#181c20]"
-                  }`}
-                >
-                  <PlusCircle className="size-4" /> Tambah Baru
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("edit")}
-                  disabled={submitting}
-                  className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                    mode === "edit"
-                      ? "bg-[#6c5dd3] text-white shadow-[0_4px_12px_rgba(108,93,211,0.25)]"
-                      : "border border-slate-200 bg-white font-semibold text-[#4e566c] hover:text-[#181c20]"
-                  }`}
-                >
-                  <PencilLine className="size-4 text-[#5343b9]" /> Perbarui
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("delete")}
-                  disabled={submitting}
-                  className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                    mode === "delete"
-                      ? "bg-[#ba1a1a] text-white shadow-[0_4px_12px_rgba(186,26,26,0.25)]"
-                      : "border border-slate-200 bg-white font-semibold text-[#4e566c] hover:text-[#181c20]"
-                  }`}
-                >
-                  <Trash2 className="size-4 text-[#ba1a1a]" /> Hapus
-                </button>
-              </div>
-              <p className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200/70 bg-white px-2.5 py-1.5 text-[11px] text-[#4e566c]">
-                <Info className="size-3.5 shrink-0 text-[#5343b9]" />
-                <span>
-                  <strong>Mode Aktif:</strong>{" "}
-                  {mode === "add"
-                    ? "Tempatkan banyak siswa sekaligus ke rombel tujuan."
-                    : mode === "edit"
-                      ? editingId
-                        ? "Pindahkan siswa terpilih ke rombel lain lalu simpan."
-                        : "Pilih siswa pada panel sebelah kanan untuk mulai mengubah."
-                      : "Keluarkan siswa terpilih dari rombelnya (akun tetap ada)."}
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7c8495]">
+              Metode Tindakan / Manajemen Penempatan
+            </span>
+            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => handleModeChange("add")}
+                disabled={submitting}
+                aria-pressed={mode === "add"}
+                className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all ${
+                  mode === "add"
+                    ? "border-[#86efac] bg-[#f0fdf4]"
+                    : "border-[#E2E8F0] bg-white hover:border-[#86efac]/70"
+                }`}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#dcfce7] text-[#16a34a]">
+                  <PlusCircle className="size-4" />
                 </span>
-              </p>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold text-[#181c20]">Tambah Baru</span>
+                  <span className="mt-0.5 block text-[11px] leading-4 text-[#7c8495]">Tempatkan banyak siswa</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeChange("edit")}
+                disabled={submitting}
+                aria-pressed={mode === "edit"}
+                className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all ${
+                  mode === "edit"
+                    ? "border-[#93c5fd] bg-[#eff6ff]"
+                    : "border-[#E2E8F0] bg-white hover:border-[#93c5fd]/70"
+                }`}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#dbeafe] text-[#3b82f6]">
+                  <PencilLine className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold text-[#181c20]">Perbarui</span>
+                  <span className="mt-0.5 block text-[11px] leading-4 text-[#7c8495]">Pindahkan siswa terpilih</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeChange("delete")}
+                disabled={submitting}
+                aria-pressed={mode === "delete"}
+                className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all ${
+                  mode === "delete"
+                    ? "border-[#fecaca] bg-[#fef2f2]"
+                    : "border-[#E2E8F0] bg-white hover:border-[#fecaca]/80"
+                }`}
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fee2e2] text-[#ba1a1a]">
+                  <Trash2 className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-bold text-[#181c20]">Hapus</span>
+                  <span className="mt-0.5 block text-[11px] leading-4 text-[#7c8495]">Keluarkan dari rombel</span>
+                </span>
+              </button>
             </div>
-
-            <div className="mt-4 flex items-center gap-3.5">
-              <div className="relative">
-                <div className="flex size-11 items-center justify-center rounded-full border-2 border-[#c9c4d5]/60 bg-[#e5deff] text-sm font-bold text-[#4331a8] shadow-sm">
-                  {mode === "add"
-                    ? selectedIds.length || "?"
-                    : selectedStudent
-                      ? buildInitials(selectedStudent.fullName)
-                      : "?"}
-                </div>
-                <span
-                  className={`absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-white ${
-                    mode === "add" || selectedStudent ? "bg-emerald-500" : "bg-slate-300"
-                  }`}
-                />
-              </div>
-              <div className="min-w-0">
-                <h3 className="truncate text-sm font-bold text-slate-800">
-                  {mode === "add"
-                    ? selectedIds.length
-                      ? `${selectedIds.length} siswa dipilih`
-                      : "Belum ada siswa dipilih"
-                    : selectedStudent?.fullName ?? "Pilih siswa terlebih dahulu"}
-                </h3>
-                <p className="mt-0.5 truncate text-[11px] text-slate-500">
-                  {mode === "add"
-                    ? selectedClass
-                      ? `Rombel tujuan: ${selectedClass.name} (sisa ${Math.max(0, selectedClass.capacity - selectedClass.studentCount)} slot)`
-                      : "Pilih jurusan, tingkat, dan rombel tujuan."
-                    : selectedStudent
-                      ? `NIS: ${selectedStudent.nomorInduk ?? "-"} • Kelas: ${selectedStudent.className ?? "Belum ditempatkan"}`
-                      : "Pilih siswa dari daftar untuk mulai menempatkan."}
-                </p>
-              </div>
-            </div>
+            <p className="mt-3 flex items-center gap-1.5 text-[11px] leading-4 text-[#7c8495]">
+              <Info className="size-3.5 shrink-0 text-[#5343b9]" />
+              <span>
+                <strong>Mode Aktif:</strong>{" "}
+                {mode === "add"
+                  ? "Tempatkan banyak siswa sekaligus ke rombel tujuan."
+                  : mode === "edit"
+                    ? editingId
+                      ? "Pindahkan siswa terpilih ke rombel lain lalu simpan."
+                      : "Pilih siswa pada panel sebelah kanan untuk mulai mengubah."
+                    : "Keluarkan siswa terpilih dari rombelnya (akun tetap ada)."}
+              </span>
+            </p>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden lg:flex-row">
-            <form
-              id="student-placement-form"
-              onSubmit={handleSubmit}
-              className="min-h-0 flex-1 space-y-5 overflow-y-auto p-7 text-xs [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-            >
+          <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="flex min-h-0 min-w-0 flex-col">
+              <section className="mx-7 mt-4 shrink-0 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7c8495]">
+                  Profil Siswa Terpilih
+                </span>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="relative">
+                    <div className="flex size-10 items-center justify-center rounded-full border-2 border-[#d9d3f0] bg-[#e5deff] text-[12px] font-bold text-[#4331a8] shadow-sm">
+                      {mode === "add"
+                        ? selectedIds.length || "?"
+                        : selectedStudent
+                          ? buildInitials(selectedStudent.fullName)
+                          : "?"}
+                    </div>
+                    <span className={`absolute bottom-0 right-0 size-2.5 rounded-full ring-2 ring-white ${mode === "add" || selectedStudent ? "bg-emerald-500" : "bg-slate-300"}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-[13px] font-bold text-slate-800">
+                      {mode === "add"
+                        ? selectedIds.length
+                          ? `${selectedIds.length} siswa dipilih`
+                          : "Belum ada siswa dipilih"
+                        : selectedStudent?.fullName ?? "Pilih siswa terlebih dahulu"}
+                    </h3>
+                    <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                      {mode === "add"
+                        ? selectedClass
+                          ? `Rombel tujuan: ${selectedClass.name} (sisa ${Math.max(0, selectedClass.capacity - selectedClass.studentCount)} slot)`
+                          : "Pilih jurusan, tingkat, dan rombel tujuan."
+                        : selectedStudent
+                          ? `NIS ${selectedStudent.nomorInduk ?? "-"} • Kelas ${selectedStudent.className ?? "Belum ditempatkan"}`
+                          : "Pilih siswa pada panel kanan untuk menampilkan profil."}
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <form
+                id="student-placement-form"
+                onSubmit={handleSubmit}
+                className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-7 text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
               {!loaded ? (
                 <div className="flex items-center justify-center py-16 text-sm text-[#787584]">
                   Memuat data penempatan…
@@ -610,6 +631,7 @@ export function AddStudentPlacementDialog({
                       options={majorOptions}
                       label={majors.length ? "Pilih konsentrasi keahlian" : "Belum ada data jurusan"}
                       disabled={!majors.length || submitting}
+                      textClassName="text-[#64748B]"
                     />
                   </div>
 
@@ -691,9 +713,10 @@ export function AddStudentPlacementDialog({
                   </div>
                 </>
               )}
-            </form>
+              </form>
+            </div>
 
-            <aside className="min-h-0 flex-1 shrink-0 overflow-y-auto border-t border-slate-200/70 bg-[#f8f9fc] p-5 lg:w-[390px] lg:flex-none lg:border-l lg:border-t-0">
+            <aside className="min-h-0 w-full min-w-0 overflow-y-auto overscroll-contain border-t border-slate-200/70 bg-[#f8f9fc] p-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:w-[360px] lg:min-w-[360px] lg:max-w-[360px] lg:border-l lg:border-t-0">
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-[#181c20]">Cari Siswa</label>
@@ -717,6 +740,7 @@ export function AddStudentPlacementDialog({
                       options={filterMajorOptions}
                       label="Semua jurusan"
                       disabled={submitting}
+                      textClassName="text-[#64748B]"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -727,6 +751,7 @@ export function AddStudentPlacementDialog({
                       options={filterGradeOptions}
                       label="Semua tingkat"
                       disabled={submitting}
+                      textClassName="text-[#64748B]"
                     />
                   </div>
                 </div>
@@ -797,6 +822,7 @@ export function AddStudentPlacementDialog({
                         options={studentOptions}
                         label={studentOptions.length ? "Pilih siswa" : "Tidak ada siswa yang cocok"}
                         disabled={submitting || !studentOptions.length}
+                        textClassName="text-[#64748B]"
                       />
                       <p className="text-[11px] text-[#787584]">
                         {mode === "delete"
