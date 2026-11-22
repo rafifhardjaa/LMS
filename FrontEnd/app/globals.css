@@ -130,23 +130,31 @@
 }
 
 .teacher-scrollbar-hide,
-.teacher-scrollbar-hide * {
+.teacher-scrollbar-hide *,
+.admin-scrollbar-hide,
+.admin-scrollbar-hide * {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 .teacher-scrollbar-hide::-webkit-scrollbar,
-.teacher-scrollbar-hide *::-webkit-scrollbar {
+.teacher-scrollbar-hide *::-webkit-scrollbar,
+.admin-scrollbar-hide::-webkit-scrollbar,
+.admin-scrollbar-hide *::-webkit-scrollbar {
   display: none;
 }
 
 html:has(.teacher-scrollbar-hide),
-body:has(.teacher-scrollbar-hide) {
+body:has(.teacher-scrollbar-hide),
+html:has(.admin-scrollbar-hide),
+body:has(.admin-scrollbar-hide) {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 html:has(.teacher-scrollbar-hide)::-webkit-scrollbar,
-body:has(.teacher-scrollbar-hide)::-webkit-scrollbar {
+body:has(.teacher-scrollbar-hide)::-webkit-scrollbar,
+html:has(.admin-scrollbar-hide)::-webkit-scrollbar,
+body:has(.admin-scrollbar-hide)::-webkit-scrollbar {
   display: none;
 }
