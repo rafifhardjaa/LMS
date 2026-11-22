@@ -14,7 +14,7 @@ export function GradingQueue({ items, totalCount, onOpenAll }: GradingQueueProps
   return (
     <FadeIn>
       <section className="flex flex-col gap-4 rounded-[20px] border border-[#FEE2E2] bg-[#FFF9F9] p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
           <div className="flex items-start gap-2.5">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FFEBEB] text-[#b71422]">
               <Clock3 className="size-4" />
@@ -28,9 +28,6 @@ export function GradingQueue({ items, totalCount, onOpenAll }: GradingQueueProps
               </p>
             </div>
           </div>
-          <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-[#b71422]">
-            Prioritas
-          </span>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -79,7 +76,7 @@ export function GradingQueue({ items, totalCount, onOpenAll }: GradingQueueProps
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-[11px] text-[#94A3B8]">
-            Menampilkan {items.length} antrean prioritas dari {totalCount} pengumpulan
+            Menampilkan {items.length} dari {totalCount} pengumpulan
           </span>
           <button
             type="button"

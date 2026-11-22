@@ -31,7 +31,7 @@ export function GuruTopbar() {
   const role = roleLabel(user?.role);
 
   return (
-    <header className="fixed left-64 right-0 top-0 z-40 h-16 border-b border-[#eef0f5] bg-white/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+    <header className="fixed left-64 right-0 top-0 z-40 h-16 border-b border-[#EBF0F5] bg-white/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between gap-4 px-6">
         <p className="min-w-0 truncate text-sm font-semibold text-[#1e293b]">
           LMS - Teacher Workspace
@@ -54,7 +54,7 @@ export function GuruTopbar() {
           ) : (
             <span
               title={fullName}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e5deff] text-[11px] font-bold text-[#4331a8] ring-2 ring-white"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#FFEBEB] text-[11px] font-bold text-[#b71422] ring-2 ring-white"
             >
               {initials(fullName)}
             </span>

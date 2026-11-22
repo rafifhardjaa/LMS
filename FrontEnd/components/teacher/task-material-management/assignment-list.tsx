@@ -15,6 +15,8 @@ export function AssignmentList({
   assignments,
   onOpenQueue,
 }: AssignmentListProps) {
+  const visibleAssignments = assignments.slice(0, 3);
+
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -23,14 +25,9 @@ export function AssignmentList({
             <ClipboardList className="size-4" />
           </span>
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-[16px] font-bold tracking-tight text-[#1E293B]">
-                Tugas Praktikum &amp; LKPD Aktif
-              </h2>
-              <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wide text-[#b71422]">
-                {assignments.length} Prioritas
-              </span>
-            </div>
+            <h2 className="text-[16px] font-bold tracking-tight text-[#1E293B]">
+              Tugas Praktikum &amp; LKPD Aktif
+            </h2>
             <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
               Pantau pengumpulan dan nilai jawaban siswa.
             </p>
@@ -38,12 +35,12 @@ export function AssignmentList({
         </div>
       </div>
 
-      {assignments.length > 0 ? (
+      {visibleAssignments.length > 0 ? (
         <StaggerChildren
           staggerDelay={0.08}
-          className="flex flex-col gap-4"
+          className="flex max-h-[420px] flex-col gap-4 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {assignments.map((assignment) => (
+          {visibleAssignments.map((assignment) => (
             <AssignmentCard
               key={assignment.id}
               assignment={assignment}
