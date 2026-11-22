@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, RefreshCw, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, CirclePlus, Loader2, RefreshCw, Search } from "lucide-react";
 import type { GradeLevel, Major, Subject } from "@/lib/api/master-data";
 import {
   EmptyRow,
@@ -28,12 +28,14 @@ export function SubjectsPanel({
   gradeLevels,
   loading = false,
   onReload,
+  onAddSubject,
 }: {
   subjects: Subject[];
   majors: Major[];
   gradeLevels: GradeLevel[];
   loading?: boolean;
   onReload?: () => void;
+  onAddSubject?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [majorId, setMajorId] = useState("");
@@ -90,8 +92,40 @@ export function SubjectsPanel({
   const endRow = Math.min(currentPage * PAGE_SIZE, rows.length);
 
   return (
-    <>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_0.8fr]">
+    <PanelCard>
+      <PanelHeader
+        title="Daftar Mata Pelajaran"
+        subtitle="Kejuruan dan umum per tingkatan, semester, dan tahun ajaran"
+        count={rows.length}
+        actions={
+          <>
+            {onAddSubject ? (
+              <button
+                type="button"
+                onClick={onAddSubject}
+                className="inline-flex h-9 items-center gap-2 rounded-full bg-[#5343b9] px-3 text-xs font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
+              >
+                <CirclePlus className="size-3.5" />
+                Tambah Mapel Baru
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={onReload}
+              disabled={loading}
+              className="inline-flex h-9 items-center gap-2 rounded-full bg-[#f1f4f9] px-3 text-xs font-semibold text-[#4e566c] hover:bg-[#eceef3] disabled:opacity-60"
+            >
+              {loading ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="size-3.5" />
+              )}
+              Muat ulang
+            </button>
+          </>
+        }
+      />
+      <div className="grid grid-cols-1 gap-2 border-b border-[#eceef3] px-5 pb-4 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_0.8fr]">
         <label className="relative">
           <span className="sr-only">Cari mata pelajaran</span>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
@@ -112,28 +146,6 @@ export function SubjectsPanel({
           <SearchableDropdown value={semester} onChange={(v) => { setSemester(v); setPage(1); }} options={semesterOptions} label="Semua semester" />
         </div>
       </div>
-
-      <PanelCard>
-        <PanelHeader
-          title="Daftar Mata Pelajaran"
-          subtitle="Kejuruan dan umum per tingkatan, semester, dan tahun ajaran"
-          count={rows.length}
-          actions={
-            <button
-              type="button"
-              onClick={onReload}
-              disabled={loading}
-              className="inline-flex h-9 items-center gap-2 rounded-full bg-[#f1f4f9] px-3 text-xs font-semibold text-[#4e566c] hover:bg-[#eceef3] disabled:opacity-60"
-            >
-              {loading ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="size-3.5" />
-              )}
-              Muat ulang
-            </button>
-          }
-        />
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-left">
             <thead className="bg-[#f1f4f9]">
@@ -234,7 +246,6 @@ export function SubjectsPanel({
             </button>
           </nav>
         </div>
-      </PanelCard>
-    </>
+    </PanelCard>
   );
 }

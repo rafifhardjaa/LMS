@@ -9,8 +9,10 @@ import { SubjectsPanel } from "./master-data/subjects-panel";
 
 export function CourseMasterData({
   refreshKey = 0,
+  onAddSubject,
 }: {
   refreshKey?: number;
+  onAddSubject?: () => void;
 } = {}) {
   const role = useAuthStore((state) => state.user?.role ?? "admin");
   const isAdmin = role === "admin";
@@ -79,6 +81,7 @@ export function CourseMasterData({
         gradeLevels={gradeLevels}
         loading={loading}
         onReload={() => void load()}
+        onAddSubject={onAddSubject}
       />
     </div>
   );
