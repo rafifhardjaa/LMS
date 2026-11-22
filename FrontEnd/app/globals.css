@@ -128,3 +128,25 @@
     @apply font-sans;
   }
 }
+
+.teacher-scrollbar-hide,
+.teacher-scrollbar-hide * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.teacher-scrollbar-hide::-webkit-scrollbar,
+.teacher-scrollbar-hide *::-webkit-scrollbar {
+  display: none;
+}
+
+html:has(.teacher-scrollbar-hide),
+body:has(.teacher-scrollbar-hide) {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html:has(.teacher-scrollbar-hide)::-webkit-scrollbar,
+body:has(.teacher-scrollbar-hide)::-webkit-scrollbar {
+  display: none;
+}
