@@ -1,4 +1,4 @@
-import { and, eq, sql, type SQL } from "drizzle-orm";
+import { and, eq, ne, sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import { storageDb } from "../db/storage";
 import { assignments } from "../db/storage-schema";
@@ -461,6 +461,41 @@ export async function updateClass(id: string, patch: Partial<ClassInput>) {
     }
     throw err;
   }
+}
+
+export async function setClassAdvisor(
+  id: string,
+  advisorId: string | null
+) {
+  assertUuid(id);
+  const existing = await db
+    .select({ id: classes.id })
+    .from(classes)
+    .where(eq(classes.id, id))
+    .limit(1);
+  if (!existing[0]) throw new NotFoundError("Kelas tidak ditemukan");
+
+  if (advisorId !== null) {
+    assertUuid(advisorId);
+    await assertGuruRole(advisorId);
+    const conflict = await db
+      .select({ id: classes.id, name: classes.name })
+      .from(classes)
+      .where(and(eq(classes.advisorId, advisorId), ne(classes.id, id)))
+      .limit(1);
+    if (conflict[0]) {
+      throw new BadRequestError(
+        `Guru ini sudah menjadi wali kelas di kelas ${conflict[0].name}`
+      );
+    }
+  }
+
+  await db
+    .update(classes)
+    .set({ advisorId, updatedAt: new Date() })
+    .where(eq(classes.id, id));
+
+  return getClass(id);
 }
 
 export async function deleteClass(id: string) {
