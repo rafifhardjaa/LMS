@@ -701,7 +701,15 @@ export function AddScheduleDialog({
       </DialogContent>
     </Dialog>
 
-    <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+    <Dialog
+      open={confirmOpen}
+      onOpenChange={(next) => {
+        if (!next) {
+          respondConfirm(false);
+          setConfirmOpen(false);
+        }
+      }}
+    >
       <DialogContent className="bg-[#f8f9fc] border border-[#c9c4d5]/60">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#ffe5e5] text-[#ba1a1a]">
