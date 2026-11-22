@@ -510,6 +510,49 @@ export function AddTeacherDialog({ open, onOpenChange, onSuccess }: AddTeacherDi
 
         <div className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${mode === "add" ? "" : "lg:grid-cols-[minmax(0,1fr)_360px]"}`}>
           <div className="flex min-h-0 min-w-0 flex-col">
+            {(mode === "edit" || mode === "delete") && (
+              <section className="mx-7 mt-4 shrink-0 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7c8495]">
+                  Profil Guru Terpilih
+                </span>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="relative">
+                    <div className="flex size-10 items-center justify-center rounded-full border-2 border-[#d9d3f0] bg-[#e5deff] text-[12px] font-bold text-[#4331a8] shadow-sm">
+                      {selectedTeacher ? buildInitials(selectedTeacher.fullName) : "?"}
+                    </div>
+                    <span
+                      className={`absolute bottom-0 right-0 size-2.5 rounded-full ring-2 ring-white ${
+                        selectedTeacher?.isActive ? "bg-emerald-500" : "bg-slate-300"
+                      }`}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="truncate text-[13px] font-bold text-slate-800">
+                        {selectedTeacher?.fullName ?? "Pilih guru terlebih dahulu"}
+                      </h3>
+                      {selectedTeacher ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/60 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+                          {selectedTeacher.isActive ? "Aktif" : "Nonaktif"}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                      {selectedTeacher ? (
+                        <>
+                          NIP <span className="font-mono">{selectedTeacher.nomorInduk ?? "-"}</span>
+                          {selectedTeacher.email ? ` • ${selectedTeacher.email}` : ""}
+                        </>
+                      ) : (
+                        "Pilih guru pada panel kanan untuk menampilkan profil."
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+
             <form id="add-teacher-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-7 text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {mode === "delete" ? (
               editingId && selectedTeacher ? (
