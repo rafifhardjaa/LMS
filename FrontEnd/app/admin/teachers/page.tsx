@@ -89,10 +89,8 @@ export default function TeachersPage() {
       <FadeIn>
         <div className="flex flex-col gap-5">
           <SlideIn direction="left">
-            <div className="max-w-[440px]">
-              <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Tenaga Pendidik & Guru</h1>
-              <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data guru pengampu, distribusi mata pelajaran, status beban mengajar (Jam Pelajaran), dan akun Dapodik SMK Mataram.</p>
-            </div>
+            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Tenaga Pendidik & Guru</h1>
+            <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data guru pengampu, distribusi mata pelajaran, status beban mengajar (Jam Pelajaran), dan akun Dapodik SMK Mataram.</p>
           </SlideIn>
         </div>
       </FadeIn>
