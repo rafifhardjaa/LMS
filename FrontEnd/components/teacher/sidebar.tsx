@@ -10,7 +10,6 @@ import {
   LayoutGrid,
   LogOut,
   School,
-  Settings,
   UserCheck,
 } from "lucide-react";
 import { useLogout } from "@/hooks/use-logout";
@@ -102,14 +101,6 @@ export function GuruSidebar() {
       </div>
 
       <div className="flex flex-col gap-1 w-full px-2 pt-2 border-t border-[#EBF0F5]">
-        <a
-          href="#"
-          title="Pengaturan Akun"
-          className="w-full h-11 flex items-center gap-3 px-3 rounded-xl text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0d1c2e] transition-all"
-        >
-          <Settings className="size-[22px] flex-shrink-0" />
-          <span className="text-[14px] font-semibold truncate">Pengaturan</span>
-        </a>
         <button
           type="button"
           title="Keluar Akun"
