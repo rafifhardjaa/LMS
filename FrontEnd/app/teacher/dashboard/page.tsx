@@ -1,11 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { KpiCards } from "@/components/teacher/kpi-cards";
 import { CourseCards } from "@/components/teacher/course-cards";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 export default function GuruDashboardPage() {
+  const user = useAuthStore((state) => state.user);
+  const fullName = user?.full_name?.trim() || "Guru";
+
   return (
     <div className="w-full bg-[#EBF0F5] text-[#1E293B]">
       <div className="w-full">
@@ -16,29 +19,20 @@ export default function GuruDashboardPage() {
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="flex flex-col w-full gap-6">
-            {/* Teacher Status Bar & Breadcrumb Banner */}
             <FadeIn>
-              <div className="flex flex-wrap items-center justify-between gap-4 bg-[#F8FAFC] px-4 py-2 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-3 py-1 bg-[#FFEBEB] rounded-full">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] animate-pulse" />
-                    <span className="text-[11px] tracking-wider text-[#b71422] uppercase font-bold">
-                      Sesi Aktif Guru TA 2024/2025
-                    </span>
-                  </div>
-                  <span className="text-[#94A3B8] text-[13px] hidden lg:inline">|</span>
-                  <span className="text-[#475569] text-[13px] hidden lg:inline">
-                    Ruang Kendala Pengampu:{" "}
-                    <strong className="text-[#1E293B] font-semibold">
-                      Fisika Terapan &amp; Sains Terpadu
-                    </strong>
-                  </span>
+              <SlideIn direction="left">
+                <div className="max-w-[480px]">
+                  <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#1E293B] sm:text-[32px]">
+                    Selamat datang, {fullName}! 👋
+                  </h1>
+                  <p className="mt-2 text-sm leading-6 text-[#64748B]">
+                    Ringkasan pengelolaan pembelajaran SMK Mataram • Tahun Ajaran 2026/2027
+                  </p>
                 </div>
-              </div>
+              </SlideIn>
             </FadeIn>
 
             <SlideIn direction="left" className="flex flex-col gap-6">
-              <KpiCards />
               <CourseCards />
             </SlideIn>
           </div>
