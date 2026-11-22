@@ -14,7 +14,7 @@ export default function CoursePage() {
       <FadeIn>
         <div className="flex flex-col gap-5">
           <SlideIn direction="left">
-            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[30px]">Manajemen Mata<br className="hidden sm:block" /> Pelajaran &amp; Kurikulum</h1>
+            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[30px]">Manajemen Mata Pelajaran &amp; Kurikulum</h1>
             <p className="mt-2 text-[13px] leading-5 text-[#4e566c]">Kelola master data jurusan, mata pelajaran kejuruan &amp; umum per tingkatan, rombongan belajar, serta guru pengampu SMK Mataram.</p>
           </SlideIn>
         </div>
