@@ -37,7 +37,10 @@ export default function CoursePage() {
         </div>
       </FadeIn>
       <FadeIn>
-        <CourseMasterData refreshKey={refreshKey} />
+        <CourseMasterData
+          refreshKey={refreshKey}
+          onAddSubject={() => setAddOpen(true)}
+        />
       </FadeIn>
       <AddSubjectDialog
         open={addOpen}
