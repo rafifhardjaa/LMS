@@ -46,10 +46,10 @@ const menu = [
     title: "Presensi Siswa",
   },
   {
-    label: "Ekspor Rekap",
+    label: "Rekap Rapor",
     icon: Download,
-    href: "/teacher/ekspor-rekap",
-    title: "Ekspor Data Raport",
+    href: "/teacher/rekap-rapor",
+    title: "Rekap Rapor",
   },
 ];
 
