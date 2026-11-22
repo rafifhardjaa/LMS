@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import moment from "moment";
-import { FadeIn, SlideIn } from "@/components/ui/animations";
+import { FadeIn } from "@/components/ui/animations";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { masterDataApi } from "@/lib/api/master-data";
 import type {
@@ -13,7 +13,6 @@ import type {
   StudentSummary,
 } from "@/lib/api/master-data";
 import { AttendancePageHeader } from "./page-header";
-import { AttendanceSummaryGrid } from "./summary-grid";
 import { AttendanceTable } from "./attendance-table";
 import { AttendanceToolbar } from "./attendance-toolbar";
 import { AccessDeniedPlaceholder } from "./access-denied-placeholder";
@@ -303,10 +302,6 @@ export function AttendanceManagement() {
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <AttendancePageHeader />
-
-      <SlideIn direction="down" delay={0.05}>
-        <AttendanceSummaryGrid counts={counts} totalStudents={students.length} />
-      </SlideIn>
 
       <FadeIn delay={0.12}>
         <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
