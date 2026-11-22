@@ -1,76 +1,64 @@
-import {
-  Bell,
-  ChevronDown,
-  Menu,
-  MessageSquare,
-  Search,
-  User,
-} from "lucide-react";
-import { PulseDot } from "@/components/ui/animations";
+"use client";
+
+import { useAuthStore } from "@/lib/store/auth-store";
+
+function roleLabel(role: string | undefined): string {
+  switch (role) {
+    case "admin":
+      return "Administrator";
+    case "guru":
+    case "teacher":
+      return "Guru";
+    case "siswa":
+    case "student":
+      return "Siswa";
+    default:
+      return "Pengguna";
+  }
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
 
 export function GuruTopbar() {
+  const user = useAuthStore((state) => state.user);
+  const fullName = user?.full_name?.trim() || "Guru";
+  const avatarUrl = user?.avatar_url ?? null;
+  const role = roleLabel(user?.role);
+
   return (
-    <header className="fixed top-0 right-0 h-16 bg-white/90 backdrop-blur-xl z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)] left-64">
-      <div className="h-16 w-full px-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0d1c2e] transition-colors"
-          >
-            <Menu className="size-5" />
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="text-[14px] font-semibold text-[#1E293B]">
-              LMS - Teacher&apos;s Workspace
-            </span>
-            <span className="bg-[#FFEBEB] text-[#b71422] text-[11px] font-bold tracking-wider px-2 py-0.5 rounded-full uppercase">
-              Semester Genap 2024/2025
-            </span>
-          </div>
-        </div>
+    <header className="fixed left-64 right-0 top-0 z-40 h-16 border-b border-[#eef0f5] bg-white/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+      <div className="flex h-16 items-center justify-between gap-4 px-6">
+        <p className="min-w-0 truncate text-sm font-semibold text-[#1e293b]">
+          LMS - Teacher Workspace
+        </p>
 
-        <div className="flex items-center gap-4 flex-1 max-w-xl mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-[#94A3B8]" />
-            <input
-              type="text"
-              placeholder="Search courses, students, assignments, keywords..."
-              className="w-full h-10 pl-9 pr-4 rounded-full bg-[#F8FAFC] text-[13px] text-[#1E293B] placeholder:text-[#94A3B8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FFB3B3] transition-all"
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="hidden min-w-0 flex-col text-right sm:flex">
+            <span className="truncate text-xs font-semibold text-[#1e293b]">{fullName}</span>
+            <span className="truncate text-[11px] text-[#64748b]">{role}</span>
+          </div>
+
+          {avatarUrl ? (
+            <span
+              role="img"
+              aria-label={`Avatar ${fullName}`}
+              title={fullName}
+              className="size-9 shrink-0 rounded-full bg-cover bg-center ring-2 ring-white"
+              style={{ backgroundImage: `url(${avatarUrl})` }}
             />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            title="Chat Messages"
-            className="relative w-9 h-9 flex items-center justify-center rounded-full bg-[#F8FAFC] text-[#475569] hover:bg-[#F1F5F9] transition-colors"
-          >
-            <MessageSquare className="size-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#b71422] ring-2 ring-white" />
-          </button>
-          <button
-            type="button"
-            title="Notifications"
-            className="relative w-9 h-9 flex items-center justify-center rounded-full bg-[#F8FAFC] text-[#475569] hover:bg-[#F1F5F9] transition-colors"
-          >
-            <Bell className="size-5" />
-            <PulseDot className="bg-[#EF4444] ring-2 ring-white" wrapClassName="absolute top-1 right-1" size="size-2" />
-          </button>
-          <div className="flex items-center gap-2 pl-2 ml-0.5">
-            <div className="flex flex-col text-right hidden sm:flex">
-              <span className="text-[12px] font-semibold text-[#1E293B]">
-                Dr. Sebastian, S.Kom
-              </span>
-              <span className="text-[12px] text-[#94A3B8]">
-                Guru Pengampu Fisika &amp; IPA
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-[#b71422] flex items-center justify-center">
-              <User className="size-[18px] text-white" />
-            </div>
-            <ChevronDown className="size-[18px] text-[#94A3B8] cursor-pointer hover:text-[#1E293B]" />
-          </div>
+          ) : (
+            <span
+              title={fullName}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e5deff] text-[11px] font-bold text-[#4331a8] ring-2 ring-white"
+            >
+              {initials(fullName)}
+            </span>
+          )}
         </div>
       </div>
     </header>
