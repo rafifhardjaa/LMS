@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  CirclePlus,
   Filter,
   Loader2,
   RefreshCw,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { masterDataApi, type JadwalPelajaran } from "@/lib/api/master-data";
 import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
+import { PanelCard, PanelHeader } from "@/components/admin/master-data/panel-ui";
 
 const HARI_LIST = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"] as const;
 const PAGE_SIZE = 10;
@@ -38,7 +40,17 @@ function statusPelajaran(row: JadwalPelajaran): { label: string; className: stri
   return { label: "Bebas Bentrok", className: "bg-[#ecfdf5] text-[#059669]" };
 }
 
-export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: ReactNode; refreshKey?: number; onDataLoaded?: (rows: JadwalPelajaran[]) => void }) {
+export function ScheduleTable({
+  aside,
+  refreshKey,
+  onDataLoaded,
+  onAddSchedule,
+}: {
+  aside: ReactNode;
+  refreshKey?: number;
+  onDataLoaded?: (rows: JadwalPelajaran[]) => void;
+  onAddSchedule?: () => void;
+}) {
   const [query, setQuery] = useState("");
   const [tingkat, setTingkat] = useState("Tingkat");
   const [subGrade, setSubGrade] = useState("Sub Grade");
@@ -134,9 +146,42 @@ export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: Reac
 
   return (
     <>
-      <section className="flex flex-col gap-4 rounded-2xl border border-[#eef0f5] bg-white p-4 shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div role="tablist" aria-label="Filter hari jadwal" className="flex flex-wrap items-center gap-1.5">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <PanelCard>
+          <PanelHeader
+            title="Daftar Sesi Pembelajaran Dan Alokasi Jam"
+            subtitle="Jadwal pelajaran, alokasi jam, dan status validasi per rombel"
+            count={rows.length}
+            actions={
+              <>
+                {onAddSchedule ? (
+                  <button
+                    type="button"
+                    onClick={onAddSchedule}
+                    className="inline-flex h-9 items-center gap-2 rounded-full bg-[#5343b9] px-3 text-xs font-semibold text-white shadow-[0_6px_14px_-2px_rgba(83,67,185,0.35)] hover:bg-[#4331a8]"
+                  >
+                    <CirclePlus className="size-3.5" />
+                    Tambah Sesi Jadwal
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => reload()}
+                  disabled={loading}
+                  className="inline-flex h-9 items-center gap-2 rounded-full bg-[#f1f4f9] px-3 text-xs font-semibold text-[#4e566c] hover:bg-[#eceef3] disabled:opacity-60"
+                >
+                  {loading ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="size-3.5" />
+                  )}
+                  Muat ulang
+                </button>
+              </>
+            }
+          />
+          <div className="border-b border-[#eceef3] px-5 py-4">
+            <div role="tablist" aria-label="Filter hari jadwal" className="flex flex-wrap items-center gap-1.5">
             {dayTabs.map((item) => (
               <button
                 key={item.value}
@@ -154,8 +199,7 @@ export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: Reac
               </button>
             ))}
           </div>
-        </div>
-        <div className="flex flex-col gap-2.5 border-t border-[#eef0f5] pt-4 lg:flex-row lg:gap-3">
+          <div className="flex flex-col gap-2.5 border-t border-[#eef0f5] pt-4 lg:flex-row lg:gap-3">
           <label className="relative flex-1">
             <span className="sr-only">Cari jadwal</span>
             <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#4e566c]" />
@@ -204,20 +248,6 @@ export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: Reac
             <Filter className="size-4" /> Reset
           </button>
         </div>
-      </section>
-
-      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
-          <div className="flex flex-col justify-between gap-3 px-5 py-4 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-3">
-              <h2 className="max-w-[400px] text-base font-bold leading-5 text-[#181c20]">Daftar Sesi Pembelajaran Dan Alokasi Jam</h2>
-              <span className="rounded-full bg-[#e5deff] px-2 py-1 text-[10px] font-semibold text-[#4331a8]">{rows.length} Sesi Ditampilkan</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button type="button" aria-label="Muat ulang jadwal" onClick={() => reload()} disabled={loading} className="flex size-9 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] disabled:opacity-50">
-                <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-              </button>
-            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left">
@@ -338,7 +368,7 @@ export function ScheduleTable({ aside, refreshKey, onDataLoaded }: { aside: Reac
               </button>
             </nav>
           </div>
-        </section>
+        </PanelCard>
         {aside}
       </div>
     </>

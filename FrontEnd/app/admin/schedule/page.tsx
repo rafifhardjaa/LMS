@@ -23,7 +23,12 @@ export default function SchedulePage() {
         </SlideIn>
       </FadeIn>
       <FadeIn>
-        <ScheduleTable aside={<ScheduleSidePanels />} refreshKey={refreshKey} onDataLoaded={setSchedules} />
+        <ScheduleTable
+          aside={<ScheduleSidePanels />}
+          refreshKey={refreshKey}
+          onDataLoaded={setSchedules}
+          onAddSchedule={() => setDialogOpen(true)}
+        />
       </FadeIn>
       <AddScheduleDialog open={dialogOpen} onOpenChange={setDialogOpen} onSuccess={() => setRefreshKey((k) => k + 1)} schedules={schedules} />
     </div>
