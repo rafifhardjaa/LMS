@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -50,7 +50,21 @@ export function WaliKelasPlacementDialog({
   const [query, setQuery] = useState("");
   const [gradeId, setGradeId] = useState("");
   const [majorId, setMajorId] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const confirmResolveRef = useRef<(ok: boolean) => void>(() => {});
+
+  const askConfirm = (message: string) =>
+    new Promise<boolean>((resolve) => {
+      confirmResolveRef.current = resolve;
+      setConfirmMessage(message);
+      setConfirmOpen(true);
+    });
+
+  const respondConfirm = (ok: boolean) => {
+    confirmResolveRef.current(ok);
+    confirmResolveRef.current = () => {};
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -65,7 +79,7 @@ export function WaliKelasPlacementDialog({
       setQuery("");
       setGradeId("");
       setMajorId("");
-      setConfirmDelete(false);
+      setConfirmOpen(false);
       setLoading(true);
 
       (async () => {
@@ -205,7 +219,7 @@ export function WaliKelasPlacementDialog({
     setMode(nextMode);
     setSelectedClassId("");
     setSelectedTeacherId("");
-    setConfirmDelete(false);
+    setConfirmOpen(false);
   }
 
   function selectClass(classItem: SchoolClass) {
@@ -213,7 +227,7 @@ export function WaliKelasPlacementDialog({
     setSelectedTeacherId(
       mode === "edit" && classItem.advisorId ? classItem.advisorId : ""
     );
-    setConfirmDelete(false);
+    setConfirmOpen(false);
   }
 
   async function submit() {
@@ -260,22 +274,32 @@ export function WaliKelasPlacementDialog({
     }
   }
 
-  function handleSubmit() {
-    if (mode === "delete" && !confirmDelete) {
-      setConfirmDelete(true);
+  async function handleSubmit() {
+    if (!selectedClass) {
+      toast.error("Pilih kelas terlebih dahulu");
       return;
     }
+
+    if (mode === "delete") {
+      const ok = await askConfirm(
+        `Lepas ${selectedClass.advisorName ?? "wali kelas"} dari ${selectedClass.name}? Akun guru tidak akan dihapus.`
+      );
+      setConfirmOpen(false);
+      if (!ok) return;
+    }
+
     void submit();
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) setConfirmDelete(false);
-        onOpenChange(next);
-      }}
-    >
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) setConfirmOpen(false);
+          onOpenChange(next);
+        }}
+      >
       <DialogContent
         showCloseButton={false}
         overlayClassName="z-[80] bg-slate-900/40 backdrop-blur-sm"
@@ -368,19 +392,9 @@ export function WaliKelasPlacementDialog({
               )}
 
               {mode === "delete" ? (
-                confirmDelete ? (
-                  <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-700">
-                    <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-                    <p>
-                      Lepas <strong>{selectedClass?.advisorName ?? "wali kelas"}</strong> dari{" "}
-                      {selectedClass?.name ?? "kelas ini"}?
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-[11px] leading-5 text-[#787584]">
-                    Wali kelas akan dilepas dari rombel tanpa menghapus akun guru.
-                  </p>
-                )
+                <p className="text-[11px] leading-5 text-[#787584]">
+                  Wali kelas akan dilepas dari rombel tanpa menghapus akun guru.
+                </p>
               ) : (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-[#181c20]">
@@ -506,12 +520,53 @@ export function WaliKelasPlacementDialog({
               ? "Tambah Penempatan"
               : mode === "edit"
                 ? "Simpan Perubahan"
-                : confirmDelete
-                  ? "Ya, Lepas Wali"
-                  : "Lepas Wali"}
+                : "Lepas Wali"}
           </button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(next) => {
+          if (!next) {
+            respondConfirm(false);
+            setConfirmOpen(false);
+          }
+        }}
+      >
+        <DialogContent className="border border-[#c9c4d5]/60 bg-[#f8f9fc]">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#ffe5e5] text-[#ba1a1a]">
+              <TriangleAlert className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-bold tracking-tight text-[#181c20]">
+                Konfirmasi Lepas Wali Kelas
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-sm leading-6 text-[#787584]">
+                {confirmMessage}
+              </DialogDescription>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-end gap-2 border-t border-[#c9c4d5]/60 bg-[#f8f9fc] px-6 py-4">
+            <button
+              type="button"
+              onClick={() => respondConfirm(false)}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-[#c9c4d5]/60 bg-white px-4 py-2.5 text-sm font-semibold text-[#4e566c] transition-all hover:bg-[#eceef3] active:bg-[#d9d3f0]"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={() => respondConfirm(true)}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#ba1a1a] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-900/20 transition-all hover:bg-[#93000a] active:bg-[#7a0008]"
+            >
+              Ya, Lepas
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

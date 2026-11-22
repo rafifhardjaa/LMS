@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -123,6 +123,21 @@ export function AddPlacementDialog({
   const [filterTingkat, setFilterTingkat] = useState("Semua Tingkat");
   const [filterSubGrade, setFilterSubGrade] = useState("Semua Sub Grade");
   const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const confirmResolveRef = useRef<(ok: boolean) => void>(() => {});
+
+  const askConfirm = (message: string) =>
+    new Promise<boolean>((resolve) => {
+      confirmResolveRef.current = resolve;
+      setConfirmMessage(message);
+      setConfirmOpen(true);
+    });
+
+  const respondConfirm = (ok: boolean) => {
+    confirmResolveRef.current(ok);
+    confirmResolveRef.current = () => {};
+  };
 
   const selectedTeacher = teachers.find((teacher) => teacher.id === form.teacherId);
   const selectedSubject = subjects.find((subject) => subject.id === form.subjectId);
@@ -242,6 +257,7 @@ export function AddPlacementDialog({
     setBaseline(null);
     setFilterTingkat("Semua Tingkat");
     setFilterSubGrade("Semua Sub Grade");
+    setConfirmOpen(false);
   };
 
   const handleSelectAssignment = (assignmentId: string) => {
@@ -429,6 +445,13 @@ export function AddPlacementDialog({
         });
         return;
       }
+      const ok = await askConfirm(
+        `Hapus penempatan ${selectedTeacher?.fullName ?? "guru"} pada ${
+          selectedSubject?.name ?? "mata pelajaran"
+        } di ${selectedAssignment?.className ?? "kelas terpilih"}? Tindakan ini tidak bisa dibatalkan.`
+      );
+      setConfirmOpen(false);
+      if (!ok) return;
       setSubmitting(true);
       try {
         const res = await masterDataApi.teacherAssignments.remove(editingId);
@@ -509,13 +532,14 @@ export function AddPlacementDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) resetState();
-        onOpenChange(next);
-      }}
-    >
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) resetState();
+          onOpenChange(next);
+        }}
+      >
       <DialogContent
         showCloseButton={false}
         overlayClassName="bg-slate-900/60 backdrop-blur-sm supports-backdrop-filter:backdrop-blur-sm"
@@ -925,6 +949,46 @@ export function AddPlacementDialog({
           </div>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(next) => {
+          if (!next) respondConfirm(false);
+        }}
+      >
+        <DialogContent className="border border-[#c9c4d5]/60 bg-[#f8f9fc]">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#ffe5e5] text-[#ba1a1a]">
+              <Trash2 className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-bold tracking-tight text-[#181c20]">
+                Konfirmasi Hapus Penempatan
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-sm leading-6 text-[#787584]">
+                {confirmMessage}
+              </DialogDescription>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-end gap-2 border-t border-[#c9c4d5]/60 bg-[#f8f9fc] px-6 py-4">
+            <button
+              type="button"
+              onClick={() => respondConfirm(false)}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-[#c9c4d5]/60 bg-white px-4 py-2.5 text-sm font-semibold text-[#4e566c] transition-all hover:bg-[#eceef3] active:bg-[#d9d3f0]"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={() => respondConfirm(true)}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#ba1a1a] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-900/20 transition-all hover:bg-[#93000a] active:bg-[#7a0008]"
+            >
+              Ya, Hapus
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
