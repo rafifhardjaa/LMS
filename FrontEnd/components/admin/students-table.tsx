@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { StudentSummary, Major, GradeLevel, SchoolClass } from "@/lib/api/master-data";
@@ -10,13 +10,6 @@ import { SearchableDropdown, type JurusanOption } from "@/components/admin/searc
 type SsoFilter = "" | "active" | "inactive";
 
 const PAGE_SIZE = 20;
-
-function pageWindow(current: number, total: number): number[] {
-  const size = Math.min(5, total);
-  let start = Math.max(1, current - Math.floor(size / 2));
-  start = Math.min(start, total - size + 1);
-  return Array.from({ length: size }, (_, index) => start + index);
-}
 
 type StudentsTableProps = {
   onAddStudent: () => void;
@@ -70,7 +63,7 @@ export function StudentsTable({ onAddStudent, onPlacement }: StudentsTableProps)
     };
   }, []);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -96,9 +89,14 @@ export function StudentsTable({ onAddStudent, onPlacement }: StudentsTableProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, jurusan, tingkat, rombel, sso]);
 
-  useEffect(() => { void load(); }, [query, jurusan, tingkat, rombel, sso]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [load]);
 
   const reset = () => {
     setQuery("");
@@ -149,8 +147,6 @@ export function StudentsTable({ onAddStudent, onPlacement }: StudentsTableProps)
     () => students.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
     [students, currentPage]
   );
-  const startRow = students.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endRow = Math.min(currentPage * PAGE_SIZE, students.length);
 
   if (loading && students.length === 0) {
     return <div className="flex items-center justify-center py-16 text-sm text-[#787584]">Memuat siswa…</div>;
@@ -247,14 +243,26 @@ export function StudentsTable({ onAddStudent, onPlacement }: StudentsTableProps)
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col gap-3 bg-[#f8f9fc] px-6 py-4 text-[11px] text-[#4e566c] lg:flex-row lg:items-center lg:justify-between">
-        <span>Menampilkan <b className="font-semibold text-[#181c20]">{startRow}–{endRow}</b> dari <b className="font-semibold text-[#181c20]">{students.length} Siswa</b></span>
-        <nav aria-label="Paginasi siswa" className="flex items-center gap-1 text-sm">
-          <button type="button" aria-label="Halaman sebelumnya" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#eceef3] disabled:opacity-40"><ChevronLeft className="size-4" /></button>
-          {pageWindow(currentPage, totalPages).map((n) => (
-            <button key={n} type="button" aria-current={currentPage === n ? "page" : undefined} onClick={() => setPage(n)} className={`size-8 rounded-full font-semibold ${currentPage === n ? "bg-[#4331a8] text-white" : "text-[#181c20] hover:bg-[#eceef3]"}`}>{n}</button>
-          ))}
-          <button type="button" aria-label="Halaman berikutnya" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)} className="flex size-8 items-center justify-center rounded-full text-[#181c20] hover:bg-[#eceef3] disabled:opacity-40"><ChevronRight className="size-4" /></button>
+      <div className="flex flex-col gap-2 border-t border-[#eceef3] px-5 py-3 text-[11px] text-[#787584] sm:flex-row sm:items-center sm:justify-between">
+        <span>Halaman {currentPage} dari {totalPages}</span>
+        <nav aria-label="Paginasi siswa" className="flex items-center gap-2">
+          <button type="button" aria-label="Halaman sebelumnya" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} className="flex size-8 items-center justify-center rounded-full text-[#787584] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronLeft className="size-4" /></button>
+          <label className="flex items-center gap-2">
+            <span className="sr-only">Nomor halaman</span>
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={currentPage}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                if (!Number.isFinite(next)) return;
+                setPage(Math.min(totalPages, Math.max(1, Math.round(next))));
+              }}
+              className="h-8 w-16 rounded-full border border-[#e0e2e7] bg-white px-3 text-center text-[11px] font-semibold text-[#4e566c] outline-none focus:ring-2 focus:ring-[#6c5dd3]/30"
+            />
+          </label>
+          <button type="button" aria-label="Halaman berikutnya" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)} className="flex size-8 items-center justify-center rounded-full text-[#4e566c] hover:bg-[#f1f4f9] disabled:opacity-40"><ChevronRight className="size-4" /></button>
         </nav>
       </div>
     </section>
