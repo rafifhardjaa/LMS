@@ -15,7 +15,7 @@ export default function GuruLayout({
   return (
     <div
       style={{ fontFamily: inter.style.fontFamily }}
-      className="min-h-screen bg-[#EBF0F5] text-[#0d1c2e] antialiased relative overflow-x-hidden"
+      className="teacher-scrollbar-hide min-h-screen bg-[#EBF0F5] text-[#0d1c2e] antialiased relative overflow-x-hidden"
     >
       {/* Decorative ambient blobs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
