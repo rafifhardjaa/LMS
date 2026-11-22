@@ -24,7 +24,7 @@ export function ExportPageHeader({
     <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
       <div>
         <h1 className="text-[28px] font-bold leading-tight tracking-[-0.03em] text-[#1E293B]">
-          Pusat Ekspor Rekap &amp; Laporan Akademik
+          Pusat Rekap Rapor &amp; Laporan Akademik
         </h1>
         <p className="mt-1.5 max-w-[760px] text-sm leading-6 text-[#475569]">
           Unduh rekapitulasi data nilai rapor siswa, leger kurikulum merdeka,
