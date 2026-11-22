@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { StudentSummary, Major, GradeLevel, SchoolClass } from "@/lib/api/master-data";
-import { ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, Search, UserPlus, UserRoundCheck } from "lucide-react";
 import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
 
 type SsoFilter = "" | "active" | "inactive";
@@ -17,7 +18,12 @@ function pageWindow(current: number, total: number): number[] {
   return Array.from({ length: size }, (_, index) => start + index);
 }
 
-export function StudentsTable() {
+type StudentsTableProps = {
+  onAddStudent: () => void;
+  onPlacement: () => void;
+};
+
+export function StudentsTable({ onAddStudent, onPlacement }: StudentsTableProps) {
   const [query, setQuery] = useState("");
   const [jurusan, setJurusan] = useState("");
   const [tingkat, setTingkat] = useState("");
@@ -152,9 +158,31 @@ export function StudentsTable() {
 
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border border-[#eef0f5] bg-white shadow-[0_8px_24px_rgba(32,44,90,0.04)]">
-      <div className="flex flex-wrap items-center gap-2 px-6 pt-5 pb-4">
-        <h2 className="text-lg font-bold text-[#181c20]">Daftar Siswa & Peserta Didik</h2>
-        <span className="rounded-full bg-[#e5deff] px-2 py-0.5 text-[11px] font-semibold text-[#4331a8]">{students.length} Total</span>
+      <div className="flex flex-col gap-3 border-b border-[#eceef3] px-6 pt-5 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-bold text-[#181c20]">Daftar Siswa & Peserta Didik</h2>
+          <span className="rounded-full bg-[#e5deff] px-2 py-0.5 text-[11px] font-semibold text-[#4331a8]">{students.length} Total</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <motion.button
+            type="button"
+            onClick={onPlacement}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
+          >
+            <UserRoundCheck className="size-4 text-[#5343b9]" /> Penempatan
+          </motion.button>
+          <motion.button
+            type="button"
+            onClick={onAddStudent}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
+          >
+            <UserPlus className="size-4" /> + Tambah Siswa Baru
+          </motion.button>
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-3 border-b border-[#eceef3] px-6 pb-5 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_0.8fr_0.8fr_0.7fr_auto]">
         <label className="relative">

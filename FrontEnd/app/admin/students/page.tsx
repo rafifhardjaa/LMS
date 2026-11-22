@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserPlus, UserRoundCheck } from "lucide-react";
-import { motion } from "framer-motion";
 import { StudentsTable } from "@/components/admin/students-table";
 import { AddStudentDialog } from "@/components/admin/add-student-dialog";
 import { AddStudentPlacementDialog } from "@/components/admin/add-student-placement-dialog";
-import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
 
 export default function StudentsPage() {
@@ -38,34 +36,14 @@ export default function StudentsPage() {
               <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data {totalStudents !== null ? totalStudents.toLocaleString("id-ID") : "…"} siswa aktif, distribusi rombel kelas, status aktivasi akun SSO Dapodik, dan rekap kelengkapan administrasi peserta didik SMK Mataram.</p>
             </div>
           </SlideIn>
-          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-3">
-            <StaggerItem>
-              <motion.button
-                type="button"
-                onClick={() => setPlacementOpen(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                <UserRoundCheck className="size-4 text-[#5343b9]" /> Penempatan
-              </motion.button>
-            </StaggerItem>
-            <StaggerItem>
-              <motion.button
-                type="button"
-                onClick={() => setAddStudentOpen(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                <UserPlus className="size-4" /> + Tambah Siswa Baru
-              </motion.button>
-            </StaggerItem>
-          </StaggerChildren>
         </div>
       </FadeIn>
       <FadeIn>
-        <StudentsTable key={refreshKey} />
+        <StudentsTable
+          key={refreshKey}
+          onAddStudent={() => setAddStudentOpen(true)}
+          onPlacement={() => setPlacementOpen(true)}
+        />
       </FadeIn>
 
       <AddStudentDialog
