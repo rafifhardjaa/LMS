@@ -25,6 +25,7 @@ interface SearchableDropdownProps {
   searchPlaceholder?: string;
   emptyMessage?: string;
   variant?: "admin" | "ghost" | "light";
+  textClassName?: string;
 }
 
 export function SearchableDropdown({
@@ -37,6 +38,7 @@ export function SearchableDropdown({
   searchPlaceholder = "Cari jurusan atau keahlian...",
   emptyMessage = "Jurusan tidak ditemukan.",
   variant = "admin",
+  textClassName,
 }: SearchableDropdownProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -69,7 +71,7 @@ export function SearchableDropdown({
   };
 
   return (
-    <div ref={containerRef} className={`relative w-full font-sans text-slate-800 ${open ? "z-50" : ""}`}>
+    <div ref={containerRef} className={`relative w-full text-slate-800 ${open ? "z-50" : ""}`}>
       <span className="sr-only">{label}</span>
       <button
         type="button"
@@ -94,7 +96,7 @@ export function SearchableDropdown({
       >
         <div className="flex min-w-0 items-center gap-2.5">
           <span
-            className={`break-words font-semibold ${variant === "ghost" ? "text-white" : "text-slate-800"}`}
+            className={`break-words font-semibold ${variant === "ghost" ? "text-white" : (textClassName ?? "text-slate-800")}`}
             title={selected.label}
           >
             {selected.label}
@@ -142,7 +144,7 @@ export function SearchableDropdown({
                       ? variant === "light"
                         ? "bg-[#b71422]/10 font-semibold text-[#b71422]"
                         : "bg-[#6C5DD3]/10 font-semibold text-[#6C5DD3]"
-                      : "font-medium text-slate-700 hover:bg-slate-50"
+                      : `font-medium ${textClassName ?? "text-slate-700"} hover:bg-slate-50`
                   }`}
                 >
                   <div className="flex items-center gap-2">
