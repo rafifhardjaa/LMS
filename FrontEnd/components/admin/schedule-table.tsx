@@ -92,7 +92,7 @@ export function ScheduleTable({
     return () => {
       cancelled = true;
     };
-  }, [activeRefreshKey]);
+  }, [activeRefreshKey, onDataLoaded]);
 
   const reload = () => {
     setLoading(true);
