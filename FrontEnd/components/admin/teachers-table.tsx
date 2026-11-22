@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { masterDataApi } from "@/lib/api/master-data";
 import { Subject, TeacherSummary } from "@/lib/api/master-data";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -10,6 +11,8 @@ import {
   ChevronRight,
   RefreshCw,
   Search,
+  UserPlus,
+  UserRoundCheck,
 } from "lucide-react";
 
 const statusStyle: Record<string, string> = {
@@ -64,7 +67,19 @@ function teacherMajors(
   return [...majors];
 }
 
-export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; onTeacherAdded?: () => void }) {
+type TeachersTableProps = {
+  isAdmin: boolean;
+  onTeacherAdded?: () => void;
+  onAddTeacher: () => void;
+  onPlacement: () => void;
+};
+
+export function TeachersTable({
+  isAdmin,
+  onTeacherAdded,
+  onAddTeacher,
+  onPlacement,
+}: TeachersTableProps) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [fieldFilter, setFieldFilter] = useState("");
@@ -188,6 +203,26 @@ export function TeachersTable({ isAdmin, onTeacherAdded }: { isAdmin: boolean; o
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-bold text-[#181c20]">Daftar Pendidik & Pengampu</h2>
           <span className="rounded-full bg-[#e5deff] px-2.5 py-1 text-[11px] font-semibold text-[#4331a8]">Total {rows.length} Guru</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <motion.button
+            type="button"
+            onClick={onPlacement}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
+          >
+            <UserRoundCheck className="size-4 text-[#6c5dd3]" /> Penempatan
+          </motion.button>
+          <motion.button
+            type="button"
+            onClick={onAddTeacher}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
+          >
+            <UserPlus className="size-4" /> + Tambah Guru Baru
+          </motion.button>
         </div>
       </div>
       <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 md:flex-row md:flex-wrap md:items-center">

@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, UserRoundCheck } from "lucide-react";
-import { motion } from "framer-motion";
 import { TeachersTable } from "@/components/admin/teachers-table";
 import { AddTeacherDialog } from "@/components/admin/add-teacher-dialog";
 import { AddPlacementDialog } from "@/components/admin/add-placement-dialog";
-import { FadeIn, SlideIn, StaggerChildren, StaggerItem } from "@/components/ui/animations";
+import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { useAuthStore } from "@/lib/store/auth-store";
 
 export default function TeachersPage() {
@@ -19,42 +17,24 @@ export default function TeachersPage() {
   return (
     <div className="flex w-full flex-col gap-7 pt-4">
       <FadeIn>
-        <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
+        <div className="flex flex-col gap-5">
           <SlideIn direction="left">
             <div className="max-w-[440px]">
               <h1 className="text-[28px] font-bold leading-tight tracking-[-0.7px] text-[#181c20] sm:text-[32px]">Manajemen Tenaga Pendidik & Guru</h1>
               <p className="mt-2 text-sm leading-6 text-[#4e566c]">Kelola data guru pengampu, distribusi mata pelajaran, status beban mengajar (Jam Pelajaran), dan akun Dapodik SMK Mataram.</p>
             </div>
           </SlideIn>
-          <StaggerChildren staggerDelay={0.08} delayChildren={0.15} className="flex flex-wrap items-center gap-3">
-            <StaggerItem>
-              <motion.button
-                type="button"
-                onClick={() => setPlacementOpen(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[#e0e2e7] bg-white px-4 text-sm font-semibold text-[#181c20] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:bg-[#f8f9fc]"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                <UserRoundCheck className="size-4 text-[#6c5dd3]" /> Penempatan
-              </motion.button>
-            </StaggerItem>
-            <StaggerItem>
-              <motion.button
-                type="button"
-                onClick={() => setAddTeacherOpen(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-full bg-[#6c5dd3] px-5 text-sm font-semibold text-white shadow-[0_6px_14px_-2px_rgba(108,93,211,0.35)] hover:bg-[#5343b9]"
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                <UserPlus className="size-4" /> + Tambah Guru Baru
-              </motion.button>
-            </StaggerItem>
-          </StaggerChildren>
         </div>
       </FadeIn>
 
       <FadeIn>
-        <TeachersTable key={refreshKey} isAdmin={isAdmin} onTeacherAdded={() => setRefreshKey(k => k + 1)} />
+        <TeachersTable
+          key={refreshKey}
+          isAdmin={isAdmin}
+          onTeacherAdded={() => setRefreshKey(k => k + 1)}
+          onAddTeacher={() => setAddTeacherOpen(true)}
+          onPlacement={() => setPlacementOpen(true)}
+        />
       </FadeIn>
 
       <AddTeacherDialog open={addTeacherOpen} onOpenChange={setAddTeacherOpen} onSuccess={() => setRefreshKey(k => k + 1)} />
