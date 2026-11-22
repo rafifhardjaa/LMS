@@ -1,19 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, Users } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { FadeIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
 import type { JadwalPelajaran } from "@/lib/api/master-data";
-import { AdminPanel } from "./admin-panel";
 import { CourseTable } from "./course-table";
-import { CurriculumPanel } from "./curriculum-panel";
-import { DapodikPanel } from "./dapodik-panel";
-import { KpiGrid } from "./kpi-grid";
 import { ModulesHeader } from "./modules-header";
-import { adminItems, curriculumModules } from "./data";
-import type { Kpi } from "./types";
+import { ScheduleAnalyticsPanel } from "./schedule-analytics-panel";
 
 export function ModulesManagement() {
   const [rows, setRows] = useState<JadwalPelajaran[]>([]);
@@ -48,41 +42,9 @@ export function ModulesManagement() {
     };
   }, []);
 
-  const subjectCount = new Set(rows.map((row) => row.subjectId)).size;
-  const classCount = new Set(rows.map((row) => row.classId)).size;
-  const majorCount = new Set(
-    rows.map((row) => row.majorCode).filter(Boolean),
-  ).size;
-
-  const kpis: Kpi[] = [
-    {
-      label: "Total Mata Pelajaran",
-      value: String(subjectCount),
-      unit: "Mapel Diampu",
-      unitClassName: "text-[#b71422]",
-      icon: BookOpen,
-      tone: "primary",
-      footerLeft: `${majorCount} Jurusan`,
-      dotClassName: "bg-[#22C55E]",
-    },
-    {
-      label: "Rombel Kelas Diajar",
-      value: String(classCount),
-      unit: "Kelas Aktif",
-      unitClassName: "text-[#006398]",
-      icon: Users,
-      tone: "blue",
-      footerLeft: `${rows.length} Sesi Aktif`,
-      footerRight: `${majorCount} Jurusan`,
-      footerRightClassName: "text-[#1E293B]",
-    },
-  ];
-
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <ModulesHeader />
-
-      <KpiGrid kpis={kpis} />
 
       <AnimatePresence mode="wait">
         {error ? (
@@ -112,20 +74,11 @@ export function ModulesManagement() {
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
-        <FadeIn delay={0.1} className="lg:col-span-7">
-          <CurriculumPanel modules={curriculumModules} />
+      {!loading && !error ? (
+        <FadeIn delay={0.1}>
+          <ScheduleAnalyticsPanel rows={rows} />
         </FadeIn>
-
-        <FadeIn delay={0.16} className="flex flex-col gap-4 lg:col-span-5">
-          <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
-            <AdminPanel items={adminItems} />
-          </motion.div>
-          <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
-            <DapodikPanel courseCount={classCount} />
-          </motion.div>
-        </FadeIn>
-      </div>
+      ) : null}
     </div>
   );
 }
