@@ -16,6 +16,13 @@ function initials(name: string): string {
     .join("");
 }
 
+type Accent = "teacher" | "student";
+
+const ACCENT_STYLES: Record<Accent, { avatarBg: string; avatarText: string }> = {
+  teacher: { avatarBg: "bg-[#FFEBEB]", avatarText: "text-[#b71422]" },
+  student: { avatarBg: "bg-[#d4eee7]", avatarText: "text-[#0d5c52]" },
+};
+
 type PesertaTableProps = {
   students: StudentSummary[];
   teacherName?: string | null;
@@ -23,6 +30,7 @@ type PesertaTableProps = {
   majorName?: string | null;
   loading: boolean;
   error: string | null;
+  accent?: Accent;
 };
 
 export function PesertaTable({
@@ -32,12 +40,14 @@ export function PesertaTable({
   majorName,
   loading,
   error,
+  accent = "teacher",
 }: PesertaTableProps) {
+  const styles = ACCENT_STYLES[accent];
   return (
     <section className="flex min-h-64 flex-1 flex-col overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
       <div className="flex flex-col gap-3 border-b border-[#E2E8F0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#FFEBEB] text-[13px] font-bold text-[#b71422]">
+          <div className={`flex size-10 shrink-0 items-center justify-center rounded-full ${styles.avatarBg} ${styles.avatarText} text-[13px] font-bold`}>
             {initials(teacherName ?? "")}
           </div>
           <div className="min-w-0">
