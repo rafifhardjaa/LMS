@@ -260,6 +260,9 @@ selalu dipaksa ke user yang login.
 | `PUT` | `/api/v1/course-details/:subjectId/assignments/:id` | admin, guru | `{ classId?, meetingId?, type?, title?, description?, startAt?, deadlineAt? }` | Perbarui tugas/kuis |
 | `DELETE` | `/api/v1/course-details/:subjectId/assignments/:id` | admin, guru | params `{ subjectId, id }` | Hapus tugas/kuis dari pertemuan |
 
+> Untuk mengirim file jawaban sebagai siswa lewat API (tanpa UI), lihat
+> **Submit tugas/kuis sebagai siswa (tanpa UI)** pada bagian Uploads.
+
 ---
 
 ## Modules — `/api/v1/modules`
@@ -338,6 +341,96 @@ Slot penyimpanan pertemuan (`:slot`): `materi`, `tugasFile`, `tugasSubmission`,
 | `DELETE` | `/api/v1/uploads/storage/:slot/:id` | semua (aturan slot) | params `{ slot, id }` | Hard delete file; baris mirror guru ikut terhapus via FK cascade |
 | `GET` | `/api/v1/uploads/:id` | semua | params `{ id }` | Ambil (stream) file berdasarkan ID |
 | `GET` | `/api/v1/uploads/storage/:slot/:id` | semua | params `{ slot, id }` | Ambil (stream) file slot pertemuan |
+
+### Submit tugas/kuis sebagai siswa (tanpa UI)
+
+Backend sudah menerima pengumpulan file siswa; yang belum tersedia hanya form di UI siswa.
+Contoh berikut bisa dipakai sementara.
+
+**1. Login dan simpan JWT**
+
+```bash
+curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"identifier":"NIS_ATAU_EMAIL","password":"PASSWORD"}'
+# -> { "success": true, "data": "<JWT>", "must_change_password": false, ... }
+
+export TOKEN='<JWT dari field data>'
+```
+
+Jika `must_change_password: true`, ganti password dulu lewat
+`PUT /api/v1/auth/password` — jika tidak, endpoint upload akan ditolak `403`.
+
+**2. Cari `assignmentId` dan `meetingId`**
+
+```bash
+curl -s \
+  'http://localhost:3000/api/v1/course-details/SUBJECT_UUID/assignments?classId=CLASS_UUID&meetingId=MEETING_UUID&type=tugas' \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Endpoint ini mengizinkan role `siswa`. Jika `meetingId` belum diketahui, minta dari guru:
+endpoint daftar pertemuan `/api/v1/course-details/:subjectId/meetings` hanya untuk
+`admin`/`guru`.
+
+**3. Upload file jawaban**
+
+Langsung ke backend (port `3000`):
+
+```bash
+curl -X POST 'http://localhost:3000/api/v1/uploads/storage/tugasSubmission' \
+  -H "Authorization: Bearer $TOKEN" \
+  -F 'file=@/path/jawaban.pdf;type=application/pdf' \
+  -F 'meetingId=MEETING_UUID' \
+  -F 'assignmentId=ASSIGNMENT_UUID'
+```
+
+Atau lewat BFF frontend (port `3001`) memakai cookie `lms_token`:
+
+```bash
+curl -X POST 'http://localhost:3001/api/v1/uploads/storage/tugasSubmission' \
+  -b 'lms_token=JWT' \
+  -F 'file=@/path/jawaban.pdf;type=application/pdf' \
+  -F 'meetingId=MEETING_UUID' \
+  -F 'assignmentId=ASSIGNMENT_UUID'
+```
+
+Gunakan slot `kuisSubmission` untuk kuis. **Jangan** pakai `POST /api/v1/uploads`
+(generic) — itu flow upload lain, bukan pengumpulan tugas.
+
+Respons sukses `201`:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "...",
+    "fileUrl": "http://localhost:3000/api/v1/uploads/storage/tugasSubmission/<id>",
+    "submissionId": "...",
+    "assignmentId": "...",
+    "checksumSha256": "...",
+    "sizeBytes": 12345
+  }
+}
+```
+
+**Field & aturan penting**
+
+| Field | Wajib | Catatan |
+|---|---|---|
+| `file` | ya | Maks. 10 MB; PDF, DOCX, XLSX, CSV, ZIP, RAR |
+| `meetingId` | ya | UUID pertemuan yang harus ada di database |
+| `assignmentId` | ya untuk slot submission | UUID tugas/kuis yang harus ada di database |
+| `submissionId` | tidak | Jika kosong, server membuat UUID baru |
+| `studentId` | tidak | Diabaikan untuk `siswa`; diambil dari JWT |
+
+**Keterbatasan saat ini**
+
+- Backend tidak mengecek bahwa `assignmentId` benar-benar milik `meetingId` yang dikirim.
+- Tidak ada pengecekan deadline, enrollment, atau kesesuaian slot `tugas`/`kuis`.
+- Tidak ada deduplikasi: upload ulang selalu membuat baris `submissionId` baru.
+- Kirim `submissionId` yang sama hanya jika memang ingin menimpa — tabellanya memiliki
+  unique constraint dan duplikasi akan menyebabkan error.
 
 ---
 
