@@ -136,6 +136,7 @@ type FileDropzoneProps = {
   deleting?: boolean;
   accent?: DropzoneAccent;
   showSavedFiles?: boolean;
+  labelClassName?: string;
 };
 
 export function FileDropzone({
@@ -153,6 +154,7 @@ export function FileDropzone({
   deleting = false,
   accent = "materi",
   showSavedFiles = true,
+  labelClassName,
 }: FileDropzoneProps) {
   const [pendingDelete, setPendingDelete] = useState<PendingFile | null>(null);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -328,7 +330,9 @@ export function FileDropzone({
         <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[#F1F5F9] text-[#64748B]">
           <Icon className="size-3.5" />
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#1E293B]">
+        <span
+          className={`min-w-0 flex-1 truncate text-[13px] font-semibold text-[#1E293B] ${labelClassName ?? ""}`}
+        >
           {label}
         </span>
         {files.length > 0 && (
