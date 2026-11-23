@@ -100,6 +100,13 @@ function fileColumns() {
   };
 }
 
+function assignmentFileColumns() {
+  return {
+    ...fileColumns(),
+    assignmentId: uuid("assignment_id"),
+  };
+}
+
 function submissionMetaColumns() {
   return {
     ...metadataColumns(),
@@ -140,20 +147,26 @@ export const guruUploadsMateri = guruStorage.table(
 );
 export const guruUploadsTugas = guruStorage.table(
   "uploads_tugas",
-  fileColumns(),
+  assignmentFileColumns(),
   (table) => ({
     meetingIdx: index("guru_uploads_tugas_meeting_idx").on(table.meetingId),
     uploaderIdx: index("guru_uploads_tugas_uploader_idx").on(table.uploadedBy),
     deletedIdx: index("guru_uploads_tugas_deleted_idx").on(table.isDeleted),
+    assignmentIdx: index("guru_uploads_tugas_assignment_idx").on(
+      table.assignmentId,
+    ),
   }),
 );
 export const guruUploadsKuis = guruStorage.table(
   "uploads_kuis",
-  fileColumns(),
+  assignmentFileColumns(),
   (table) => ({
     meetingIdx: index("guru_uploads_kuis_meeting_idx").on(table.meetingId),
     uploaderIdx: index("guru_uploads_kuis_uploader_idx").on(table.uploadedBy),
     deletedIdx: index("guru_uploads_kuis_deleted_idx").on(table.isDeleted),
+    assignmentIdx: index("guru_uploads_kuis_assignment_idx").on(
+      table.assignmentId,
+    ),
   }),
 );
 

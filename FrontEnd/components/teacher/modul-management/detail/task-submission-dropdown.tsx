@@ -19,6 +19,12 @@ import {
 import moment from "moment";
 import { toast } from "sonner";
 import type { AssignmentSummary } from "@/lib/api/master-data";
+import {
+  fileBadgeClass,
+  fileExtension,
+  formatSize,
+  type PendingFile,
+} from "./file-dropzone";
 import Calendar from "./Calendar";
 import {
   Dialog,
@@ -39,6 +45,7 @@ export type TaskDraft = {
   deadline: string;
   startTime?: string;
   deadlineTime?: string;
+  fileIds?: string[];
 };
 
 type TaskSubmissionDropdownProps = {
@@ -48,6 +55,7 @@ type TaskSubmissionDropdownProps = {
   onTasksChange: (tasks: TaskDraft[]) => void;
   summaries?: Record<string, AssignmentSummary>;
   totalStudents: number;
+  files?: PendingFile[];
 };
 
 const KIND_STYLES: Record<
@@ -132,6 +140,7 @@ const EMPTY_FORM = {
   startTime: "",
   deadline: "",
   deadlineTime: "",
+  fileIds: [] as string[],
 };
 
 export function TaskSubmissionDropdown({
@@ -141,14 +150,17 @@ export function TaskSubmissionDropdown({
   onTasksChange,
   summaries = {},
   totalStudents,
+  files = [],
 }: TaskSubmissionDropdownProps) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [filesOpen, setFilesOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [openDate, setOpenDate] = useState<"startDate" | "deadline" | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const filesRef = useRef<HTMLDivElement>(null);
   const datePopoverRef = useRef<HTMLDivElement>(null);
 
   const style = KIND_STYLES[kind];
@@ -156,6 +168,10 @@ export function TaskSubmissionDropdown({
 
   const selectedTask =
     tasks.find((task) => task.id === selectedTaskId) ?? tasks[0] ?? null;
+
+  const savedFiles = files.filter(
+    (file) => file.status === "saved" && Boolean(file.id),
+  );
 
   const summary = selectedTask ? summaries[selectedTask.id] : undefined;
   const submitted = summary ? Math.min(summary.submitted, totalStudents) : 0;
@@ -176,6 +192,22 @@ export function TaskSubmissionDropdown({
   }, [menuOpen]);
 
   useEffect(() => {
+    if (!filesOpen) return;
+
+    const handleOutside = (event: MouseEvent) => {
+      if (
+        filesRef.current &&
+        !filesRef.current.contains(event.target as Node)
+      ) {
+        setFilesOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [filesOpen]);
+
+  useEffect(() => {
     if (!openDate) return;
 
     const handleOutside = (event: MouseEvent) => {
@@ -193,12 +225,17 @@ export function TaskSubmissionDropdown({
 
   function openAdd() {
     setForm(EMPTY_FORM);
+    setFilesOpen(false);
     setModalMode("add");
     setMenuOpen(false);
   }
 
   function openEdit() {
     if (!selectedTask) return;
+    const assignedFileIds = savedFiles
+      .filter((file) => file.assignmentId === selectedTask.serverId)
+      .map((file) => file.id as string);
+
     setForm({
       title: selectedTask.title,
       description: selectedTask.description,
@@ -206,9 +243,20 @@ export function TaskSubmissionDropdown({
       startTime: selectedTask.startTime ?? "",
       deadline: selectedTask.deadline,
       deadlineTime: selectedTask.deadlineTime ?? "",
+      fileIds: selectedTask.fileIds ?? assignedFileIds,
     });
+    setFilesOpen(false);
     setModalMode("edit");
     setMenuOpen(false);
+  }
+
+  function toggleFileId(fileId: string) {
+    setForm((current) => ({
+      ...current,
+      fileIds: current.fileIds.includes(fileId)
+        ? current.fileIds.filter((id) => id !== fileId)
+        : [...current.fileIds, fileId],
+    }));
   }
 
   function handleDateSelect(field: "startDate" | "deadline", date: Date) {
@@ -250,6 +298,7 @@ export function TaskSubmissionDropdown({
     }
 
     setModalMode(null);
+    setFilesOpen(false);
     setForm(EMPTY_FORM);
   }
 
@@ -560,6 +609,88 @@ export function TaskSubmissionDropdown({
                   className="w-full rounded-xl border border-[#DCE5EE] bg-white px-3 py-2 text-[13px] text-[#1E293B] outline-none transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
                 />
               </label>
+
+              <div ref={filesRef} className="relative flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">
+                  File {kind}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFilesOpen((current) => !current)}
+                  aria-expanded={filesOpen}
+                  className="flex h-9 w-full items-center justify-between rounded-xl border border-[#DCE5EE] bg-white px-3 text-[13px] text-[#1E293B] transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
+                >
+                  <span className={form.fileIds.length ? "" : "text-[#94A3B8]"}>
+                    {form.fileIds.length > 0
+                      ? `${form.fileIds.length} file dipilih`
+                      : `Pilih file ${kind}`}
+                  </span>
+                  <ChevronDown
+                    className={`size-4 text-[#94A3B8] transition ${
+                      filesOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {filesOpen && (
+                  <div className="absolute left-0 right-0 top-10 z-30 max-h-56 overflow-y-auto rounded-xl border border-[#E2E8F0] bg-white p-2 shadow-[0_12px_24px_-4px_rgba(30,41,59,0.15)]">
+                    {savedFiles.length === 0 ? (
+                      <p className="px-2 py-3 text-center text-[12px] text-[#94A3B8]">
+                        Belum ada file {kind} yang diunggah
+                      </p>
+                    ) : (
+                      savedFiles.map((file) => {
+                        const fileId = file.id as string;
+                        const usedByOther =
+                          Boolean(file.assignmentId) &&
+                          file.assignmentId !==
+                            (modalMode === "edit"
+                              ? selectedTask?.serverId
+                              : null);
+
+                        return (
+                          <label
+                            key={file.clientId}
+                            className={`flex items-start gap-2 rounded-lg px-2 py-2 transition ${
+                              usedByOther
+                                ? "cursor-not-allowed opacity-50"
+                                : "hover:bg-[#F8FAFC]"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={form.fileIds.includes(fileId)}
+                              disabled={usedByOther}
+                              onChange={() => toggleFileId(fileId)}
+                              className="mt-0.5 size-3.5 shrink-0 accent-[#b71422]"
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[12px] font-semibold text-[#1E293B]">
+                                {file.name}
+                              </span>
+                              <span className="mt-0.5 flex items-center gap-1.5 text-[10px] font-medium text-[#94A3B8]">
+                                <span
+                                  className={`rounded px-1 py-0.5 text-[9px] font-extrabold ${fileBadgeClass(
+                                    fileExtension(file.name),
+                                  )}`}
+                                >
+                                  {fileExtension(file.name)}
+                                </span>
+                                {formatSize(file.size)}
+                                {usedByOther && (
+                                  <span className="font-bold text-[#D97706]">
+                                    Dipakai tugas lain
+                                  </span>
+                                )}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div
                 ref={datePopoverRef}
