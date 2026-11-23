@@ -69,6 +69,18 @@ function isSubmissionSlot(slot: UploadSlot) {
   return slot === "tugasSubmission" || slot === "kuisSubmission";
 }
 
+function isAssignmentFileSlot(slot: UploadSlot) {
+  return slot === "tugasFile" || slot === "kuisFile";
+}
+
+function assignmentTypeForSlot(
+  slot: UploadSlot,
+): "tugas" | "kuis" | null {
+  if (slot === "tugasFile" || slot === "tugasSubmission") return "tugas";
+  if (slot === "kuisFile" || slot === "kuisSubmission") return "kuis";
+  return null;
+}
+
 function streamFile(
   data: Uint8Array,
   filename: string,
@@ -224,16 +236,54 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
         const blob = new Uint8Array(await file.arrayBuffer());
         const checksumSha256 = createHash("sha256").update(blob).digest("hex");
 
-        const assignmentId = body.assignmentId ?? null;
-        const validateAssignmentId = assignmentId
-          ? UUID_RE.test(assignmentId)
-          : false;
+        const requestedAssignmentId = body.assignmentId ?? null;
+        const validAssignmentId =
+          requestedAssignmentId && UUID_RE.test(requestedAssignmentId)
+            ? requestedAssignmentId
+            : null;
 
-        if (isSubmissionSlot(slot) && !validateAssignmentId) {
+        const assignmentId = isSubmissionSlot(slot)
+          ? validAssignmentId
+          : isAssignmentFileSlot(slot)
+            ? validAssignmentId
+            : null;
+
+        if (isSubmissionSlot(slot) && !assignmentId) {
           return status(400, {
             success: false,
             message: "assignmentId wajib diisi dan valid",
           });
+        }
+
+        if (assignmentId) {
+          const [foundAssignment] = await storageDb
+            .select({
+              id: assignments.id,
+              meetingId: assignments.meetingId,
+              type: assignments.type,
+            })
+            .from(assignments)
+            .where(eq(assignments.id, assignmentId))
+            .limit(1);
+          if (!foundAssignment) {
+            return status(400, {
+              success: false,
+              message: "Assignment tidak ditemukan",
+            });
+          }
+          if (foundAssignment.meetingId !== meetingId) {
+            return status(400, {
+              success: false,
+              message: "Assignment tidak termasuk pertemuan ini",
+            });
+          }
+          const expectedType = assignmentTypeForSlot(slot);
+          if (expectedType && foundAssignment.type !== expectedType) {
+            return status(400, {
+              success: false,
+              message: `Assignment bukan tipe ${expectedType}`,
+            });
+          }
         }
 
         const base = {
@@ -244,22 +294,8 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
           uploadedBy: user.id,
           uploaderRole: role,
           meetingId,
-          assignmentId: validateAssignmentId ? assignmentId : null,
+          ...(assignmentId ? { assignmentId } : {}),
         };
-
-        if (base.assignmentId) {
-          const [foundAssignment] = await storageDb
-            .select({ id: assignments.id })
-            .from(assignments)
-            .where(eq(assignments.id, base.assignmentId))
-            .limit(1);
-          if (!foundAssignment) {
-            return status(400, {
-              success: false,
-              message: "Assignment tidak ditemukan",
-            });
-          }
-        }
 
         const origin = new URL(request.url).origin;
         const table = slotTables[slot];
@@ -442,6 +478,9 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
                 mimeType: table.mimeType,
                 size: table.size,
                 checksumSha256: table.checksumSha256,
+                ...(isAssignmentFileSlot(slot)
+                  ? { assignmentId: table.assignmentId }
+                  : {}),
                 createdAt: table.createdAt,
               })
               .from(table)
@@ -459,7 +498,9 @@ export const uploadsRoute = new Elysia({ prefix: "/api/v1/uploads" })
               }`,
               studentId: submission ? row.studentId : null,
               submissionId: submission ? row.submissionId : null,
-              assignmentId: submission ? row.assignmentId : null,
+              assignmentId: submission || isAssignmentFileSlot(slot)
+                ? row.assignmentId ?? null
+                : null,
               createdAt: row.createdAt,
         }));
 

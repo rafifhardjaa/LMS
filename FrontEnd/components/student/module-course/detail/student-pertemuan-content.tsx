@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, Download } from "lucide-react";
+import { Clock, Download, Trash2 } from "lucide-react";
 import moment from "moment";
 import { FadeIn } from "@/components/ui/animations";
 import type { Assignment, CourseMeeting } from "@/lib/api/master-data";
@@ -118,6 +118,77 @@ function TeacherFileList({ files }: { files: PendingFile[] }) {
   );
 }
 
+type StudentSubmissionPanelProps = {
+  files: PendingFile[];
+  onDelete: (item: PendingFile) => void;
+  deleting: boolean;
+};
+
+function StudentSubmissionPanel({
+  files,
+  onDelete,
+  deleting,
+}: StudentSubmissionPanelProps) {
+  if (files.length === 0) {
+    return (
+      <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-center text-[12px] font-medium text-[#94A3B8]">
+        Belum ada pengumpulan
+      </p>
+    );
+  }
+
+  return (
+    <ul className="flex flex-col gap-1.5">
+      {files.map((item) => {
+        const extension = fileExtension(item.name);
+        return (
+          <li
+            key={item.clientId}
+            className="flex items-center gap-1.5 rounded-xl border border-[#E2E8F0] bg-white p-2"
+          >
+            <span
+              className={`flex h-6 shrink-0 items-center justify-center rounded px-1.5 text-[9px] font-extrabold tracking-wide ${fileBadgeClass(
+                extension,
+              )}`}
+            >
+              {extension}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12px] font-semibold text-[#1E293B]">
+                {item.name}
+              </p>
+              <p className="text-[10px] font-medium text-[#94A3B8]">
+                {formatSize(item.size)}
+              </p>
+            </div>
+            {item.fileUrl && (
+              <a
+                href={item.fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                title={`Buka ${item.name}`}
+                aria-label={`Buka ${item.name}`}
+                className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#EDF7F4] hover:text-[#0d5c52]"
+              >
+                <Download className="size-3.5" />
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => onDelete(item)}
+              disabled={deleting}
+              aria-label={`Hapus ${item.name}`}
+              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#FFEBEB] hover:text-[#b71422] disabled:opacity-50"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function StudentPertemuanContent({
   meeting,
   materiFiles,
@@ -168,53 +239,78 @@ export function StudentPertemuanContent({
               assignments.map((assignment) => {
                 const key = `${kind}:${assignment.id}`;
                 const tone = deadlineTone(assignment.deadlineAt);
+                const assignedTeacherFiles = teacherFiles.filter(
+                  (file) => file.assignmentId === assignment.id,
+                );
+                const visibleTeacherFiles =
+                  assignedTeacherFiles.length > 0
+                    ? assignedTeacherFiles
+                    : teacherFiles.filter((file) => !file.assignmentId);
+                const submissionFiles = files.filter(
+                  (file) => file.assignmentId === assignment.id,
+                );
+
                 return (
-                  <div key={assignment.id} className="flex flex-col gap-3">
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="flex flex-col gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
-                    >
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <p className="text-[13px] font-bold text-[#1E293B]">
-                            {assignment.title}
-                          </p>
-                          {assignment.description && (
-                            <p className="mt-1 text-[12px] leading-5 text-[#64748B]">
-                              {assignment.description}
+                  <motion.div
+                    key={assignment.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2">
+                      <div className="flex flex-col gap-3 border-b border-[#E2E8F0] p-4 md:border-b-0 md:border-r">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-bold text-[#1E293B]">
+                              {assignment.title}
                             </p>
-                          )}
+                            {assignment.description && (
+                              <p className="mt-1 text-[12px] leading-5 text-[#64748B]">
+                                {assignment.description}
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className={`inline-flex shrink-0 items-center self-start rounded-full px-2.5 py-1 text-[10px] font-bold sm:self-auto ${tone.className}`}
+                          >
+                            {tone.label}
+                          </span>
                         </div>
-                        <span
-                          className={`inline-flex shrink-0 items-center self-start rounded-full px-2.5 py-1 text-[10px] font-bold sm:self-auto ${tone.className}`}
-                        >
-                          {tone.label}
-                        </span>
+
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-[#64748B]">
+                          <span className="inline-flex items-center gap-1">
+                            Mulai · {formatDateTime(assignment.startAt)}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="size-3 text-[#D97706]" />
+                            Batas · {formatDateTime(assignment.deadlineAt)}
+                          </span>
+                        </div>
+
+                        {visibleTeacherFiles.length > 0 && (
+                          <div className="border-t border-[#F1F5F9] pt-3">
+                            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                              {kind === "tugas" ? "File tugas" : "File kuis"}
+                            </p>
+                            <TeacherFileList files={visibleTeacherFiles} />
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-[#64748B]">
-                        <span className="inline-flex items-center gap-1">
-                          Mulai · {formatDateTime(assignment.startAt)}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="size-3 text-[#D97706]" />
-                          Batas · {formatDateTime(assignment.deadlineAt)}
-                        </span>
+                      <div className="flex flex-col gap-2 p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                          Pengumpulan {kind}
+                        </p>
+                        <StudentSubmissionPanel
+                          files={submissionFiles}
+                          onDelete={(item) => onDelete(slot, item)}
+                          deleting={deleting}
+                        />
                       </div>
+                    </div>
 
-                      {teacherFiles.length > 0 && (
-                        <div className="border-t border-[#F1F5F9] pt-3">
-                          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">
-                            {kind === "tugas" ? "File tugas" : "File kuis"}
-                          </p>
-                          <TeacherFileList files={teacherFiles} />
-                        </div>
-                      )}
-                    </motion.div>
-
-                    <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-2.5">
+                    <div className="border-t border-[#E2E8F0] bg-[#F8FAFC] p-3">
                       <FileDropzone
                         accent={accent}
                         label={
@@ -222,9 +318,7 @@ export function StudentPertemuanContent({
                             ? "Pengumpulan tugas"
                             : "Pengumpulan kuis"
                         }
-                        files={files.filter(
-                          (file) => file.assignmentId === assignment.id,
-                        )}
+                        files={submissionFiles}
                         onChange={(next) =>
                           onFilesChange(assignment.id, next)
                         }
@@ -236,9 +330,10 @@ export function StudentPertemuanContent({
                         uploading={uploading}
                         onDelete={(item) => onDelete(slot, item)}
                         deleting={deleting}
+                        showSavedFiles={false}
                       />
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })
             )}

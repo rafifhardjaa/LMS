@@ -54,6 +54,7 @@ function toPendingFile(item: UploadedFile): PendingFile {
     id: item.id,
     fileUrl: item.fileUrl,
     studentId: item.studentId,
+    assignmentId: item.assignmentId ?? null,
   };
 }
 
@@ -108,6 +109,16 @@ const UUID_RE_PATTERN =
 
 function taskDraftChanged(a: TaskDraft, b: TaskDraft | undefined) {
   if (!b) return true;
+
+  const aFileIds = a.fileIds ?? [];
+  const bFileIds = b.fileIds ?? [];
+  if (
+    aFileIds.length !== bFileIds.length ||
+    aFileIds.some((id) => !bFileIds.includes(id))
+  ) {
+    return true;
+  }
+
   return (
     b.title !== a.title ||
     b.description !== a.description ||
@@ -431,6 +442,7 @@ export default function ModulCourseDetailPage() {
           ? wibIso(draft.startDate, draft.startTime || "08:00")
           : undefined,
         deadlineAt: wibIso(draft.deadline, draft.deadlineTime || "23:59"),
+        fileIds: draft.fileIds,
       });
 
       try {

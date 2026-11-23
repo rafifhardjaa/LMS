@@ -6,6 +6,8 @@ import {
   assignments,
   guruAssignmentKuis,
   guruAssignmentTugas,
+  guruUploadsKuis,
+  guruUploadsTugas,
   siswaUpAssignmentKuis,
   siswaUpAssignmentTugas,
 } from "../db/storage-schema";
@@ -37,6 +39,81 @@ function assertAssignmentType(type: unknown): asserts type is AssignmentType {
   if (type !== "tugas" && type !== "kuis") {
     throw new BadRequestError("type harus 'tugas' atau 'kuis'");
   }
+}
+
+function assignmentFileTable(type: AssignmentType) {
+  return type === "tugas" ? guruUploadsTugas : guruUploadsKuis;
+}
+
+async function syncAssignmentFiles({
+  assignment,
+  fileIds,
+}: {
+  assignment: { id: string; meetingId: string; type: AssignmentType };
+  fileIds?: string[];
+}) {
+  if (!fileIds) return;
+
+  const table = assignmentFileTable(assignment.type);
+  const uniqueFileIds = [...new Set(fileIds)];
+
+  if (uniqueFileIds.length > 0) {
+    const rows = await storageDb
+      .select({
+        id: table.id,
+        meetingId: table.meetingId,
+        assignmentId: table.assignmentId,
+        isDeleted: table.isDeleted,
+      })
+      .from(table)
+      .where(inArray(table.id, uniqueFileIds));
+
+    if (rows.length !== uniqueFileIds.length) {
+      throw new BadRequestError("File tugas tidak ditemukan");
+    }
+
+    for (const row of rows) {
+      if (row.isDeleted) throw new BadRequestError("File tugas tidak ditemukan");
+      if (row.meetingId !== assignment.meetingId) {
+        throw new BadRequestError(
+          "File tugas hanya boleh berasal dari pertemuan ini",
+        );
+      }
+      if (row.assignmentId && row.assignmentId !== assignment.id) {
+        throw new BadRequestError(
+          "File tugas sudah dipakai assignment lain",
+        );
+      }
+    }
+  }
+
+  await storageDb.transaction(async (tx) => {
+    await tx
+      .update(table)
+      .set({ assignmentId: null })
+      .where(eq(table.assignmentId, assignment.id));
+
+    if (uniqueFileIds.length > 0) {
+      await tx
+        .update(table)
+        .set({ assignmentId: assignment.id })
+        .where(inArray(table.id, uniqueFileIds));
+    }
+  });
+}
+
+async function clearAssignmentFiles({
+  id,
+  type,
+}: {
+  id: string;
+  type: AssignmentType;
+}) {
+  const table = assignmentFileTable(type);
+  await storageDb
+    .update(table)
+    .set({ assignmentId: null })
+    .where(eq(table.assignmentId, id));
 }
 
 function assertPositiveString(value: string | undefined, label: string) {
@@ -199,15 +276,16 @@ export async function createAssignment({
   subjectId: string;
   classId: string;
   teacherId: string | null;
-  data: {
-    type: AssignmentType;
-    title: string;
-    description?: string;
-    startAt?: string;
-    deadlineAt: string;
-    meetingId: string;
-  };
-}) {
+    data: {
+      type: AssignmentType;
+      title: string;
+      description?: string;
+      startAt?: string;
+      deadlineAt: string;
+      meetingId: string;
+      fileIds?: string[];
+    };
+  }) {
   await assertTeacherHasAssignment(teacherId, subjectId, classId);
 
   assertAssignmentType(data.type);
@@ -238,6 +316,16 @@ export async function createAssignment({
     .returning();
 
   if (!inserted) throw new NotFoundError("Gagal membuat assignment");
+
+  await syncAssignmentFiles({
+    assignment: {
+      id: inserted.id,
+      meetingId: inserted.meetingId,
+      type: inserted.type as AssignmentType,
+    },
+    fileIds: data.fileIds,
+  });
+
   return toApiAssignment(inserted);
 }
 
@@ -252,16 +340,17 @@ export async function updateAssignment({
   classId: string;
   teacherId: string | null;
   id: string;
-  data: {
-    classId?: string;
-    type?: AssignmentType;
-    title?: string;
-    description?: string;
-    startAt?: string;
-    deadlineAt?: string;
-    meetingId?: string;
-  };
-}) {
+    data: {
+      classId?: string;
+      type?: AssignmentType;
+      title?: string;
+      description?: string;
+      startAt?: string;
+      deadlineAt?: string;
+      meetingId?: string;
+      fileIds?: string[];
+    };
+  }) {
   const [existing] = await storageDb
     .select()
     .from(assignments)
@@ -304,6 +393,16 @@ export async function updateAssignment({
     .returning();
 
   if (!updated) throw new NotFoundError("Assignment tidak ditemukan");
+
+  await syncAssignmentFiles({
+    assignment: {
+      id: updated.id,
+      meetingId: updated.meetingId,
+      type: updated.type as AssignmentType,
+    },
+    fileIds: data.fileIds,
+  });
+
   return toApiAssignment(updated);
 }
 
@@ -336,6 +435,7 @@ export async function removeAssignment({
     );
   }
 
+  await clearAssignmentFiles({ id, type: existing.type as AssignmentType });
   await storageDb.delete(assignments).where(eq(assignments.id, id));
   return { id };
 }
