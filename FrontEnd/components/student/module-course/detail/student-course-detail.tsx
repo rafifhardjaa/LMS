@@ -20,7 +20,11 @@ import type { PendingFile } from "@/components/teacher/modul-management/detail/f
 import { StudentPertemuanContent } from "./student-pertemuan-content";
 
 type SubmissionSlot = "tugasSubmission" | "kuisSubmission";
-type FileKind = "materi" | SubmissionSlot;
+type FileKind =
+  | "materi"
+  | "tugasFile"
+  | "kuisFile"
+  | SubmissionSlot;
 
 type MeetingFiles = Record<FileKind, PendingFile[]>;
 
@@ -28,11 +32,22 @@ type MeetingTasks = { tugas: Assignment[]; kuis: Assignment[] };
 
 const EMPTY_MEETING_FILES: MeetingFiles = {
   materi: [],
+  tugasFile: [],
+  kuisFile: [],
   tugasSubmission: [],
   kuisSubmission: [],
 };
 
 const EMPTY_TASKS: MeetingTasks = { tugas: [], kuis: [] };
+
+function toProxyFileUrl(fileUrl: string): string {
+  try {
+    const url = new URL(fileUrl);
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return fileUrl;
+  }
+}
 
 function toPendingFile(item: UploadedFile): PendingFile {
   return {
@@ -42,7 +57,7 @@ function toPendingFile(item: UploadedFile): PendingFile {
     mimeType: item.mimeType,
     status: "saved",
     id: item.id,
-    fileUrl: item.fileUrl,
+    fileUrl: toProxyFileUrl(item.fileUrl),
     studentId: item.studentId,
     assignmentId: item.assignmentId ?? null,
   };
@@ -216,6 +231,8 @@ export function StudentCourseDetail({
     async (meetingId: string, isActive: () => boolean = () => true) => {
       const results = await Promise.all([
         uploadsApi.list("materi", meetingId),
+        uploadsApi.list("tugasFile", meetingId),
+        uploadsApi.list("kuisFile", meetingId),
         uploadsApi.list("tugasSubmission", meetingId),
         uploadsApi.list("kuisSubmission", meetingId),
         masterDataApi.courseDetails.assignments.list(
@@ -227,10 +244,19 @@ export function StudentCourseDetail({
 
       if (!isActive()) return;
 
-      const [materiRes, tugasRes, kuisRes, assignmentsRes] = results;
+      const [
+        materiRes,
+        tugasFileRes,
+        kuisFileRes,
+        tugasRes,
+        kuisRes,
+        assignmentsRes,
+      ] = results;
 
       if (
         materiRes.error ||
+        tugasFileRes.error ||
+        kuisFileRes.error ||
         tugasRes.error ||
         kuisRes.error ||
         assignmentsRes.error
@@ -243,6 +269,8 @@ export function StudentCourseDetail({
         ...current,
         [meetingId]: {
           materi: (materiRes.data?.data ?? []).map(toPendingFile),
+          tugasFile: (tugasFileRes.data?.data ?? []).map(toPendingFile),
+          kuisFile: (kuisFileRes.data?.data ?? []).map(toPendingFile),
           tugasSubmission: (tugasRes.data?.data ?? []).map(toPendingFile),
           kuisSubmission: (kuisRes.data?.data ?? []).map(toPendingFile),
         },
@@ -469,6 +497,8 @@ export function StudentCourseDetail({
                   <StudentPertemuanContent
                     meeting={selectedMeeting}
                     materiFiles={currentFiles.materi}
+                    tugasTeacherFiles={currentFiles.tugasFile}
+                    kuisTeacherFiles={currentFiles.kuisFile}
                     tugasFiles={currentFiles.tugasSubmission}
                     kuisFiles={currentFiles.kuisSubmission}
                     tugas={currentTasks.tugas}
