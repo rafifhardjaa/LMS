@@ -90,6 +90,7 @@ assignmentsRoute.post(
       description: t.Optional(t.String()),
       startAt: t.Optional(t.String()),
       deadlineAt: t.String(),
+      fileIds: t.Optional(t.Array(t.String())),
     }),
   }
 );
@@ -234,6 +235,7 @@ assignmentsRoute.put(
       startAt: t.Optional(t.String()),
       deadlineAt: t.Optional(t.String()),
       meetingId: t.Optional(t.String()),
+      fileIds: t.Optional(t.Array(t.String())),
     }),
     params: assignmentParams,
   }

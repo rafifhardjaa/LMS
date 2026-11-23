@@ -674,6 +674,7 @@ export const masterDataApi = {
             description?: string;
             startAt?: string;
             deadlineAt: string;
+            fileIds?: string[];
           },
         ) =>
           apiFetch<ApiSuccess<Assignment>>(
@@ -683,7 +684,13 @@ export const masterDataApi = {
         update: (
           subjectId: string,
           id: string,
-          body: Partial<Assignment & { meetingId?: string; classId?: string }>,
+          body: Partial<
+            Assignment & {
+              meetingId?: string;
+              classId?: string;
+              fileIds?: string[];
+            }
+          >,
         ) =>
           apiFetch<ApiSuccess<Assignment>>(
             `/api/v1/course-details/${subjectId}/assignments/${id}`,

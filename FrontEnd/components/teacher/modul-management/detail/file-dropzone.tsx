@@ -135,6 +135,7 @@ type FileDropzoneProps = {
   onDelete?: (item: PendingFile) => Promise<void> | void;
   deleting?: boolean;
   accent?: DropzoneAccent;
+  showSavedFiles?: boolean;
 };
 
 export function FileDropzone({
@@ -151,6 +152,7 @@ export function FileDropzone({
   onDelete,
   deleting = false,
   accent = "materi",
+  showSavedFiles = true,
 }: FileDropzoneProps) {
   const [pendingDelete, setPendingDelete] = useState<PendingFile | null>(null);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -305,7 +307,7 @@ export function FileDropzone({
 
   return (
     <div>
-      {savedFiles.length > 0 && (
+      {savedFiles.length > 0 && showSavedFiles && (
         <ul className="mb-2 flex flex-wrap gap-1.5">
           {savedFiles.map((item) => renderChip(item))}
         </ul>
