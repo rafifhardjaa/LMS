@@ -1,7 +1,10 @@
-"use client";
+import type { Metadata } from "next";
+import { ModulesManagement } from "@/components/student/modul-management";
 
-import { StudentModules } from "@/components/student/modules-page";
+export const metadata: Metadata = {
+  title: "Modul & Course",
+};
 
 export default function MuridModulesPage() {
-  return <StudentModules />;
+  return <ModulesManagement />;
 }
