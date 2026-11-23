@@ -175,6 +175,7 @@ export function PertemuanContent({
                   onTasksChange={(next) => onTasksChange("tugas", next)}
                   summaries={summaries}
                   totalStudents={totalStudents}
+                  files={files.tugasFile}
                 />
               </div>
               </div>
@@ -209,6 +210,7 @@ export function PertemuanContent({
                   onTasksChange={(next) => onTasksChange("kuis", next)}
                   summaries={summaries}
                   totalStudents={totalStudents}
+                  files={files.kuisFile}
                 />
               </div>
             </div>
