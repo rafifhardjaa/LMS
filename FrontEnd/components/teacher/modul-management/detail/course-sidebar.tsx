@@ -10,6 +10,13 @@ export type MeetingListItem = {
   date: string;
 };
 
+type Accent = "teacher" | "student";
+
+const ACCENT_STYLES: Record<Accent, { selected: string; icon: string }> = {
+  teacher: { selected: "text-[#b71422]", icon: "text-[#006398]" },
+  student: { selected: "text-[#0d5c52]", icon: "text-[#14b8a6]" },
+};
+
 type CourseSidebarProps = {
   subjectName: string;
   classLabel: string;
@@ -18,6 +25,7 @@ type CourseSidebarProps = {
   onSelect: (key: string) => void;
   pesertaCount?: number | null;
   meetings: MeetingListItem[];
+  accent?: Accent;
 };
 
 export function CourseSidebar({
@@ -28,8 +36,10 @@ export function CourseSidebar({
   onSelect,
   pesertaCount,
   meetings,
+  accent = "teacher",
 }: CourseSidebarProps) {
   const [courseOpen, setCourseOpen] = useState(true);
+  const styles = ACCENT_STYLES[accent];
 
   return (
     <aside className="max-h-[calc(100vh-8.5rem)] w-full shrink-0 overflow-y-auto rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:w-72">
@@ -50,10 +60,10 @@ export function CourseSidebar({
           onClick={() => onSelect("peserta")}
           className={cn(
             "flex w-full items-center gap-2 rounded-lg px-1 py-1 text-left text-[14px] font-bold transition-colors hover:bg-[#F8FAFC]",
-            selectedKey === "peserta" ? "text-[#b71422]" : "text-[#1E293B]",
+            selectedKey === "peserta" ? styles.selected : "text-[#1E293B]",
           )}
         >
-          <Users className="size-4 text-[#006398]" />
+          <Users className={`size-4 ${styles.icon}`} />
           Peserta
         </motion.button>
         <p className="mt-0.5 pl-7 text-[11px] text-[#94A3B8]">
@@ -73,7 +83,7 @@ export function CourseSidebar({
           className="flex w-full items-center justify-between rounded-lg px-1 py-1 text-left"
         >
           <span className="flex items-center gap-2 text-[14px] font-bold text-[#1E293B]">
-            <BookOpen className="size-4 text-[#006398]" />
+            <BookOpen className={`size-4 ${styles.icon}`} />
             Course
           </span>
           <motion.span
@@ -107,9 +117,7 @@ export function CourseSidebar({
                   <p
                     className={cn(
                       "text-[13px] font-bold",
-                      selectedKey === "info"
-                        ? "text-[#b71422]"
-                        : "text-[#1E293B]",
+                      selectedKey === "info" ? styles.selected : "text-[#1E293B]",
                     )}
                   >
                     Info pembelajaran
@@ -132,7 +140,7 @@ export function CourseSidebar({
                       className={cn(
                         "text-[13px] font-bold",
                         selectedKey === meeting.label
-                          ? "text-[#b71422]"
+                          ? styles.selected
                           : "text-[#1E293B]",
                       )}
                     >

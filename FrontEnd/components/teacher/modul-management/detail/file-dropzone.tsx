@@ -42,6 +42,7 @@ export type PendingFile = {
   fileUrl?: string;
   error?: string;
   studentId?: string | null;
+  assignmentId?: string | null;
 };
 
 export const EMPTY_UPLOAD_FILES: Record<UploadSlot, PendingFile[]> = {

@@ -39,18 +39,46 @@ function initials(name: string): string {
     .join("");
 }
 
+type Accent = "teacher" | "student";
+
+const ACCENT_STYLES: Record<
+  Accent,
+  { header: string; avatarBg: string; avatarText: string; bullet: string }
+> = {
+  teacher: {
+    header: "bg-gradient-to-r from-[#b71422] to-[#8f0f1a]",
+    avatarBg: "bg-[#FFEBEB]",
+    avatarText: "text-[#b71422]",
+    bullet: "bg-[#b71422]",
+  },
+  student: {
+    header: "bg-gradient-to-r from-[#0d5c52] to-[#071f1c]",
+    avatarBg: "bg-[#d4eee7]",
+    avatarText: "text-[#0d5c52]",
+    bullet: "bg-[#0d5c52]",
+  },
+};
+
 type CourseInfoContentProps = {
   subjectName: string;
   capaianPembelajaran?: string | null;
   pesertaCount?: number;
+  teacherName?: string | null;
+  meetingCount?: number;
+  accent?: Accent;
 };
 
 export function CourseInfoContent({
   subjectName,
   capaianPembelajaran,
   pesertaCount,
+  teacherName,
+  meetingCount,
+  accent = "teacher",
 }: CourseInfoContentProps) {
   const user = useAuthStore((state) => state.user);
+  const styles = ACCENT_STYLES[accent];
+  const displayTeacher = teacherName?.trim() || user?.full_name || "-";
 
   const capaianText = capaianPembelajaran?.trim() || capaianPembelajaranDefault;
   const capaianItems = capaianText
@@ -64,13 +92,13 @@ export function CourseInfoContent({
 
   const stats = [
     { label: "Peserta", value: pesertaCount ?? 0 },
-    { label: "Pertemuan", value: meetings.length },
+    { label: "Pertemuan", value: meetingCount ?? meetings.length },
     { label: "Semester", value: "Genap 2024/2025" },
   ];
 
   return (
     <section className="flex min-h-64 flex-1 flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <FadeIn className="bg-gradient-to-r from-[#b71422] to-[#8f0f1a] px-5 py-4">
+      <FadeIn className={`px-5 py-4 ${styles.header}`}>
         <h2 className="text-[15px] font-bold text-white">Info Pembelajaran</h2>
         <p className="mt-0.5 text-[12px] font-medium text-white/80">
           {subjectName}
@@ -79,15 +107,17 @@ export function CourseInfoContent({
 
       <div className="flex flex-col gap-5 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#FFEBEB] text-[15px] font-bold text-[#b71422]">
-            {initials(user?.full_name ?? "")}
+          <div
+            className={`flex size-11 shrink-0 items-center justify-center rounded-full ${styles.avatarBg} ${styles.avatarText} text-[15px] font-bold`}
+          >
+            {initials(displayTeacher)}
           </div>
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
               Guru Pengampu
             </p>
             <p className="truncate text-[14px] font-bold text-[#1E293B]">
-              {user?.full_name ?? "-"}
+              {displayTeacher}
             </p>
           </div>
         </div>
@@ -122,7 +152,7 @@ export function CourseInfoContent({
                 key={item.nomor}
                 className="flex items-start gap-2.5"
               >
-                <span className="mt-0.5 flex size-5.5 shrink-0 items-center justify-center rounded-full bg-[#b71422] text-[11px] font-bold text-white">
+                <span className={`mt-0.5 flex size-5.5 shrink-0 items-center justify-center rounded-full ${styles.bullet} text-[11px] font-bold text-white`}>
                   {item.nomor}
                 </span>
                 <p className="text-[13px] leading-6 text-[#475569]">{item.teks}</p>

@@ -20,10 +20,8 @@ function dayIndex(hari: string) {
   return index === -1 ? 99 : index;
 }
 
-export type StudentCourseRow = JadwalPelajaran & { moduleId: string | null };
-
 type JadwalTableProps = {
-  rows: StudentCourseRow[];
+  rows: JadwalPelajaran[];
 };
 
 export function JadwalTable({ rows }: JadwalTableProps) {
@@ -92,29 +90,23 @@ export function JadwalTable({ rows }: JadwalTableProps) {
                   </td>
                   <td className="px-5 py-2.5">
                     <div className="flex items-center justify-end">
-                      {row.moduleId ? (
-                        <motion.div
-                          whileHover={{ scale: 1.04 }}
-                          whileTap={{ scale: 0.96 }}
-                          className="inline-block"
+                      <motion.div
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        className="inline-block"
+                      >
+                        <Link
+                          href={`/student/module-course/${row.classId}--${row.subjectId}`}
+                          className={`inline-flex h-7 items-center gap-1 rounded-lg border px-2 text-[9px] font-bold transition ${
+                            isToday
+                              ? "border-[#14b8a6] bg-[#14b8a6]/15 text-[#0d5c52] hover:border-[#14b8a6]"
+                              : "border-[#CEE8E1] bg-[#F8FAFC] text-[#536360] hover:border-[#0d5c52]/30 hover:text-[#0d5c52]"
+                          }`}
                         >
-                          <Link
-                            href={`/student/module-course/${row.moduleId}`}
-                            className={`inline-flex h-7 items-center gap-1 rounded-lg border px-2 text-[9px] font-bold transition ${
-                              isToday
-                                ? "border-[#14b8a6] bg-[#14b8a6]/15 text-[#0d5c52] hover:border-[#14b8a6]"
-                                : "border-[#CEE8E1] bg-[#F8FAFC] text-[#536360] hover:border-[#0d5c52]/30 hover:text-[#0d5c52]"
-                            }`}
-                          >
-                            <Eye className="size-3" />
-                            Lihat detail
-                          </Link>
-                        </motion.div>
-                      ) : (
-                        <span className="inline-flex h-7 items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 text-[9px] font-bold text-[#94A3B8]">
-                          Belum ada modul
-                        </span>
-                      )}
+                          <Eye className="size-3" />
+                          Lihat detail
+                        </Link>
+                      </motion.div>
                     </div>
                   </td>
                 </motion.tr>
