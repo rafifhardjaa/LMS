@@ -92,7 +92,7 @@ bun run dev
 > Langkah migrasi + seed bisa disingkat jadi satu perintah: `bun run db:setup`.
 
 Server berjalan di `http://localhost:3000`.
-Swagger UI tersedia di `http://localhost:3000/swagger`.
+Swagger UI tersedia di `http://localhost:3000/docs` (alias: `http://localhost:3000/swagger`).
 
 ### 3. Setup FrontEnd
 
@@ -139,11 +139,15 @@ Kalau DBeaver masih hanya menampilkan satu database, aktifkan opsi **Show all da
 
 ## API Endpoints
 
+> **Referensi lengkap seluruh 105 endpoint ada di [`docs/API.md`](docs/API.md).**
+> Tabel di bawah hanya ringkasan grup inti; dokumentasi per-endpoint (auth, body,
+> query, dan catatan perilaku) dipelihara di file tersebut.
+
 ### Auth — `/api/v1/auth`
 
 | Method | Endpoint | Auth | Keterangan |
 |---|---|---|---|
-| `POST` | `/api/v1/auth/register` | — | Registrasi siswa (wajib cocok dengan roster admin) |
+| `POST` | `/api/v1/auth/register` | — | Registrasi siswa (wajib cocok dengan roster admin) atau guru (`role: "guru"`) |
 | `POST` | `/api/v1/auth/activate` | — | Aktivasi akun + buat password dari token email |
 | `POST` | `/api/v1/auth/login` | — | Login (`identifier` = email atau nomor induk) → JWT |
 | `POST` | `/api/v1/auth/forgot-password` | — | Kirim tautan reset ke email |
@@ -166,8 +170,10 @@ Kalau DBeaver masih hanya menampilkan satu database, aktifkan opsi **Show all da
 
 | Method | Endpoint | Auth | Keterangan |
 |---|---|---|---|
-| `POST` | `/api/v1/subjects` | admin, guru | Buat mata pelajaran |
+| `POST` | `/api/v1/subjects` | admin | Buat mata pelajaran |
 | `GET` | `/api/v1/subjects` | semua | List mata pelajaran |
+| `GET` | `/api/v1/subjects/stats` | admin, guru | Statistik mata pelajaran |
+| `GET` | `/api/v1/subjects/:id` | semua | Detail mata pelajaran |
 | `PUT` | `/api/v1/subjects/:id` | admin | Update mata pelajaran |
 | `DELETE` | `/api/v1/subjects/:id` | admin | Hapus mata pelajaran |
 
@@ -194,7 +200,7 @@ Kalau DBeaver masih hanya menampilkan satu database, aktifkan opsi **Show all da
 | Method | Endpoint | Auth | Keterangan |
 |---|---|---|---|
 | `POST` | `/api/v1/progress/lesson/:lessonId` | siswa enrolled | Tandai lesson selesai atau batalkan |
-| `GET` | `/api/v1/progress/subject/:subjectId` | siswa enrolled | Persentase lesson selesai di satu mapel |
+| `GET` | `/api/v1/progress/subject/:subjectId` | admin, guru, siswa | Persentase lesson selesai di satu mapel |
 | `GET` | `/api/v1/progress/module/:moduleId` | siswa enrolled | Persentase lesson selesai di satu modul |
 
 > Progress dihitung untuk user yang login dan hanya tersedia jika enrollment-nya
