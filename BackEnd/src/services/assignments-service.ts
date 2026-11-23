@@ -102,18 +102,32 @@ async function syncAssignmentFiles({
   });
 }
 
-async function clearAssignmentFiles({
-  id,
+async function clearAssignmentFilesByIds({
+  ids,
   type,
+  tx,
 }: {
-  id: string;
+  ids: string[];
   type: AssignmentType;
+  tx: any;
 }) {
+  if (ids.length === 0) return;
+
   const table = assignmentFileTable(type);
-  await storageDb
+  await tx
     .update(table)
     .set({ assignmentId: null })
-    .where(eq(table.assignmentId, id));
+    .where(inArray(table.assignmentId, ids));
+}
+
+async function clearAssignmentRelationsForRows(
+  rows: Array<{ id: string; type: string }>,
+  tx: any,
+) {
+  for (const type of ["tugas", "kuis"] as const) {
+    const ids = rows.filter((row) => row.type === type).map((row) => row.id);
+    await clearAssignmentFilesByIds({ ids, type, tx });
+  }
 }
 
 function assertPositiveString(value: string | undefined, label: string) {
@@ -160,9 +174,9 @@ async function getMeeting({
   return meeting;
 }
 
-async function hasStorageRows(assignmentId: string) {
+async function hasStorageRows(assignmentId: string, tx: any = storageDb) {
   const checks = await Promise.all([
-    storageDb
+    tx
       .select({ id: siswaUpAssignmentTugas.id })
       .from(siswaUpAssignmentTugas)
       .where(
@@ -172,7 +186,7 @@ async function hasStorageRows(assignmentId: string) {
         ),
       )
       .limit(1),
-    storageDb
+    tx
       .select({ id: siswaUpAssignmentKuis.id })
       .from(siswaUpAssignmentKuis)
       .where(
@@ -182,7 +196,7 @@ async function hasStorageRows(assignmentId: string) {
         ),
       )
       .limit(1),
-    storageDb
+    tx
       .select({ id: guruAssignmentTugas.id })
       .from(guruAssignmentTugas)
       .where(
@@ -192,7 +206,7 @@ async function hasStorageRows(assignmentId: string) {
         ),
       )
       .limit(1),
-    storageDb
+    tx
       .select({ id: guruAssignmentKuis.id })
       .from(guruAssignmentKuis)
       .where(
@@ -207,15 +221,39 @@ async function hasStorageRows(assignmentId: string) {
 }
 
 export async function deleteAssignmentsByMeetingId(meetingId: string) {
-  await storageDb.delete(assignments).where(eq(assignments.meetingId, meetingId));
+  const rows = await storageDb
+    .select({ id: assignments.id, type: assignments.type })
+    .from(assignments)
+    .where(eq(assignments.meetingId, meetingId));
+
+  await storageDb.transaction(async (tx) => {
+    await clearAssignmentRelationsForRows(rows, tx);
+    await tx.delete(assignments).where(eq(assignments.meetingId, meetingId));
+  });
 }
 
 export async function deleteAssignmentsByClassId(classId: string) {
-  await storageDb.delete(assignments).where(eq(assignments.classId, classId));
+  const rows = await storageDb
+    .select({ id: assignments.id, type: assignments.type })
+    .from(assignments)
+    .where(eq(assignments.classId, classId));
+
+  await storageDb.transaction(async (tx) => {
+    await clearAssignmentRelationsForRows(rows, tx);
+    await tx.delete(assignments).where(eq(assignments.classId, classId));
+  });
 }
 
 export async function deleteAssignmentsBySubjectId(subjectId: string) {
-  await storageDb.delete(assignments).where(eq(assignments.subjectId, subjectId));
+  const rows = await storageDb
+    .select({ id: assignments.id, type: assignments.type })
+    .from(assignments)
+    .where(eq(assignments.subjectId, subjectId));
+
+  await storageDb.transaction(async (tx) => {
+    await clearAssignmentRelationsForRows(rows, tx);
+    await tx.delete(assignments).where(eq(assignments.subjectId, subjectId));
+  });
 }
 
 export async function getAssignments({
@@ -419,24 +457,31 @@ export async function removeAssignment({
 }) {
   await assertTeacherHasAssignment(teacherId, subjectId, classId);
 
-  const [existing] = await storageDb
-    .select()
-    .from(assignments)
-    .where(eq(assignments.id, id))
-    .limit(1);
+  await storageDb.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(assignments)
+      .where(eq(assignments.id, id))
+      .limit(1);
 
-  if (!existing) throw new NotFoundError("Assignment tidak ditemukan");
-  if (existing.subjectId !== subjectId || existing.classId !== classId) {
-    throw new BadRequestError("Assignment tidak ditemukan untuk course ini");
-  }
-  if (await hasStorageRows(id)) {
-    throw new BadRequestError(
-      "Assignment tidak bisa dihapus: sudah ada jawaban dari siswa",
-    );
-  }
+    if (!existing) throw new NotFoundError("Assignment tidak ditemukan");
+    if (existing.subjectId !== subjectId || existing.classId !== classId) {
+      throw new BadRequestError("Assignment tidak ditemukan untuk course ini");
+    }
+    if (await hasStorageRows(id, tx)) {
+      throw new BadRequestError(
+        "Assignment tidak bisa dihapus: sudah ada jawaban dari siswa",
+      );
+    }
 
-  await clearAssignmentFiles({ id, type: existing.type as AssignmentType });
-  await storageDb.delete(assignments).where(eq(assignments.id, id));
+    await clearAssignmentFilesByIds({
+      ids: [id],
+      type: existing.type as AssignmentType,
+      tx,
+    });
+    await tx.delete(assignments).where(eq(assignments.id, id));
+  });
+
   return { id };
 }
 

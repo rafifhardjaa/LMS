@@ -78,6 +78,7 @@ export function CourseInfoContent({
 }: CourseInfoContentProps) {
   const user = useAuthStore((state) => state.user);
   const styles = ACCENT_STYLES[accent];
+  const isStudent = accent === "student";
   const displayTeacher = teacherName?.trim() || user?.full_name || "-";
 
   const capaianText = capaianPembelajaran?.trim() || capaianPembelajaranDefault;
@@ -99,14 +100,28 @@ export function CourseInfoContent({
   return (
     <section className="flex min-h-64 flex-1 flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
       <FadeIn className={`px-5 py-4 ${styles.header}`}>
-        <h2 className="text-[15px] font-bold text-white">Info Pembelajaran</h2>
-        <p className="mt-0.5 text-[12px] font-medium text-white/80">
+        <h2
+          className={`text-[15px] text-white ${
+            isStudent ? "font-extrabold tracking-tight" : "font-bold"
+          }`}
+        >
+          Info Pembelajaran
+        </h2>
+        <p
+          className={`mt-0.5 text-[12px] text-white/80 ${
+            isStudent ? "font-semibold" : "font-medium"
+          }`}
+        >
           {subjectName}
         </p>
       </FadeIn>
 
       <div className="flex flex-col gap-5 px-5 py-5">
-        <div className="flex items-center gap-3">
+        <div
+          className={`flex items-center gap-3 ${
+            isStudent ? "border-b-2 border-[#0d5c52]/10 pb-5" : ""
+          }`}
+        >
           <div
             className={`flex size-11 shrink-0 items-center justify-center rounded-full ${styles.avatarBg} ${styles.avatarText} text-[15px] font-bold`}
           >
@@ -116,16 +131,28 @@ export function CourseInfoContent({
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
               Guru Pengampu
             </p>
-            <p className="truncate text-[14px] font-bold text-[#1E293B]">
+            <p
+              className={`truncate text-[14px] text-[#1E293B] ${
+                isStudent ? "font-extrabold" : "font-bold"
+              }`}
+            >
               {displayTeacher}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 divide-x divide-[#E2E8F0] rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-3">
+        <div
+          className={`grid grid-cols-3 divide-[#E2E8F0] rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-3 ${
+            isStudent ? "divide-x-2 border-t-2 border-[#0d5c52]" : "divide-x"
+          }`}
+        >
           {stats.map((stat) => (
             <div key={stat.label} className="px-4 text-center">
-              <p className="text-[18px] font-bold text-[#1E293B]">
+              <p
+                className={`text-[18px] text-[#1E293B] ${
+                  isStudent ? "font-extrabold" : "font-bold"
+                }`}
+              >
                 {typeof stat.value === "number" ? (
                   <CountUp to={stat.value} />
                 ) : (
@@ -139,8 +166,14 @@ export function CourseInfoContent({
           ))}
         </div>
 
-        <div>
-          <p className="text-[14px] font-semibold text-[#1E293B]">
+        <div
+          className={isStudent ? "border-t-2 border-[#0d5c52]/10 pt-5" : ""}
+        >
+          <p
+            className={`text-[14px] text-[#1E293B] ${
+              isStudent ? "font-extrabold" : "font-semibold"
+            }`}
+          >
             Capaian Pembelajaran
           </p>
           <StaggerChildren
@@ -161,8 +194,14 @@ export function CourseInfoContent({
           </StaggerChildren>
         </div>
 
-        <div>
-          <p className="text-[14px] font-semibold text-[#1E293B]">
+        <div
+          className={isStudent ? "border-t-2 border-[#0d5c52]/10 pt-5" : ""}
+        >
+          <p
+            className={`text-[14px] text-[#1E293B] ${
+              isStudent ? "font-extrabold" : "font-semibold"
+            }`}
+          >
             Bobot Penilaian
           </p>
           <StaggerChildren className="mt-2.5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
