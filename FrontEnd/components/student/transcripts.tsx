@@ -330,16 +330,6 @@ export function StudentTranscripts() {
       <div className="flex flex-col gap-6 w-full">
         {/* 1. Breadcrumb & Header */}
         <div className="flex flex-col gap-4">
-          <nav className="flex items-center gap-1.5 text-[13px] font-semibold text-[#536360]">
-            <a href="/student/dashboard" className="hover:text-[#0d5c52] transition-colors uppercase tracking-wide">
-              Dashboard
-            </a>
-            <ChevronRight className="size-4 text-[#bec9c5]" />
-            <span className="text-[#0d5c52] font-bold uppercase tracking-wide">
-              Transkrip &amp; Evaluasi Akademik
-            </span>
-          </nav>
-
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex flex-col gap-1.5 max-w-3xl">
               <div className="flex flex-wrap items-center gap-2">

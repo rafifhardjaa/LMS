@@ -8,7 +8,6 @@ import {
   CalendarDays,
   CheckCircle2,
   CheckSquare,
-  ChevronRight,
   Copy,
   DoorOpen,
   Download,
@@ -22,7 +21,6 @@ import {
   MessageCircle,
   Plus,
   PlusCircle,
-  School,
   ShieldCheck,
   Sparkles,
   Ticket,
@@ -54,19 +52,6 @@ export function StudentCounseling() {
       <div className="flex flex-col gap-6 w-full">
         {/* Breadcrumb & Top Bar Meta */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <nav className="flex items-center gap-1 text-[#536360]">
-            <a
-              href="/student/dashboard"
-              className="text-sm font-semibold text-[#0d5c52] flex items-center gap-1.5 hover:underline"
-            >
-              <School className="size-4" />
-              Dashboard
-            </a>
-            <ChevronRight className="size-3.5 text-[#bec9c5]" />
-            <span className="text-sm font-semibold text-[#071f1c]">
-              Counseling (BK) &amp; Student Wellness Hub
-            </span>
-          </nav>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4eee7] text-[#0d5c52] text-xs font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-[#14b8a6]" />

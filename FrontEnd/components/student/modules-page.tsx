@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   ChevronDown,
   Download,
-  Home,
   LayoutGrid,
   Library,
   List,
@@ -158,17 +157,6 @@ export function StudentModules() {
         {/* Header */}
         <div className="flex flex-col gap-4">
           <div className="flex max-w-3xl flex-col gap-1">
-            <nav className="flex items-center gap-1 text-[13px] font-semibold leading-[18px] text-[#3f4946]">
-              <a
-                href="/student/dashboard"
-                className="flex items-center gap-1 transition-colors hover:text-[#0d5c52]"
-              >
-                <Home className="size-4" />
-                Dashboard
-              </a>
-              <span className="text-[#bec9c5]">/</span>
-              <span className="text-[#0d5c52]">Modules &amp; Learning Materials</span>
-            </nav>
             <h1
               className="mt-1 flex flex-wrap items-center gap-2 text-[26px] font-bold leading-[34px] tracking-tight text-[#071f1c]"
               style={jakarta}

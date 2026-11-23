@@ -11,13 +11,11 @@ import {
   Check,
   CheckCheck,
   CheckCircle2,
-  ChevronRight,
   Code,
   ExternalLink,
   FileText,
   FolderArchive,
   GraduationCap,
-  Home,
   Hourglass,
   Info,
   Lock,
@@ -187,24 +185,6 @@ export function StudentModuleDetail({ moduleId }: { moduleId: string }) {
   return (
     <FadeIn className="w-full">
       <div className="flex flex-col gap-6 w-full">
-        {/* Breadcrumb & Top Controls */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-          <nav className="flex items-center gap-1.5 text-[13px] font-semibold text-[#536360] overflow-x-auto whitespace-nowrap py-1">
-            <Link href="/student/dashboard" className="hover:text-[#0d5c52] transition-colors flex items-center gap-1">
-              <Home className="size-4" />
-              Dashboard
-            </Link>
-            <ChevronRight className="size-3.5 text-[#bec9c5]" />
-            <Link href="/student/module-course" className="hover:text-[#0d5c52] transition-colors">
-              Modules
-            </Link>
-            <ChevronRight className="size-3.5 text-[#bec9c5]" />
-            <span className="text-[#0d5c52]">
-              {moduleData?.subject_name ?? "Informatika & Sains Komputasi"}
-            </span>
-          </nav>
-        </div>
-
         {/* Hero Module Header */}
         <div className="relative overflow-hidden rounded-2xl bg-white p-6 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] border border-[#cee8e1]/60">
           <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-[#abf0e2]/30 blur-3xl pointer-events-none" />

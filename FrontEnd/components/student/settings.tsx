@@ -8,10 +8,8 @@ import {
   Bot,
   Camera,
   CheckCheck,
-  ChevronRight,
   CircleCheck,
   Globe,
-  Home,
   IdCard,
   KeyRound,
   Laptop,
@@ -213,19 +211,6 @@ export function StudentSettings() {
       <div className="flex flex-col gap-6 w-full">
         {/* Breadcrumb & actions */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <nav className="flex items-center gap-1 text-[#536360]">
-            <a
-              href="/student/dashboard"
-              className="text-[13px] font-semibold text-[#0d5c52] flex items-center gap-1.5 hover:underline"
-            >
-              <Home className="size-4" />
-              Dashboard
-            </a>
-            <ChevronRight className="size-3.5 text-[#bec9c5]" />
-            <span className="text-[13px] font-semibold text-[#536360]">
-              Settings &amp; Account Preferences
-            </span>
-          </nav>
           <div className="flex items-center gap-2">
             <motion.button
               type="button"
