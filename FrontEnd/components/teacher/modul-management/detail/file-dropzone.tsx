@@ -69,7 +69,7 @@ const ACCEPT = {
 
 const MAX_SIZE = 10 * 1024 * 1024;
 
-function formatSize(size: number): string {
+export function formatSize(size: number): string {
   if (size >= 1024 * 1024) {
     return `${(size / 1024 / 1024).toFixed(2)} MB`;
   }
@@ -102,12 +102,12 @@ const FILE_TYPE_BADGE: Record<string, string> = {
   RAR: "bg-[#FEF3C7] text-[#B45309]",
 };
 
-function fileExtension(name: string): string {
+export function fileExtension(name: string): string {
   const match = name.toLowerCase().match(/\.([a-z0-9]+)$/);
   return (match?.[1] ?? "file").toUpperCase();
 }
 
-function fileBadgeClass(extension: string): string {
+export function fileBadgeClass(extension: string): string {
   return FILE_TYPE_BADGE[extension] ?? "bg-[#F1F5F9] text-[#64748B]";
 }
 
@@ -216,15 +216,17 @@ export function FileDropzone({
           <span className="shrink-0 font-medium text-[#5B8C1F]">
             {formatSize(item.size)}
           </span>
-          <button
-            type="button"
-            onClick={() => setPendingDelete(item)}
-            disabled={deleting}
-            aria-label={`Hapus ${item.name}`}
-            className="flex size-4 shrink-0 items-center justify-center rounded-full text-[#5B8C1F] transition hover:bg-[#DCFCE7] hover:text-[#b71422] disabled:opacity-50"
-          >
-            <X className="size-3" />
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={() => setPendingDelete(item)}
+              disabled={deleting}
+              aria-label={`Hapus ${item.name}`}
+              className="flex size-4 shrink-0 items-center justify-center rounded-full text-[#5B8C1F] transition hover:bg-[#DCFCE7] hover:text-[#b71422] disabled:opacity-50"
+            >
+              <X className="size-3" />
+            </button>
+          )}
         </motion.li>
       );
     }

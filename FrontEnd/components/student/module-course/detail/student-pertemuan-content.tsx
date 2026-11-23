@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
+import { Clock, Download } from "lucide-react";
 import moment from "moment";
 import { FadeIn } from "@/components/ui/animations";
 import type { Assignment, CourseMeeting } from "@/lib/api/master-data";
 import {
   FileDropzone,
+  fileBadgeClass,
+  fileExtension,
+  formatSize,
   type PendingFile,
 } from "@/components/teacher/modul-management/detail/file-dropzone";
 
@@ -17,6 +20,8 @@ type SubmissionSlot = "tugasSubmission" | "kuisSubmission";
 type StudentPertemuanContentProps = {
   meeting: CourseMeeting;
   materiFiles: PendingFile[];
+  tugasTeacherFiles: PendingFile[];
+  kuisTeacherFiles: PendingFile[];
   tugasFiles: PendingFile[];
   kuisFiles: PendingFile[];
   tugas: Assignment[];
@@ -63,9 +68,61 @@ function deadlineTone(deadlineAt: string): {
 const EMPTY_TEXT =
   "rounded-lg bg-[#F8FAFC] px-3 py-2 text-center text-[12px] font-medium text-[#94A3B8]";
 
+function TeacherFileList({ files }: { files: PendingFile[] }) {
+  if (files.length === 0) return null;
+
+  return (
+    <ul className="flex flex-wrap gap-1.5">
+      {files.map((item) => {
+        const extension = fileExtension(item.name);
+        const content = (
+          <>
+            <span
+              className={`flex h-5 shrink-0 items-center justify-center rounded px-1.5 text-[9px] font-extrabold tracking-wide ${fileBadgeClass(
+                extension,
+              )}`}
+            >
+              {extension}
+            </span>
+            <span className="max-w-[220px] truncate font-semibold text-[#1E293B]">
+              {item.name}
+            </span>
+            <span className="shrink-0 font-medium text-[#64748B]">
+              {formatSize(item.size)}
+            </span>
+            <Download className="size-3 shrink-0 text-[#0d5c52]" />
+          </>
+        );
+
+        return (
+          <li key={item.clientId}>
+            {item.fileUrl ? (
+              <a
+                href={item.fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                title={`Buka ${item.name}`}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white py-1 pl-2.5 pr-2 text-[12px] transition hover:border-[#0d5c52]/40 hover:bg-[#edf7f4]"
+              >
+                {content}
+              </a>
+            ) : (
+              <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white py-1 pl-2.5 pr-2 text-[12px]">
+                {content}
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function StudentPertemuanContent({
   meeting,
   materiFiles,
+  tugasTeacherFiles,
+  kuisTeacherFiles,
   tugasFiles,
   kuisFiles,
   tugas,
@@ -85,6 +142,7 @@ export function StudentPertemuanContent({
 
   function renderAssignmentSection(
     kind: "tugas" | "kuis",
+    teacherFiles: PendingFile[],
     assignments: Assignment[],
     files: PendingFile[],
     onFilesChange: (assignmentId: string, next: PendingFile[]) => void,
@@ -111,60 +169,76 @@ export function StudentPertemuanContent({
                 const key = `${kind}:${assignment.id}`;
                 const tone = deadlineTone(assignment.deadlineAt);
                 return (
-                  <motion.div
-                    key={assignment.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="flex flex-col gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-bold text-[#1E293B]">
-                          {assignment.title}
-                        </p>
-                        {assignment.description && (
-                          <p className="mt-1 text-[12px] leading-5 text-[#64748B]">
-                            {assignment.description}
+                  <div key={assignment.id} className="flex flex-col gap-3">
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex flex-col gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-bold text-[#1E293B]">
+                            {assignment.title}
                           </p>
-                        )}
+                          {assignment.description && (
+                            <p className="mt-1 text-[12px] leading-5 text-[#64748B]">
+                              {assignment.description}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={`inline-flex shrink-0 items-center self-start rounded-full px-2.5 py-1 text-[10px] font-bold sm:self-auto ${tone.className}`}
+                        >
+                          {tone.label}
+                        </span>
                       </div>
-                      <span
-                        className={`inline-flex shrink-0 items-center self-start rounded-full px-2.5 py-1 text-[10px] font-bold sm:self-auto ${tone.className}`}
-                      >
-                        {tone.label}
-                      </span>
-                    </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-[#64748B]">
-                      <span className="inline-flex items-center gap-1">
-                        Mulai · {formatDateTime(assignment.startAt)}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="size-3 text-[#D97706]" />
-                        Batas · {formatDateTime(assignment.deadlineAt)}
-                      </span>
-                    </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-[#64748B]">
+                        <span className="inline-flex items-center gap-1">
+                          Mulai · {formatDateTime(assignment.startAt)}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="size-3 text-[#D97706]" />
+                          Batas · {formatDateTime(assignment.deadlineAt)}
+                        </span>
+                      </div>
 
-                    <FileDropzone
-                      accent={accent}
-                      label={
-                        kind === "tugas" ? "Pengumpulan tugas" : "Pengumpulan kuis"
-                      }
-                      files={files.filter(
-                        (file) => file.assignmentId === assignment.id,
+                      {teacherFiles.length > 0 && (
+                        <div className="border-t border-[#F1F5F9] pt-3">
+                          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                            {kind === "tugas" ? "File tugas" : "File kuis"}
+                          </p>
+                          <TeacherFileList files={teacherFiles} />
+                        </div>
                       )}
-                      onChange={(next) => onFilesChange(assignment.id, next)}
-                      expanded={expandedKey === key}
-                      onToggle={() => toggle(key)}
-                      onUploadAll={(items) =>
-                        onUpload(slot, items, assignment.id)
-                      }
-                      uploading={uploading}
-                      onDelete={(item) => onDelete(slot, item)}
-                      deleting={deleting}
-                    />
-                  </motion.div>
+                    </motion.div>
+
+                    <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-2.5">
+                      <FileDropzone
+                        accent={accent}
+                        label={
+                          kind === "tugas"
+                            ? "Pengumpulan tugas"
+                            : "Pengumpulan kuis"
+                        }
+                        files={files.filter(
+                          (file) => file.assignmentId === assignment.id,
+                        )}
+                        onChange={(next) =>
+                          onFilesChange(assignment.id, next)
+                        }
+                        expanded={expandedKey === key}
+                        onToggle={() => toggle(key)}
+                        onUploadAll={(items) =>
+                          onUpload(slot, items, assignment.id)
+                        }
+                        uploading={uploading}
+                        onDelete={(item) => onDelete(slot, item)}
+                        deleting={deleting}
+                      />
+                    </div>
+                  </div>
                 );
               })
             )}
@@ -218,22 +292,26 @@ export function StudentPertemuanContent({
                 {materiFiles.length === 0 ? (
                   <p className={EMPTY_TEXT}>Materi ini belum diunggah</p>
                 ) : (
-                  <FileDropzone
-                    accent="materi"
-                    label="Lampiran materi"
-                    files={materiFiles}
-                    onChange={() => undefined}
-                    expanded={expandedKey === "materi"}
-                    onToggle={() => toggle("materi")}
-                    readOnly
-                  />
+                  <TeacherFileList files={materiFiles} />
                 )}
               </div>
             </div>
           </FadeIn>
 
-          {renderAssignmentSection("tugas", tugas, tugasFiles, onTugasFilesChange)}
-          {renderAssignmentSection("kuis", kuis, kuisFiles, onKuisFilesChange)}
+          {renderAssignmentSection(
+            "tugas",
+            tugasTeacherFiles,
+            tugas,
+            tugasFiles,
+            onTugasFilesChange,
+          )}
+          {renderAssignmentSection(
+            "kuis",
+            kuisTeacherFiles,
+            kuis,
+            kuisFiles,
+            onKuisFilesChange,
+          )}
         </div>
       </section>
     </div>
