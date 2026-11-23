@@ -427,6 +427,34 @@ export default function ModulCourseDetailPage() {
     }
   }, [meetingSubjectId, meetingClassId]);
 
+  const fetchAndMergeMeetingFiles = useCallback(
+    async (key: string, isActive: () => boolean = () => true) => {
+      const results = await Promise.all(
+        UPLOAD_SLOTS.map((slot) => uploadsApi.list(slot, key)),
+      );
+      if (!isActive()) return;
+
+      if (results.some((result) => result.error)) {
+        toast.error("Gagal memuat daftar file pertemuan");
+        return;
+      }
+
+      setMeetingFiles((current) => {
+        const currentEntry = current[key] ?? EMPTY_UPLOAD_FILES;
+        const nextEntry = { ...currentEntry };
+        UPLOAD_SLOTS.forEach((slot, index) => {
+          const saved = (results[index].data?.data ?? []).map(toPendingFile);
+          const unsaved = (currentEntry[slot] ?? []).filter(
+            (item) => item.status !== "saved",
+          );
+          nextEntry[slot] = [...unsaved, ...saved];
+        });
+        return { ...current, [key]: nextEntry };
+      });
+    },
+    [],
+  );
+
   const handleTasksChange = useCallback(
     async (kind: TaskKind, next: TaskDraft[]) => {
       const key = meetingFileKey;
@@ -524,6 +552,7 @@ export default function ModulCourseDetailPage() {
         );
       } finally {
         void fetchAssignments(key);
+        void fetchAndMergeMeetingFiles(key);
       }
     },
     [
@@ -532,35 +561,8 @@ export default function ModulCourseDetailPage() {
       meetingClassId,
       taskDrafts,
       fetchAssignments,
+      fetchAndMergeMeetingFiles,
     ],
-  );
-
-  const fetchAndMergeMeetingFiles = useCallback(
-    async (key: string, isActive: () => boolean = () => true) => {
-      const results = await Promise.all(
-        UPLOAD_SLOTS.map((slot) => uploadsApi.list(slot, key)),
-      );
-      if (!isActive()) return;
-
-      if (results.some((result) => result.error)) {
-        toast.error("Gagal memuat daftar file pertemuan");
-        return;
-      }
-
-      setMeetingFiles((current) => {
-        const currentEntry = current[key] ?? EMPTY_UPLOAD_FILES;
-        const nextEntry = { ...currentEntry };
-        UPLOAD_SLOTS.forEach((slot, index) => {
-          const saved = (results[index].data?.data ?? []).map(toPendingFile);
-          const unsaved = (currentEntry[slot] ?? []).filter(
-            (item) => item.status !== "saved",
-          );
-          nextEntry[slot] = [...unsaved, ...saved];
-        });
-        return { ...current, [key]: nextEntry };
-      });
-    },
-    [],
   );
 
   useEffect(() => {
