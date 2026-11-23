@@ -155,6 +155,8 @@ export const classesRoute = new Elysia({ prefix: "/api/v1/classes" })
       detail: {
         tags: ["Classes"],
         summary: "Tetapkan wali kelas (admin)",
+        description:
+          "Menetapkan, mengganti, atau melepas wali kelas. `advisorId` wajib UUID user dengan role `guru`; kirim `null` untuk melepas wali. Satu guru hanya boleh menjadi wali satu kelas — jika sudah menjadi wali di kelas lain, request ditolak 400. Respons `data` adalah kelas terbaru.",
         security: [{ BearerAuth: [] }],
       },
       params: t.Object({ id: t.String() }),

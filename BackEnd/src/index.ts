@@ -34,7 +34,18 @@ const documentation = {
 ## SiManis — Learning Management System API
 
 REST API untuk platform manajemen pembelajaran SMK Mataram.
-Mendukung manajemen siswa, guru, mata pelajaran, modul, lesson, enrollment, review, notifikasi, progress, dan upload file.
+Mendukung master data (jurusan, tingkatan, kelas, mapel), manajemen siswa & guru,
+penugasan guru, penetapan wali kelas, jadwal pelajaran, presensi, dashboard,
+course detail (pertemuan & materi), tugas/kuis beserta penilaian, modul, lesson,
+enrollment, review, notifikasi, progress, dan upload file.
+
+Referensi lengkap seluruh endpoint: \`docs/API.md\` pada repositori.
+
+### Wali kelas
+Penetapan wali kelas memakai \`PUT /api/v1/classes/:id/advisor\` (admin).
+Kirim \`advisorId\` berupa UUID guru, atau \`null\` untuk melepas wali.
+Satu guru hanya boleh menjadi wali satu kelas; guru non-wali tidak dapat membuka
+presensi kelas tersebut.
 
 ### Autentikasi
 Gunakan \`POST /api/v1/auth/login\` (identifier = email atau nomor induk) untuk mendapatkan JWT token, lalu klik tombol **Authorize 🔒** di atas dan masukkan:
@@ -73,6 +84,7 @@ Akun guru dibuat oleh admin melalui \`POST /api/v1/admin/users\`.
   },
   security: [{ BearerAuth: [] }],
   tags: [
+    { name: "Health", description: "Health check server" },
     { name: "Auth", description: "Registrasi, login, profil, dan logout" },
     { name: "Admin", description: "Manajemen akun guru & siswa (admin)" },
     { name: "Subjects", description: "Manajemen mata pelajaran" },
@@ -86,7 +98,27 @@ Akun guru dibuat oleh admin melalui \`POST /api/v1/admin/users\`.
     { name: "Teachers", description: "Daftar guru dan beban mengajar" },
     { name: "Students", description: "Manajemen data siswa dan kelas" },
     { name: "Dashboard", description: "Statistik grafik dashboard admin" },
+    {
+      name: "Jadwal Pelajaran",
+      description: "Sesi jadwal pelajaran dan statistik bentrok",
+    },
+    {
+      name: "Attendance",
+      description: "Tanggal presensi per kelas (wali kelas)",
+    },
+    {
+      name: "Course Detail",
+      description: "Pertemuan dan materi course per kelas",
+    },
+    {
+      name: "Assignments",
+      description: "Tugas & kuis per pertemuan beserta penilaian submission",
+    },
     { name: "Modules", description: "Manajemen modul dalam mata pelajaran" },
+    {
+      name: "Discussions",
+      description: "Diskusi dan balasan pada modul",
+    },
     { name: "Lessons", description: "Manajemen lesson dalam modul" },
     { name: "Enrollments", description: "Pendaftaran siswa ke mata pelajaran" },
     { name: "Reviews", description: "Ulasan siswa terhadap mata pelajaran" },
@@ -126,7 +158,14 @@ const app = new Elysia()
     // Log semua error yang tidak ditangani oleh route/middleware
     console.error(`[onError] ${request.method} ${new URL(request.url).pathname}`, error);
   })
-  .get("/", () => ({ status: "ok" }))
+  .get("/", () => ({ status: "ok" }), {
+    detail: {
+      tags: ["Health"],
+      summary: "Health check",
+      description: "Memastikan server berjalan. Mengembalikan { status: 'ok' }.",
+      security: [],
+    },
+  })
   .use(usersRoute)
   .use(authRoute)
   .use(adminUsersRoute)
