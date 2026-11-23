@@ -730,4 +730,18 @@ export const masterDataApi = {
         `/api/v1/progress/module/${moduleId}`
       ),
   },
+  studentCourses: {
+    meetings: {
+      list: (subjectId: string, classId: string) =>
+        apiFetch<ApiSuccess<CourseMeeting[]>>(
+          `/api/v1/student-courses/${subjectId}/meetings${queryString({ classId })}`
+        ),
+    },
+    participants: {
+      list: (subjectId: string, classId: string) =>
+        apiFetch<ApiSuccess<StudentSummary[]>>(
+          `/api/v1/student-courses/${subjectId}/participants${queryString({ classId })}`
+        ),
+    },
+  },
 } as const;

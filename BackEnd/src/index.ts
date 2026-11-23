@@ -25,6 +25,7 @@ import { notificationsRoute } from "./routes/notifications";
 import { progressRoute } from "./routes/progress";
 import { uploadsRoute } from "./routes/uploads";
 import { assignmentsRoute } from "./routes/assignments-route";
+import { studentCourseRoute } from "./routes/student-course-route";
 
 const documentation = {
   info: {
@@ -189,6 +190,7 @@ const app = new Elysia()
   .use(notificationsRoute)
   .use(progressRoute)
   .use(uploadsRoute)
+  .use(studentCourseRoute)
   .listen(Number(process.env.PORT) || 3000);
 
 console.log(
