@@ -4,17 +4,18 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Loader2 } from "lucide-react";
 import { masterDataApi } from "@/lib/api/master-data";
+import { modulesApi } from "@/lib/api/client";
+import type { BackendModule } from "@/lib/api/types";
+import { useAuthStore } from "@/lib/store/auth-store";
 
-type ModuleItem = {
-  id: string;
-  title: string;
-  description?: string;
-};
+type ModuleItem = BackendModule;
 
 export function LearningModules() {
+  const user = useAuthStore((state) => state.user);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modules, setModules] = useState<ModuleItem[]>([]);
+  const [classId, setClassId] = useState("");
   const [selectedModuleId, setSelectedModuleId] = useState("");
 
   useEffect(() => {
@@ -23,13 +24,22 @@ export function LearningModules() {
     async function load() {
       try {
         setLoading(true);
-        const res = await masterDataApi.modules.list();
+        const [modulesRes, classesRes] = await Promise.all([
+          modulesApi.list(),
+          user?.kelas ? masterDataApi.classes.list() : Promise.resolve(null),
+        ]);
         if (!active) return;
-        if (res.error) {
-          setError(res.error.message ?? "Gagal memuat modul.");
+
+        if (modulesRes.error) {
+          setError(modulesRes.error.message ?? "Gagal memuat modul.");
           return;
         }
-        setModules(res.data?.data ?? []);
+
+        const foundClass = classesRes?.data?.data.find(
+          (item) => item.name === user?.kelas,
+        );
+        setClassId(foundClass?.id ?? "");
+        setModules(modulesRes.data?.data ?? []);
         setError(null);
       } catch {
         if (active) setError("Gagal memuat modul.");
@@ -42,12 +52,18 @@ export function LearningModules() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.kelas]);
 
   const visibleModules = selectedModuleId
     ? modules.filter((module) => module.id === selectedModuleId)
     : modules;
   const selectedModule = modules.find((module) => module.id === selectedModuleId);
+
+  function courseHref(module: ModuleItem) {
+    return classId && module.subject_id
+      ? `/student/module-course/${classId}--${module.subject_id}`
+      : null;
+  }
 
   if (loading) {
     return (
@@ -87,12 +103,9 @@ export function LearningModules() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleModules.map((module) => (
-            <Link
-              key={module.id}
-              href={`/student/module-course/${module.id}`}
-              className="rounded-xl bg-[#f8f9fc] p-4 transition-colors hover:border hover:border-[#0d5c52]/30"
-            >
+          {visibleModules.map((module) => {
+            const href = courseHref(module);
+            const content = (
               <div className="flex items-start gap-3">
                 <BookOpen className="size-4 text-[#0d5c52] flex-shrink-0" />
                 <div className="min-w-0">
@@ -102,8 +115,25 @@ export function LearningModules() {
                   </p>
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+
+            return href ? (
+              <Link
+                key={module.id}
+                href={href}
+                className="rounded-xl bg-[#f8f9fc] p-4 transition-colors hover:border hover:border-[#0d5c52]/30"
+              >
+                {content}
+              </Link>
+            ) : (
+              <div
+                key={module.id}
+                className="rounded-xl bg-[#f8f9fc] p-4 opacity-60"
+              >
+                {content}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -116,12 +146,14 @@ export function LearningModules() {
           <p className="mt-2 text-sm">
             Status: <span className="font-medium">Belum diakses</span>
           </p>
-          <Link
-            href={`/student/module-course/${selectedModule.id}`}
-            className="mt-3 inline-flex text-sm font-semibold text-[#0d5c52] hover:underline"
-          >
-            Buka modul
-          </Link>
+          {courseHref(selectedModule) ? (
+            <Link
+              href={courseHref(selectedModule)!}
+              className="mt-3 inline-flex text-sm font-semibold text-[#0d5c52] hover:underline"
+            >
+              Buka modul
+            </Link>
+          ) : null}
         </div>
       )}
     </section>

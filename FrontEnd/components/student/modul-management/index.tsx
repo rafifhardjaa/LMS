@@ -1,20 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { FadeIn } from "@/components/ui/animations";
 import { masterDataApi, type JadwalPelajaran } from "@/lib/api/master-data";
-import { modulesApi } from "@/lib/api/client";
-import type { BackendModule } from "@/lib/api/types";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { StudentModulesHeader } from "./modules-header";
-import { JadwalTable, type StudentCourseRow } from "./jadwal-table";
+import { JadwalTable } from "./jadwal-table";
 import { JadwalAnalyticsPanel } from "./jadwal-analytics-panel";
 
 export function ModulesManagement() {
   const user = useAuthStore((state) => state.user);
   const [rows, setRows] = useState<JadwalPelajaran[]>([]);
-  const [modules, setModules] = useState<BackendModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +26,6 @@ export function ModulesManagement() {
 
         if (!user.kelas) {
           setRows([]);
-          setModules([]);
           setError("Kelas siswa belum diatur. Hubungi admin sekolah.");
           return;
         }
@@ -43,31 +39,27 @@ export function ModulesManagement() {
         const found = (classRes.data?.data ?? []).find((item) => item.name === user.kelas);
         if (!found) {
           setRows([]);
-          setModules([]);
           setError("Kelas siswa tidak ditemukan.");
           return;
         }
 
-        const [jadwalRes, modulesRes] = await Promise.all([
-          masterDataApi.jadwalPelajaran.list({ classId: found.id, activeOnly: true }),
-          modulesApi.list(),
-        ]);
+        const jadwalRes = await masterDataApi.jadwalPelajaran.list({
+          classId: found.id,
+          activeOnly: true,
+        });
         if (!active) return;
 
-        const firstError = jadwalRes.error ?? modulesRes.error;
-        if (firstError) {
+        if (jadwalRes.error) {
           throw new Error(
-            firstError.message ?? firstError.error ?? "Gagal memuat jadwal kelas."
+            jadwalRes.error.message ?? jadwalRes.error.error ?? "Gagal memuat jadwal kelas."
           );
         }
 
         setRows(jadwalRes.data?.data ?? []);
-        setModules(modulesRes.data?.data ?? []);
         setError(null);
       } catch (err) {
         if (active) {
           setRows([]);
-          setModules([]);
           setError(err instanceof Error ? err.message : "Gagal memuat jadwal kelas.");
         }
       } finally {
@@ -80,20 +72,6 @@ export function ModulesManagement() {
       active = false;
     };
   }, [user]);
-
-  const rowsWithModule = useMemo<StudentCourseRow[]>(() => {
-    const firstBySubject = new Map<string, string>();
-    const ordered = [...modules].sort((first, second) => first.order_index - second.order_index);
-    for (const moduleItem of ordered) {
-      if (moduleItem.subject_id && !firstBySubject.has(moduleItem.subject_id)) {
-        firstBySubject.set(moduleItem.subject_id, moduleItem.id);
-      }
-    }
-    return rows.map((row) => ({
-      ...row,
-      moduleId: firstBySubject.get(row.subjectId) ?? null,
-    }));
-  }, [modules, rows]);
 
   return (
     <div className="flex w-full flex-col gap-5 text-[#1E293B]">
@@ -122,7 +100,7 @@ export function ModulesManagement() {
           </FadeIn>
         ) : (
           <FadeIn key="table">
-            <JadwalTable rows={rowsWithModule} />
+            <JadwalTable rows={rows} />
           </FadeIn>
         )}
       </AnimatePresence>
