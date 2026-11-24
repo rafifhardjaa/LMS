@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { FadeIn, SlideIn } from "@/components/ui/animations";
 import { masterDataApi } from "@/lib/api/master-data";
 import { uploadsApi, type UploadedFile } from "@/lib/api/uploads";
-import { useAuthStore } from "@/lib/store/auth-store";
 import type {
   Assignment,
   AssignmentSummary,
@@ -133,7 +132,6 @@ export default function ModulCourseDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
   const [classId, subjectId] = id.split("--");
-  const user = useAuthStore((state) => state.user);
 
   const [rows, setRows] = useState<JadwalPelajaran[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +144,6 @@ export default function ModulCourseDetailPage() {
   const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
   const [meetingsVersion, setMeetingsVersion] = useState(0);
-  const [advisorId, setAdvisorId] = useState<string | null>(null);
   const [meetingFiles, setMeetingFiles] = useState<
     Record<string, Record<UploadSlot, PendingFile[]>>
   >({});
@@ -227,31 +224,6 @@ export default function ModulCourseDetailPage() {
 
   const meetingSubjectId = course?.subjectId ?? null;
   const meetingClassId = course?.classId ?? null;
-
-  useEffect(() => {
-    if (!meetingClassId) return;
-    let active = true;
-    const loadAdvisor = async () => {
-      try {
-        const res = await masterDataApi.classes.list();
-        if (!active) return;
-        if (res.error) return;
-        const found = (res.data?.data ?? []).find(
-          (item) => item.id === meetingClassId,
-        );
-        setAdvisorId(found?.advisorId ?? null);
-      } catch {
-        // abaikan, fallback ke false
-      }
-    };
-    void loadAdvisor();
-    return () => {
-      active = false;
-    };
-  }, [meetingClassId]);
-
-  const canOpenAttendance =
-    user?.role === "admin" || (advisorId !== null && advisorId === user?.id);
 
   useEffect(() => {
     if (!meetingSubjectId || !meetingClassId) return;
@@ -762,7 +734,6 @@ export default function ModulCourseDetailPage() {
                     meeting={selectedMeeting}
                     subjectId={course.subjectId}
                     classId={course.classId}
-                    canOpenAttendance={canOpenAttendance}
                     meetings={meetings}
                     onMeetingsChanged={() => setMeetingsVersion((value) => value + 1)}
                     files={
