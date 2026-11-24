@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   BadgeCheck,
   BookOpen,
+  ClipboardCheck,
   GraduationCap,
   Headset,
   LayoutDashboard,
@@ -29,6 +30,12 @@ const menu = [
     icon: BookOpen,
     href: "/student/module-course",
     title: "Modul & Course Pembelajaran",
+  },
+  {
+    label: "Presensi",
+    icon: ClipboardCheck,
+    href: "/student/presensi",
+    title: "Rekap Presensi Harian",
   },
   {
     label: "Transkrip",

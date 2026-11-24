@@ -1,6 +1,9 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware, requireRole } from "../middleware/auth-middleware";
-import { listAttendanceDates } from "../services/attendance-service";
+import {
+  listAttendanceDates,
+  listStudentAttendanceRecap,
+} from "../services/attendance-service";
 import { handleError } from "../utils/response";
 
 export const attendanceRoute = new Elysia({
@@ -41,5 +44,29 @@ export const attendanceRoute = new Elysia({
         classId: t.Optional(t.String()),
         class_id: t.Optional(t.String()),
       }),
+    }
+  )
+  .get(
+    "/me",
+    async ({ user, status }: any) => {
+      try {
+        const data = await listStudentAttendanceRecap({ userId: user.id });
+        return status(200, {
+          success: true,
+          message: "Attendance recap retrieved",
+          data,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["siswa"]),
+      detail: {
+        tags: ["Attendance"],
+        summary: "Rekap presensi harian siswa untuk semester aktif",
+        security: [{ BearerAuth: [] }],
+      },
     }
   );
