@@ -18,6 +18,7 @@ type AttendanceToolbarProps = {
   classFilter: string;
   dateFilter: string;
   opened: boolean;
+  closesAt?: string | null;
   canOpen: boolean;
   counts: AttendanceCounts;
   studentCount: number;
@@ -34,6 +35,7 @@ export function AttendanceToolbar({
   classFilter,
   dateFilter,
   opened,
+  closesAt,
   canOpen,
   counts,
   studentCount,
@@ -231,6 +233,17 @@ export function AttendanceToolbar({
                 <ClipboardCheck className="size-4" />
                 {opened ? "Presensi dibuka" : "Buka presensi"}
               </motion.button>
+              {opened && closesAt && (
+                <p className="mt-2 text-center text-[10px] font-semibold text-white/80">
+                  Berakhir pukul{" "}
+                  {new Date(closesAt).toLocaleTimeString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  WIB
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

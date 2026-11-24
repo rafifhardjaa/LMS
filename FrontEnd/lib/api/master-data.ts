@@ -234,6 +234,15 @@ export interface AttendanceRecapDay {
   day: string;
   status: AttendanceStatus | null;
   note: string | null;
+  sessionOpen: boolean;
+  sessionOpenedAt: string | null;
+  sessionClosesAt: string | null;
+}
+
+export interface AttendanceSessionInfo {
+  isOpen: boolean;
+  openedAt: string | null;
+  closesAt: string | null;
 }
 
 export interface AttendanceRecap {
@@ -676,6 +685,22 @@ export const masterDataApi = {
           method: "PUT",
           body: JSON.stringify({ classId, date, records }),
         }),
+    },
+    sessions: {
+      get: (classId: string, date: string) =>
+        apiFetch<ApiSuccess<AttendanceSessionInfo>>(
+          `/api/v1/attendance/sessions${queryString({ classId, date })}`,
+        ),
+      open: (classId: string, date: string) =>
+        apiFetch<ApiSuccess<AttendanceSessionInfo>>(
+          `/api/v1/attendance/sessions`,
+          { method: "POST", body: JSON.stringify({ classId, date }) },
+        ),
+      close: (classId: string, date: string) =>
+        apiFetch<ApiSuccess<{ closed: boolean }>>(
+          `/api/v1/attendance/sessions${queryString({ classId, date })}`,
+          { method: "DELETE" },
+        ),
     },
   },
   academicPeriods: {

@@ -9,6 +9,7 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { masterDataApi } from "@/lib/api/master-data";
 import type {
   AttendanceDate,
+  AttendanceSessionInfo,
   SchoolClass,
   StudentSummary,
 } from "@/lib/api/master-data";
@@ -101,6 +102,9 @@ export function AttendanceManagement({
   const [classFilter, setClassFilter] = useState(initialClassId ?? "");
   const [dateFilter, setDateFilter] = useState(initialDate ?? "");
   const [isSessionOpened, setIsSessionOpened] = useState(false);
+  const [sessionInfo, setSessionInfo] = useState<AttendanceSessionInfo | null>(
+    null,
+  );
 
   const [dates, setDates] = useState<AttendanceDate[]>([]);
   const [datesLoading, setDatesLoading] = useState(false);
@@ -192,6 +196,26 @@ export function AttendanceManagement({
     };
   }, [classFilter, classes]);
 
+  useEffect(() => {
+    if (!classFilter || !dateFilter) return;
+
+    void (async () => {
+      try {
+        const res = await masterDataApi.attendance.sessions.get(
+          classFilter,
+          dateFilter,
+        );
+        if (res.error) return;
+        const info = res.data?.data ?? null;
+        setSessionInfo(info);
+        setIsSessionOpened(Boolean(info?.isOpen));
+      } catch {
+        setIsSessionOpened(false);
+        setSessionInfo(null);
+      }
+    })();
+  }, [classFilter, dateFilter]);
+
   const visibleClasses = useMemo(
     () =>
       user?.role === "admin"
@@ -247,11 +271,13 @@ export function AttendanceManagement({
     setDatesError(null);
     setStudentsError(null);
     setIsSessionOpened(false);
+    setSessionInfo(null);
   }
 
   function handleDateChange(value: string) {
     setDateFilter(value);
     setIsSessionOpened(false);
+    setSessionInfo(null);
     setStudents(baseRoster);
     setSavedSnapshot(baseRoster);
   }
@@ -282,10 +308,23 @@ export function AttendanceManagement({
 
   async function handleOpenSession() {
     if (!classFilter || !dateFilter) return;
-    setIsSessionOpened(true);
     setStudentsLoading(true);
 
     try {
+      const sessionRes = await masterDataApi.attendance.sessions.open(
+        classFilter,
+        dateFilter,
+      );
+      if (sessionRes.error) {
+        throw new Error(sessionRes.error.message ?? "Gagal membuka presensi");
+      }
+      const info = sessionRes.data?.data ?? null;
+      setSessionInfo(info);
+      setIsSessionOpened(Boolean(info?.isOpen));
+      if (!info?.isOpen) {
+        throw new Error("Sesi presensi tidak dapat dibuka");
+      }
+
       const res = await masterDataApi.attendance.records.list(
         classFilter,
         dateFilter,
@@ -323,13 +362,35 @@ export function AttendanceManagement({
     }
   }
 
-  function handleCancelSession() {
+  async function handleCancelSession() {
+    if (classFilter && dateFilter) {
+      try {
+        const res = await masterDataApi.attendance.sessions.close(
+          classFilter,
+          dateFilter,
+        );
+        if (res.error) {
+          throw new Error(res.error.message ?? "Gagal menutup sesi presensi");
+        }
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Gagal menutup sesi presensi",
+        );
+        return;
+      }
+    }
+
     setStudents(savedSnapshot);
     setIsSessionOpened(false);
+    setSessionInfo(null);
   }
 
   async function handleSaveSession() {
     if (!classFilter || !dateFilter) return;
+    if (!sessionInfo?.isOpen) {
+      toast.error("Presensi belum dibuka atau waktu sesi sudah berakhir");
+      return;
+    }
     setSaving(true);
 
     try {
@@ -403,6 +464,7 @@ export function AttendanceManagement({
             classFilter={classFilter}
             dateFilter={dateFilter}
             opened={isSessionOpened}
+            closesAt={sessionInfo?.closesAt ?? null}
             canOpen={canOpen}
             counts={counts}
             studentCount={students.length}
