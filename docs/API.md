@@ -232,10 +232,15 @@ pembacaan untuk `admin, guru`.
 | `PUT` | `/api/v1/attendance/me` | siswa | `{ date, status: hadir\|sakit\|izin, note? }` | Siswa mencatat presensi sendiri (hanya sekali per tanggal) |
 | `GET` | `/api/v1/attendance/records` | admin, guru | query `classId`, `date` | Catatan kehadiran kelas per tanggal |
 | `PUT` | `/api/v1/attendance/records` | admin, guru | `{ classId, date, records: [{ studentId, status, note? }] }` | Simpan/upsert catatan kehadiran (`hadir\|sakit\|izin\|alpa`) |
+| `POST` | `/api/v1/attendance/sessions` | admin, guru | `{ classId, date }` | Buka/buka ulang sesi presensi kelas |
+| `GET` | `/api/v1/attendance/sessions` | admin, guru | query `classId`, `date` | Status sesi (`isOpen`, `openedAt`, `closesAt`) |
+| `DELETE` | `/api/v1/attendance/sessions` | admin, guru | query `classId`, `date` | Tutup sesi presensi (dipakai tombol Batal guru) |
 
 > Untuk role `guru`, service menolak kelas yang `advisorId`-nya bukan user tersebut
 > (`403` — "Hanya wali kelas yang dapat membuka presensi kelas ini"). `admin` bypass.
 > Tanggal harus weekday dan berada di dalam periode akademik aktif.
+> Sesi presensi aktif selama **60 menit** sejak dibuka; guru dan siswa hanya bisa
+> menyimpan catatan kehadiran selama sesi aktif. Buka ulang akan mengatur ulang jendela 1 jam.
 
 ## Academic Periods — `/api/v1/academic-periods`
 

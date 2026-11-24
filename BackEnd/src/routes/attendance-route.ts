@@ -1,9 +1,12 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware, requireRole } from "../middleware/auth-middleware";
 import {
+  closeAttendanceSession,
+  getAttendanceSession,
   listAttendanceDates,
   listAttendanceRecords,
   listStudentAttendanceRecap,
+  openAttendanceSession,
   saveAttendanceRecords,
   saveStudentAttendance,
 } from "../services/attendance-service";
@@ -191,6 +194,120 @@ export const attendanceRoute = new Elysia({
             note: t.Optional(t.String()),
           })
         ),
+      }),
+    }
+  )
+  .post(
+    "/sessions",
+    async ({ body, user, status }: any) => {
+      try {
+        const classId = body.classId || body.class_id;
+        if (!classId) {
+          return status(400, {
+            success: false,
+            message: "classId wajib diisi",
+          });
+        }
+        const data = await openAttendanceSession({
+          classId,
+          date: body.date,
+          actor: user,
+        });
+        return status(200, {
+          success: true,
+          message: "Presensi dibuka selama 1 jam",
+          data,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru"]),
+      detail: {
+        tags: ["Attendance"],
+        summary: "Buka/buka ulang sesi presensi kelas (1 jam)",
+        security: [{ BearerAuth: [] }],
+      },
+      body: t.Object({
+        classId: t.Optional(t.String()),
+        class_id: t.Optional(t.String()),
+        date: t.String(),
+      }),
+    }
+  )
+  .get(
+    "/sessions",
+    async ({ query, status }: any) => {
+      try {
+        const classId = query.classId || query.class_id;
+        const date = query.date;
+        if (!classId || !date) {
+          return status(400, {
+            success: false,
+            message: "classId dan date wajib diisi",
+          });
+        }
+        const data = await getAttendanceSession({ classId, date });
+        return status(200, { success: true, data });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru"]),
+      detail: {
+        tags: ["Attendance"],
+        summary: "Status sesi presensi kelas per tanggal",
+        security: [{ BearerAuth: [] }],
+      },
+      query: t.Object({
+        classId: t.Optional(t.String()),
+        class_id: t.Optional(t.String()),
+        date: t.String(),
+      }),
+    }
+  )
+  .delete(
+    "/sessions",
+    async ({ query, user, status }: any) => {
+      try {
+        const classId = query.classId || query.class_id;
+        const date = query.date;
+        if (!classId || !date) {
+          return status(400, {
+            success: false,
+            message: "classId dan date wajib diisi",
+          });
+        }
+        const data = await closeAttendanceSession({
+          classId,
+          date,
+          actor: user,
+        });
+        return status(200, {
+          success: true,
+          message: "Sesi presensi ditutup",
+          data,
+        });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["admin", "guru"]),
+      detail: {
+        tags: ["Attendance"],
+        summary: "Tutup sesi presensi kelas",
+        security: [{ BearerAuth: [] }],
+      },
+      query: t.Object({
+        classId: t.Optional(t.String()),
+        class_id: t.Optional(t.String()),
+        date: t.String(),
       }),
     }
   );
