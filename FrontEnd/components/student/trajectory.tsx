@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { ArrowRight, ChevronRight, Clock } from "lucide-react";
 import moment from "moment";
 import "moment/locale/id";
-import { toast } from "sonner";
 import {
   FadeIn,
   StaggerChildren,
@@ -17,6 +16,8 @@ import { useAuthStore } from "@/lib/store/auth-store";
 
 type CourseItem = {
   key: string;
+  classId: string;
+  subjectId: string;
   className: string;
   majorName: string;
   subjectName: string;
@@ -38,6 +39,8 @@ function mapCourses(jadwal: JadwalPelajaran[]): CourseItem[] {
   return jadwal
     .map((item) => ({
       key: item.id,
+      classId: item.classId,
+      subjectId: item.subjectId,
       className: item.className?.trim() || "-",
       majorName: item.majorName || "-",
       subjectName: item.subjectName,
@@ -142,12 +145,6 @@ export function Trajectory() {
     };
   }, [classId]);
 
-  function handleOpenCourse(course: CourseItem) {
-    toast.info("Detail course siswa akan tersedia setelah integrasi.", {
-      description: `${course.className} • ${course.subjectName}`,
-    });
-  }
-
   return (
     <FadeIn>
       <section className="rounded-[20px] border border-[#cee8e1]/60 bg-white p-5 shadow-[0_1px_8px_rgba(7,31,28,0.04)]">
@@ -219,16 +216,18 @@ export function Trajectory() {
                           <Clock className="size-3" />
                           {course.hari}, {course.waktuLabel}
                         </span>
-                        <motion.button
-                          type="button"
-                          onClick={() => handleOpenCourse(course)}
+                        <motion.div
                           whileHover={{ x: 3 }}
                           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                          className="flex items-center gap-1 text-[12px] font-semibold text-[#0d5c52]"
                         >
-                          Lihat Course
-                          <ChevronRight className="size-4" />
-                        </motion.button>
+                          <Link
+                            href={`/student/module-course/${course.classId}--${course.subjectId}`}
+                            className="flex items-center gap-1 text-[12px] font-semibold text-[#0d5c52]"
+                          >
+                            Lihat Course
+                            <ChevronRight className="size-4" />
+                          </Link>
+                        </motion.div>
                       </div>
                     </motion.div>
                   </StaggerItem>
