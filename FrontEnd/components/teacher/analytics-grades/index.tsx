@@ -198,7 +198,7 @@ export function AnalyticsGrades() {
         if (item.subjectId) {
           map.set(
             item.subjectId,
-            item.subjectCode || item.subjectName || "Mata pelajaran",
+            item.subjectName || item.subjectCode || "Mata pelajaran",
           );
         }
       });
@@ -254,6 +254,9 @@ export function AnalyticsGrades() {
     setClassFilter(value);
     setSubjectFilter("");
     setAssignmentFilter("");
+    setAssignments([]);
+    setGradingRows([]);
+    setStudents([]);
     setIsLedgerOpen(false);
     setIsRemedialOpen(false);
   }
@@ -261,12 +264,15 @@ export function AnalyticsGrades() {
   function handleSubjectChange(value: string) {
     setSubjectFilter(value);
     setAssignmentFilter("");
+    setAssignments([]);
+    setGradingRows([]);
     setIsLedgerOpen(false);
     setIsRemedialOpen(false);
   }
 
   function handleAssignmentChange(value: string) {
     setAssignmentFilter(value);
+    setGradingRows([]);
     setIsLedgerOpen(false);
     setIsRemedialOpen(false);
   }
@@ -275,6 +281,9 @@ export function AnalyticsGrades() {
     setClassFilter("");
     setSubjectFilter("");
     setAssignmentFilter("");
+    setAssignments([]);
+    setGradingRows([]);
+    setStudents([]);
     setIsLedgerOpen(false);
     setIsRemedialOpen(false);
   }
