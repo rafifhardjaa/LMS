@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-export type AttendanceStatus = "HADIR" | "SAKIT" | "IZIN" | "ALPA";
+export type AttendanceStatus = "hadir" | "sakit" | "izin" | "alpa";
 export type CheckInMethod =
   | "qr"
   | "geo"

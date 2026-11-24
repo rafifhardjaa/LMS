@@ -10,9 +10,8 @@ export function AttendancePageHeader() {
           Presensi Harian &amp; Manajemen Kehadiran Siswa
         </h1>
         <p className="mt-1 max-w-[720px] text-sm leading-6 text-[#475569]">
-          Pencatatan kehadiran kelas tatap muka &amp; praktikum lab,
-          sinkronisasi Dapodik real-time, monitoring dispensasi/sakit,
-          dan rekap semester.
+          Catat kehadiran harian per kelas, pantau status sakit/izin/alpa,
+          dan lihat rekap kehadiran siswa untuk semester berjalan.
         </p>
       </SlideIn>
     </FadeIn>

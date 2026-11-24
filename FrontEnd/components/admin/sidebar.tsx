@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  CalendarCheck,
   CalendarDays,
   GraduationCap,
   LayoutGrid,
@@ -22,6 +23,11 @@ const mainMenu = [
   { label: "Wali Kelas", icon: GraduationCap, href: "/admin/wali-kelas" },
   { label: "Course (Mapel)", icon: BookOpen, href: "/admin/course" },
   { label: "Jadwal Pelajaran", icon: CalendarDays, href: "/admin/schedule" },
+  {
+    label: "Periode Akademik",
+    icon: CalendarCheck,
+    href: "/admin/academic-periods",
+  },
 ];
 
 function roleLabel(role: string | undefined): string {
