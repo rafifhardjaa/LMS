@@ -3,6 +3,7 @@ import {
   date,
   index,
   integer,
+  numeric,
   pgEnum,
   pgTable,
   type PgColumn,
@@ -852,5 +853,73 @@ export const attendanceSessions = pgTable(
     periodIdx: index("attendance_sessions_period_idx").on(
       table.academicPeriodId
     ),
+  })
+);
+
+export const subjectGradeWeights = pgTable(
+  "subject_grade_weights",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    academicPeriodId: uuid("academic_period_id")
+      .notNull()
+      .references(() => academicPeriods.id, { onDelete: "cascade" }),
+    tugasWeight: numeric("tugas_weight", { precision: 5, scale: 2 })
+      .default("20")
+      .notNull(),
+    kuisWeight: numeric("kuis_weight", { precision: 5, scale: 2 })
+      .default("20")
+      .notNull(),
+    utsWeight: numeric("uts_weight", { precision: 5, scale: 2 })
+      .default("30")
+      .notNull(),
+    uasWeight: numeric("uas_weight", { precision: 5, scale: 2 })
+      .default("30")
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    subjectPeriodUnique: uniqueIndex(
+      "subject_grade_weights_subject_period_unique"
+    ).on(table.subjectId, table.academicPeriodId),
+  })
+);
+
+export const studentSubjectGrades = pgTable(
+  "student_subject_grades",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    academicPeriodId: uuid("academic_period_id")
+      .notNull()
+      .references(() => academicPeriods.id, { onDelete: "cascade" }),
+    tugasScore: numeric("tugas_score", { precision: 5, scale: 2 }),
+    kuisScore: numeric("kuis_score", { precision: 5, scale: 2 }),
+    utsScore: numeric("uts_score", { precision: 5, scale: 2 }),
+    uasScore: numeric("uas_score", { precision: 5, scale: 2 }),
+    finalScore: numeric("final_score", { precision: 5, scale: 2 }),
+    tugasCount: integer("tugas_count").default(0).notNull(),
+    kuisCount: integer("kuis_count").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    studentSubjectPeriodUnique: uniqueIndex(
+      "student_subject_grades_student_subject_period_unique"
+    ).on(table.studentId, table.subjectId, table.academicPeriodId),
+    classSubjectPeriodIdx: index(
+      "student_subject_grades_class_subject_period_idx"
+    ).on(table.classId, table.subjectId, table.academicPeriodId),
   })
 );

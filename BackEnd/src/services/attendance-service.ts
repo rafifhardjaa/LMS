@@ -52,7 +52,7 @@ async function assertAdvisorAccess(
   }
 }
 
-async function getActiveAcademicPeriod() {
+export async function getActiveAcademicPeriod() {
   const [period] = await db
     .select()
     .from(academicPeriods)
