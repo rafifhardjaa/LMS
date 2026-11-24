@@ -246,6 +246,28 @@ export interface AttendanceRecap {
   days: AttendanceRecapDay[];
 }
 
+export interface AcademicPeriod {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+}
+
+export interface AttendanceRecordStudent {
+  studentId: string;
+  name: string;
+  nomorInduk: string | null;
+  status: AttendanceStatus | null;
+  note: string | null;
+}
+
+export interface AttendanceRecordsResponse {
+  period: AttendanceRecap["period"];
+  date: string;
+  students: AttendanceRecordStudent[];
+}
+
 export interface CourseMeeting {
   id: string;
   meetingNumber: number;
@@ -627,6 +649,66 @@ export const masterDataApi = {
     },
     myRecap: () =>
       apiFetch<ApiSuccess<AttendanceRecap>>(`/api/v1/attendance/me`),
+    mySave: (body: {
+      date: string;
+      status: "hadir" | "sakit" | "izin";
+      note?: string;
+    }) =>
+      apiFetch<ApiSuccess<{ date: string; status: AttendanceStatus }>>(
+        `/api/v1/attendance/me`,
+        { method: "PUT", body: JSON.stringify(body) },
+      ),
+    records: {
+      list: (classId: string, date: string) =>
+        apiFetch<ApiSuccess<AttendanceRecordsResponse>>(
+          `/api/v1/attendance/records${queryString({ classId, date })}`,
+        ),
+      save: (
+        classId: string,
+        date: string,
+        records: Array<{
+          studentId: string;
+          status: AttendanceStatus;
+          note?: string | null;
+        }>,
+      ) =>
+        apiFetch<ApiSuccess<{ saved: number }>>(`/api/v1/attendance/records`, {
+          method: "PUT",
+          body: JSON.stringify({ classId, date, records }),
+        }),
+    },
+  },
+  academicPeriods: {
+    list: () =>
+      apiFetch<ApiSuccess<AcademicPeriod[]>>(`/api/v1/academic-periods`),
+    create: (body: {
+      name: string;
+      startDate: string;
+      endDate: string;
+      isActive?: boolean;
+    }) =>
+      apiFetch<ApiSuccess<AcademicPeriod>>(`/api/v1/academic-periods`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (
+      id: string,
+      body: Partial<{
+        name: string;
+        startDate: string;
+        endDate: string;
+        isActive: boolean;
+      }>,
+    ) =>
+      apiFetch<ApiSuccess<AcademicPeriod>>(`/api/v1/academic-periods/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    activate: (id: string) =>
+      apiFetch<ApiSuccess<{ id: string }>>(
+        `/api/v1/academic-periods/${id}/activate`,
+        { method: "POST" },
+      ),
   },
   courseDetails: {
     meetings: {

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   academicPeriods,
@@ -8,12 +8,21 @@ import {
   subjects,
   users,
 } from "../db/schema";
-import { ForbiddenError, NotFoundError } from "../utils/response";
+import { canonicalRole } from "./role-service";
+import { listStudents } from "./students-service";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from "../utils/response";
 
 export type AttendanceActor = {
   id: string;
   role: string;
 };
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function assertAdvisorAccess(
   classId: string,
@@ -29,7 +38,11 @@ async function assertAdvisorAccess(
     throw new NotFoundError("Kelas tidak ditemukan");
   }
 
-  if (actor && actor.role === "guru" && rows[0]!.advisorId !== actor.id) {
+  if (
+    actor &&
+    canonicalRole(actor.role) === "guru" &&
+    rows[0]!.advisorId !== actor.id
+  ) {
     throw new ForbiddenError(
       "Hanya wali kelas yang dapat membuka presensi kelas ini"
     );
@@ -49,6 +62,47 @@ async function getActiveAcademicPeriod() {
   }
 
   return period;
+}
+
+function assertAttendanceDate(
+  date: string,
+  period: { startDate: string; endDate: string }
+) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new BadRequestError("Tanggal presensi tidak valid");
+  }
+  if (date < period.startDate || date > period.endDate) {
+    throw new BadRequestError("Tanggal di luar periode akademik aktif");
+  }
+
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+  if (weekday === 0 || weekday === 6) {
+    throw new BadRequestError("Presensi hanya untuk hari Senin–Jumat");
+  }
+}
+
+function periodSummary(period: {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+}) {
+  return {
+    id: period.id,
+    name: period.name,
+    startDate: period.startDate,
+    endDate: period.endDate,
+  };
+}
+
+function validatePeriodInput(name: string, startDate: string, endDate: string) {
+  if (!name.trim()) throw new BadRequestError("Nama periode wajib diisi");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+    throw new BadRequestError("Tanggal periode tidak valid");
+  }
+  if (startDate > endDate) {
+    throw new BadRequestError("Tanggal mulai harus sebelum tanggal selesai");
+  }
 }
 
 export async function listAttendanceDates({
@@ -101,6 +155,124 @@ export async function listAttendanceDates({
       subjects: subjectList,
     };
   });
+}
+
+export async function listAttendanceRecords({
+  classId,
+  date,
+  actor,
+}: {
+  classId: string;
+  date: string;
+  actor: AttendanceActor | null;
+}) {
+  await assertAdvisorAccess(classId, actor);
+  const period = await getActiveAcademicPeriod();
+  assertAttendanceDate(date, period);
+
+  const students = await listStudents({ classId });
+  const rows = await db
+    .select({
+      studentId: attendanceRecords.studentId,
+      status: attendanceRecords.status,
+      note: attendanceRecords.note,
+    })
+    .from(attendanceRecords)
+    .where(
+      and(
+        eq(attendanceRecords.classId, classId),
+        eq(attendanceRecords.date, date)
+      )
+    )
+    .orderBy(asc(attendanceRecords.studentId));
+
+  const byStudent = new Map(rows.map((row) => [row.studentId, row]));
+
+  return {
+    period: periodSummary(period),
+    date,
+    students: students.map((student) => ({
+      studentId: student.id,
+      name: student.fullName,
+      nomorInduk: student.nomorInduk ?? student.nisn ?? null,
+      status: byStudent.get(student.id)?.status ?? null,
+      note: byStudent.get(student.id)?.note ?? null,
+    })),
+  };
+}
+
+export async function saveAttendanceRecords({
+  classId,
+  date,
+  records,
+  actor,
+}: {
+  classId: string;
+  date: string;
+  records: Array<{
+    studentId: string;
+    status: "hadir" | "sakit" | "izin" | "alpa";
+    note?: string | null;
+  }>;
+  actor: AttendanceActor | null;
+}) {
+  await assertAdvisorAccess(classId, actor);
+  const period = await getActiveAcademicPeriod();
+  assertAttendanceDate(date, period);
+
+  const allowed = new Set((await listStudents({ classId })).map((s) => s.id));
+  const seen = new Set<string>();
+  const values: Array<{
+    studentId: string;
+    classId: string;
+    academicPeriodId: string;
+    date: string;
+    status: "hadir" | "sakit" | "izin" | "alpa";
+    note: string | null;
+    recordedBy: string | null;
+    updatedAt: Date;
+  }> = [];
+
+  for (const record of records) {
+    if (!allowed.has(record.studentId)) {
+      throw new BadRequestError("Siswa tidak terdaftar pada kelas ini");
+    }
+    if (!["hadir", "sakit", "izin", "alpa"].includes(record.status)) {
+      throw new BadRequestError("Status kehadiran tidak valid");
+    }
+    if (seen.has(record.studentId)) continue;
+    seen.add(record.studentId);
+
+    values.push({
+      studentId: record.studentId,
+      classId,
+      academicPeriodId: period.id,
+      date,
+      status: record.status,
+      note: record.note?.trim() || null,
+      recordedBy: actor && UUID_RE.test(actor.id) ? actor.id : null,
+      updatedAt: new Date(),
+    });
+  }
+
+  if (values.length > 0) {
+    await db
+      .insert(attendanceRecords)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [attendanceRecords.studentId, attendanceRecords.date],
+        set: {
+          classId: sql`excluded.class_id`,
+          academicPeriodId: sql`excluded.academic_period_id`,
+          status: sql`excluded.status`,
+          note: sql`excluded.note`,
+          recordedBy: sql`excluded.recorded_by`,
+          updatedAt: sql`excluded.updated_at`,
+        },
+      });
+  }
+
+  return { saved: values.length };
 }
 
 const DAY_NAMES = [
@@ -179,4 +351,160 @@ export async function listStudentAttendanceRecap({ userId }: { userId: string })
       note: byDate.get(item.date)?.note ?? null,
     })),
   };
+}
+
+export async function listAcademicPeriods() {
+  return db
+    .select()
+    .from(academicPeriods)
+    .orderBy(desc(academicPeriods.startDate));
+}
+
+export async function createAcademicPeriod({
+  name,
+  startDate,
+  endDate,
+  isActive = false,
+}: {
+  name: string;
+  startDate: string;
+  endDate: string;
+  isActive?: boolean;
+}) {
+  validatePeriodInput(name, startDate, endDate);
+
+  return db.transaction(async (tx) => {
+    if (isActive) {
+      await tx
+        .update(academicPeriods)
+        .set({ isActive: false })
+        .where(eq(academicPeriods.isActive, true));
+    }
+
+    const [created] = await tx
+      .insert(academicPeriods)
+      .values({
+        name: name.trim(),
+        startDate,
+        endDate,
+        isActive,
+      })
+      .returning();
+
+    return created;
+  });
+}
+
+export async function updateAcademicPeriod(
+  id: string,
+  patch: {
+    name?: string;
+    startDate?: string;
+    endDate?: string;
+    isActive?: boolean;
+  }
+) {
+  const [existing] = await db
+    .select()
+    .from(academicPeriods)
+    .where(eq(academicPeriods.id, id))
+    .limit(1);
+  if (!existing) throw new NotFoundError("Periode akademik tidak ditemukan");
+
+  const name = patch.name ?? existing.name;
+  const startDate = patch.startDate ?? existing.startDate;
+  const endDate = patch.endDate ?? existing.endDate;
+  validatePeriodInput(name, startDate, endDate);
+
+  return db.transaction(async (tx) => {
+    if (patch.isActive === true) {
+      await tx
+        .update(academicPeriods)
+        .set({ isActive: false })
+        .where(eq(academicPeriods.isActive, true));
+    }
+
+    const [updated] = await tx
+      .update(academicPeriods)
+      .set({
+        name: name.trim(),
+        startDate,
+        endDate,
+        ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(academicPeriods.id, id))
+      .returning();
+
+    return updated;
+  });
+}
+
+export async function activateAcademicPeriod(id: string) {
+  const [existing] = await db
+    .select()
+    .from(academicPeriods)
+    .where(eq(academicPeriods.id, id))
+    .limit(1);
+  if (!existing) throw new NotFoundError("Periode akademik tidak ditemukan");
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(academicPeriods)
+      .set({ isActive: false })
+      .where(eq(academicPeriods.isActive, true));
+    await tx
+      .update(academicPeriods)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(academicPeriods.id, id));
+  });
+
+  return { id };
+}
+
+export async function saveStudentAttendance({
+  userId,
+  date,
+  status,
+  note,
+}: {
+  userId: string;
+  date: string;
+  status: "hadir" | "sakit" | "izin";
+  note?: string | null;
+}) {
+  const classId = await getStudentClassId(userId);
+  const period = await getActiveAcademicPeriod();
+  assertAttendanceDate(date, period);
+
+  if (!["hadir", "sakit", "izin"].includes(status)) {
+    throw new BadRequestError("Status presensi siswa tidak valid");
+  }
+
+  const [existing] = await db
+    .select({ id: attendanceRecords.id })
+    .from(attendanceRecords)
+    .where(
+      and(
+        eq(attendanceRecords.studentId, userId),
+        eq(attendanceRecords.date, date)
+      )
+    )
+    .limit(1);
+
+  if (existing) {
+    throw new BadRequestError("Presensi untuk tanggal ini sudah tercatat");
+  }
+
+  await db.insert(attendanceRecords).values({
+    studentId: userId,
+    classId,
+    academicPeriodId: period.id,
+    date,
+    status,
+    note: note?.trim() || null,
+    recordedBy: userId,
+  });
+
+  return { date, status };
 }

@@ -45,10 +45,10 @@ export function AttendanceToolbar({
 }: AttendanceToolbarProps) {
   const isReady = Boolean(classFilter && dateFilter);
   const summaryItems: { label: string; value: number; dot: string }[] = [
-    { label: "Hadir", value: counts.HADIR, dot: "bg-[#22C55E]" },
-    { label: "Sakit", value: counts.SAKIT, dot: "bg-[#F59E0B]" },
-    { label: "Izin", value: counts.IZIN, dot: "bg-[#38BDF8]" },
-    { label: "Alpa", value: counts.ALPA, dot: "bg-[#EF4444]" },
+    { label: "Hadir", value: counts.hadir, dot: "bg-[#22C55E]" },
+    { label: "Sakit", value: counts.sakit, dot: "bg-[#F59E0B]" },
+    { label: "Izin", value: counts.izin, dot: "bg-[#38BDF8]" },
+    { label: "Alpa", value: counts.alpa, dot: "bg-[#EF4444]" },
   ];
   const subjectNames = (selectedDate?.subjects ?? [])
     .map((subject) => subject.name)
