@@ -3,6 +3,7 @@ import { db } from "../db";
 import {
   academicPeriods,
   attendanceRecords,
+  attendanceSessions,
   classes,
   jadwalPelajaran,
   subjects,
@@ -23,6 +24,8 @@ export type AttendanceActor = {
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const SESSION_WINDOW_MS = 60 * 60 * 1000;
 
 async function assertAdvisorAccess(
   classId: string,
@@ -103,6 +106,118 @@ function validatePeriodInput(name: string, startDate: string, endDate: string) {
   if (startDate > endDate) {
     throw new BadRequestError("Tanggal mulai harus sebelum tanggal selesai");
   }
+}
+
+function describeSession(openedAt: Date | string | null) {
+  if (!openedAt) {
+    return { isOpen: false, openedAt: null, closesAt: null };
+  }
+
+  const opened = openedAt instanceof Date ? openedAt : new Date(openedAt);
+  const closes = new Date(opened.getTime() + SESSION_WINDOW_MS);
+
+  return {
+    isOpen: Date.now() <= closes.getTime(),
+    openedAt: opened.toISOString(),
+    closesAt: closes.toISOString(),
+  };
+}
+
+export async function openAttendanceSession({
+  classId,
+  date,
+  actor,
+}: {
+  classId: string;
+  date: string;
+  actor: AttendanceActor | null;
+}) {
+  await assertAdvisorAccess(classId, actor);
+  const period = await getActiveAcademicPeriod();
+  assertAttendanceDate(date, period);
+
+  const openedAt = new Date();
+  const [row] = await db
+    .insert(attendanceSessions)
+    .values({
+      classId,
+      academicPeriodId: period.id,
+      date,
+      openedBy: actor && UUID_RE.test(actor.id) ? actor.id : null,
+      openedAt,
+    })
+    .onConflictDoUpdate({
+      target: [attendanceSessions.classId, attendanceSessions.date],
+      set: {
+        academicPeriodId: sql`excluded.academic_period_id`,
+        openedBy: sql`excluded.opened_by`,
+        openedAt: sql`excluded.opened_at`,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+
+  return describeSession(row?.openedAt ?? openedAt);
+}
+
+export async function getAttendanceSession({
+  classId,
+  date,
+}: {
+  classId: string;
+  date: string;
+}) {
+  const [row] = await db
+    .select({ openedAt: attendanceSessions.openedAt })
+    .from(attendanceSessions)
+    .where(
+      and(
+        eq(attendanceSessions.classId, classId),
+        eq(attendanceSessions.date, date)
+      )
+    )
+    .limit(1);
+
+  return describeSession(row?.openedAt ?? null);
+}
+
+export async function closeAttendanceSession({
+  classId,
+  date,
+  actor,
+}: {
+  classId: string;
+  date: string;
+  actor: AttendanceActor | null;
+}) {
+  await assertAdvisorAccess(classId, actor);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new BadRequestError("Tanggal presensi tidak valid");
+  }
+
+  await db
+    .delete(attendanceSessions)
+    .where(
+      and(
+        eq(attendanceSessions.classId, classId),
+        eq(attendanceSessions.date, date)
+      )
+    );
+
+  return { closed: true };
+}
+
+async function assertSessionOpen(classId: string, date: string) {
+  const session = await getAttendanceSession({ classId, date });
+  if (!session.isOpen) {
+    throw new BadRequestError(
+      session.openedAt
+        ? "Waktu presensi sudah berakhir"
+        : "Presensi belum dibuka guru",
+    );
+  }
+  return session;
 }
 
 export async function listAttendanceDates({
@@ -219,6 +334,7 @@ export async function saveAttendanceRecords({
   await assertAdvisorAccess(classId, actor);
   const period = await getActiveAcademicPeriod();
   assertAttendanceDate(date, period);
+  await assertSessionOpen(classId, date);
 
   const allowed = new Set((await listStudents({ classId })).map((s) => s.id));
   const seen = new Set<string>();
@@ -319,7 +435,7 @@ async function getStudentClassId(userId: string) {
 }
 
 export async function listStudentAttendanceRecap({ userId }: { userId: string }) {
-  await getStudentClassId(userId);
+  const classId = await getStudentClassId(userId);
   const period = await getActiveAcademicPeriod();
 
   const rows = await db
@@ -336,19 +452,33 @@ export async function listStudentAttendanceRecap({ userId }: { userId: string })
       )
     );
 
+  const sessionRows = await db
+    .select({
+      date: attendanceSessions.date,
+      openedAt: attendanceSessions.openedAt,
+    })
+    .from(attendanceSessions)
+    .where(
+      and(
+        eq(attendanceSessions.classId, classId),
+        eq(attendanceSessions.academicPeriodId, period.id)
+      )
+    );
+
   const byDate = new Map(rows.map((row) => [row.date, row]));
+  const sessionsByDate = new Map(
+    sessionRows.map((row) => [row.date, describeSession(row.openedAt)]),
+  );
 
   return {
-    period: {
-      id: period.id,
-      name: period.name,
-      startDate: period.startDate,
-      endDate: period.endDate,
-    },
+    period: periodSummary(period),
     days: weekdaysBetween(period.startDate, period.endDate).map((item) => ({
       ...item,
       status: byDate.get(item.date)?.status ?? null,
       note: byDate.get(item.date)?.note ?? null,
+      sessionOpen: sessionsByDate.get(item.date)?.isOpen ?? false,
+      sessionOpenedAt: sessionsByDate.get(item.date)?.openedAt ?? null,
+      sessionClosesAt: sessionsByDate.get(item.date)?.closesAt ?? null,
     })),
   };
 }
@@ -476,6 +606,7 @@ export async function saveStudentAttendance({
   const classId = await getStudentClassId(userId);
   const period = await getActiveAcademicPeriod();
   assertAttendanceDate(date, period);
+  await assertSessionOpen(classId, date);
 
   if (!["hadir", "sakit", "izin"].includes(status)) {
     throw new BadRequestError("Status presensi siswa tidak valid");

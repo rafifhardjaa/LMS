@@ -825,3 +825,32 @@ export const attendanceRecords = pgTable(
     ),
   })
 );
+
+export const attendanceSessions = pgTable(
+  "attendance_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    academicPeriodId: uuid("academic_period_id")
+      .notNull()
+      .references(() => academicPeriods.id, { onDelete: "cascade" }),
+    date: date("date", { mode: "string" }).notNull(),
+    openedBy: uuid("opened_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    openedAt: timestamp("opened_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    classDateUnique: uniqueIndex("attendance_sessions_class_date_unique").on(
+      table.classId,
+      table.date
+    ),
+    periodIdx: index("attendance_sessions_period_idx").on(
+      table.academicPeriodId
+    ),
+  })
+);

@@ -48,6 +48,14 @@ export function AttendanceDayDialog({
     .locale("id")
     .format("dddd, D MMMM YYYY");
   const recorded = Boolean(day.status);
+  const sessionActive = day.sessionOpen;
+  const closesLabel = day.sessionClosesAt
+    ? new Date(day.sessionClosesAt).toLocaleTimeString("id-ID", {
+        timeZone: "Asia/Jakarta",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
 
   async function handleSave() {
     if (!status) return;
@@ -137,11 +145,29 @@ export function AttendanceDayDialog({
                 diubah kembali. Hubungi wali kelas jika ada kesalahan.
               </p>
             </div>
+          ) : !sessionActive ? (
+            <div className="flex items-start gap-3 rounded-xl bg-[#F8FAFC] p-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#94A3B8]">
+                <Info className="size-4" />
+              </span>
+              <p className="text-[12px] leading-5 text-[#536360]">
+                {day.sessionOpenedAt
+                  ? "Waktu presensi untuk tanggal ini sudah berakhir."
+                  : "Presensi belum dibuka oleh guru pada tanggal ini."}
+              </p>
+            </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <p className="text-[12px] font-bold text-[#1E293B]">
-                Pilih status kehadiran Anda
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[12px] font-bold text-[#1E293B]">
+                  Pilih status kehadiran Anda
+                </p>
+                {closesLabel && (
+                  <span className="rounded-full bg-[#edf7f4] px-2 py-0.5 text-[10px] font-bold text-[#0d5c52]">
+                    s.d. {closesLabel} WIB
+                  </span>
+                )}
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 {SELF_STATUS_OPTIONS.map((option) => (
                   <label
@@ -186,7 +212,7 @@ export function AttendanceDayDialog({
           >
             Tutup
           </DialogClose>
-          {!recorded && (
+          {!recorded && sessionActive && (
             <Button
               type="button"
               onClick={handleSave}
