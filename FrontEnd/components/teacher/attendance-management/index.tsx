@@ -26,20 +26,20 @@ const statusDefaults: Record<
   AttendanceStatus,
   Pick<StudentAttendance, "method" | "methodLabel" | "checkInTime">
 > = {
-  HADIR: {
+  hadir: {
     method: "manual",
     methodLabel: "Manual Guru",
     checkInTime: "07:30 WITA",
   },
-  SAKIT: {
+  sakit: {
     method: "document",
     methodLabel: "Surat Dokter Valid",
   },
-  IZIN: {
+  izin: {
     method: "dispensation",
     methodLabel: "Dispensasi Sekolah",
   },
-  ALPA: {
+  alpa: {
     method: "manual",
     methodLabel: "Tidak ada keterangan",
   },
@@ -76,7 +76,7 @@ function toAttendance(
     gender: student.jenisKelamin === "L" ? "Lk" : "Pr",
     rollNo: String(index + 1),
     className,
-    status: "HADIR",
+    status: "hadir",
     checkInTime: "07:30 WITA",
     method: "manual",
     methodLabel: "Manual Guru",
@@ -107,8 +107,11 @@ export function AttendanceManagement({
   const [datesError, setDatesError] = useState<string | null>(null);
 
   const [students, setStudents] = useState<StudentAttendance[]>([]);
+  const [baseRoster, setBaseRoster] = useState<StudentAttendance[]>([]);
+  const [savedSnapshot, setSavedSnapshot] = useState<StudentAttendance[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -165,6 +168,8 @@ export function AttendanceManagement({
 
         setDates(dateRes.data?.data ?? []);
         setStudents(roster);
+        setBaseRoster(roster);
+        setSavedSnapshot(roster);
         setDatesError(null);
         setStudentsError(null);
       } catch {
@@ -227,7 +232,7 @@ export function AttendanceManagement({
           accumulator[student.status] += 1;
           return accumulator;
         },
-        { HADIR: 0, SAKIT: 0, IZIN: 0, ALPA: 0 }
+        { hadir: 0, sakit: 0, izin: 0, alpa: 0 }
       ),
     [students]
   );
@@ -237,6 +242,8 @@ export function AttendanceManagement({
     setDateFilter("");
     setDates([]);
     setStudents([]);
+    setBaseRoster([]);
+    setSavedSnapshot([]);
     setDatesError(null);
     setStudentsError(null);
     setIsSessionOpened(false);
@@ -245,6 +252,8 @@ export function AttendanceManagement({
   function handleDateChange(value: string) {
     setDateFilter(value);
     setIsSessionOpened(false);
+    setStudents(baseRoster);
+    setSavedSnapshot(baseRoster);
   }
 
   function handleStatusChange(studentId: string, status: AttendanceStatus) {
@@ -263,19 +272,96 @@ export function AttendanceManagement({
     );
   }
 
+  function handleNoteChange(studentId: string, note: string) {
+    setStudents((current) =>
+      current.map((student) =>
+        student.id === studentId ? { ...student, note } : student,
+      ),
+    );
+  }
+
+  async function handleOpenSession() {
+    if (!classFilter || !dateFilter) return;
+    setIsSessionOpened(true);
+    setStudentsLoading(true);
+
+    try {
+      const res = await masterDataApi.attendance.records.list(
+        classFilter,
+        dateFilter,
+      );
+      if (res.error) {
+        throw new Error(res.error.message ?? "Gagal memuat catatan presensi");
+      }
+
+      const records = new Map(
+        (res.data?.data?.students ?? []).map((record) => [
+          record.studentId,
+          record,
+        ]),
+      );
+
+      const next = students.map((student) => {
+        const record = records.get(student.id);
+        const status = record?.status ?? "hadir";
+        return {
+          ...student,
+          status,
+          note: record?.note || "-",
+          ...statusDefaults[status],
+        };
+      });
+
+      setStudents(next);
+      setSavedSnapshot(next);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Gagal memuat catatan presensi",
+      );
+    } finally {
+      setStudentsLoading(false);
+    }
+  }
+
   function handleCancelSession() {
+    setStudents(savedSnapshot);
     setIsSessionOpened(false);
   }
 
-  function handleSaveSession() {
-    setIsSessionOpened(false);
-    toast.success("Presensi tersimpan", {
-      description: `Presensi ${selectedClass?.name ?? "-"} · ${
-        selectedDate
-          ? moment(selectedDate.date).locale("id").format("dddd, D MMMM YYYY")
-          : "-"
-      } berhasil disimpan.`,
-    });
+  async function handleSaveSession() {
+    if (!classFilter || !dateFilter) return;
+    setSaving(true);
+
+    try {
+      const res = await masterDataApi.attendance.records.save(
+        classFilter,
+        dateFilter,
+        students.map((student) => ({
+          studentId: student.id,
+          status: student.status,
+          note: student.note === "-" ? "" : student.note,
+        })),
+      );
+      if (res.error) {
+        throw new Error(res.error.message ?? "Gagal menyimpan presensi");
+      }
+
+      setSavedSnapshot(students);
+      setIsSessionOpened(false);
+      toast.success("Presensi tersimpan", {
+        description: `Presensi ${selectedClass?.name ?? "-"} · ${
+          selectedDate
+            ? moment(selectedDate.date).locale("id").format("dddd, D MMMM YYYY")
+            : "-"
+        } berhasil disimpan.`,
+      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Gagal menyimpan presensi",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (classesLoading) {
@@ -324,7 +410,7 @@ export function AttendanceManagement({
             selectedDate={selectedDate}
             onClassChange={handleClassChange}
             onDateChange={handleDateChange}
-            onOpenSession={() => setIsSessionOpened(true)}
+            onOpenSession={handleOpenSession}
           />
 
           {classesError ? (
@@ -357,8 +443,10 @@ export function AttendanceManagement({
             }
             subjectCount={selectedDate?.subjectCount ?? 0}
             loading={datesLoading || studentsLoading}
+            saving={saving}
             opened={isSessionOpened}
             onStatusChange={handleStatusChange}
+            onNoteChange={handleNoteChange}
             onCancel={handleCancelSession}
             onSave={handleSaveSession}
           />
