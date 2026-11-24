@@ -253,6 +253,21 @@ pembacaan untuk `admin, guru`.
 
 ---
 
+## Grades — `/api/v1/grades`
+
+| Method | Endpoint | Auth | Body / Query | Keterangan |
+|---|---|---|---|---|
+| `GET` | `/api/v1/grades/weights` | admin, guru | query `subjectId`, `periodId?` | Bobot komponen nilai mapel+periode |
+| `PUT` | `/api/v1/grades/weights` | admin | `{ subjectId, periodId?, tugasWeight, kuisWeight, utsWeight, uasWeight }` | Simpan bobot (total wajib 100) |
+| `GET` | `/api/v1/grades` | admin, guru | query `classId`, `subjectId`, `periodId?` | Roster + nilai tugas/kuis/UTS/UAS/nilai akhir |
+| `PUT` | `/api/v1/grades` | admin, guru | `{ classId, subjectId, periodId?, records: [{ studentId, utsScore?, uasScore? }] }` | Simpan UTS/UAS; tugas & kuis dihitung otomatis |
+
+Default bobot: tugas 20, kuis 20, UTS 30, UAS 30. Nilai tugas/kuis =
+rata-rata semua nilai tugas/kuis pada mapel+periode. Nilai akhir =
+tugas×bobot + kuis×bobot + UTS×bobot + UAS×bobot / 100.
+
+---
+
 ## Course Details — `/api/v1/course-details`
 
 Seluruh endpoint grup ini untuk `admin, guru`. Untuk role `guru`, `teacherId`
