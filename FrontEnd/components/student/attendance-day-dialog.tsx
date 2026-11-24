@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardCheck, Info } from "lucide-react";
+import { ClipboardCheck, Info, Loader2 } from "lucide-react";
 import moment from "moment";
 import "moment/locale/id";
+import { toast } from "sonner";
 import type {
   AttendanceRecapDay,
   AttendanceStatus,
 } from "@/lib/api/master-data";
+import { masterDataApi } from "@/lib/api/master-data";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,13 +19,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const STATUS_STYLES: Record<AttendanceStatus, string> = {
-  hadir: "bg-[#edf7f4] text-[#0d5c52]",
-  sakit: "bg-[#FEF3C7] text-[#B45309]",
-  izin: "bg-[#EFF6FF] text-[#006398]",
-  alpa: "bg-[#FFEBEB] text-[#b91c1c]",
-};
-
 const STATUS_LABELS: Record<AttendanceStatus, string> = {
   hadir: "Hadir",
   sakit: "Sakit",
@@ -31,11 +26,53 @@ const STATUS_LABELS: Record<AttendanceStatus, string> = {
   alpa: "Alpa",
 };
 
-export function AttendanceDayDialog({ day }: { day: AttendanceRecapDay }) {
+const SELF_STATUS_OPTIONS: Array<"hadir" | "sakit" | "izin"> = [
+  "hadir",
+  "sakit",
+  "izin",
+];
+
+export function AttendanceDayDialog({
+  day,
+  onSaved,
+}: {
+  day: AttendanceRecapDay;
+  onSaved?: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<"hadir" | "sakit" | "izin" | "">("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const formattedDate = moment(day.date, "YYYY-MM-DD")
     .locale("id")
     .format("dddd, D MMMM YYYY");
+  const recorded = Boolean(day.status);
+
+  async function handleSave() {
+    if (!status) return;
+    setSaving(true);
+
+    try {
+      const res = await masterDataApi.attendance.mySave({
+        date: day.date,
+        status,
+        note,
+      });
+      if (res.error) {
+        throw new Error(res.error.message ?? "Gagal menyimpan presensi");
+      }
+      toast.success("Presensi berhasil dicatat");
+      setOpen(false);
+      onSaved?.();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Gagal menyimpan presensi",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -90,29 +127,55 @@ export function AttendanceDayDialog({ day }: { day: AttendanceRecapDay }) {
             </div>
           </div>
 
-          {day.status && (
-            <div className="flex justify-start">
-              <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${STATUS_STYLES[day.status]}`}
-              >
-                {STATUS_LABELS[day.status]}
-              </span>
-            </div>
-          )}
-
-          {!day.status && (
+          {recorded ? (
             <div className="flex items-start gap-3 rounded-xl bg-[#edf7f4] p-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#0d5c52]">
                 <Info className="size-4" />
               </span>
               <p className="text-[12px] leading-5 text-[#536360]">
-                Kehadiran tanggal ini belum dicatat oleh guru atau wali kelas.
+                Presensi untuk tanggal ini sudah tercatat dan tidak dapat
+                diubah kembali. Hubungi wali kelas jika ada kesalahan.
               </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <p className="text-[12px] font-bold text-[#1E293B]">
+                Pilih status kehadiran Anda
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {SELF_STATUS_OPTIONS.map((option) => (
+                  <label
+                    key={option}
+                    className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-[11px] font-bold transition ${
+                      status === option
+                        ? "border-[#0d5c52] bg-[#edf7f4] text-[#0d5c52]"
+                        : "border-[#E2E8F0] bg-white text-[#475569] hover:border-[#0d5c52]/40"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={`attendance-${day.date}`}
+                      value={option}
+                      checked={status === option}
+                      onChange={() => setStatus(option)}
+                      className="sr-only"
+                    />
+                    {STATUS_LABELS[option]}
+                  </label>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Catatan opsional (mis. alasan sakit/izin)"
+                className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-[12px] text-[#1E293B] outline-none transition focus:border-[#0d5c52] focus:ring-2 focus:ring-[#0d5c52]/15"
+              />
             </div>
           )}
         </div>
 
-        <div className="flex justify-end border-t border-[#F1F5F9] px-5 py-3">
+        <div className="flex justify-end gap-2 border-t border-[#F1F5F9] px-5 py-3">
           <DialogClose
             render={
               <Button
@@ -123,6 +186,21 @@ export function AttendanceDayDialog({ day }: { day: AttendanceRecapDay }) {
           >
             Tutup
           </DialogClose>
+          {!recorded && (
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={!status || saving}
+              className="h-9 gap-2 px-4 text-[12px] font-bold disabled:opacity-60"
+            >
+              {saving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ClipboardCheck className="size-4" />
+              )}
+              {saving ? "Menyimpan…" : "Simpan presensi"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -227,10 +227,24 @@ pembacaan untuk `admin, guru`.
 
 | Method | Endpoint | Auth | Body / Query | Keterangan |
 |---|---|---|---|---|
-| `GET` | `/api/v1/attendance/dates` | admin, guru | query `classId` (**wajib**) | Daftar tanggal presensi untuk satu kelas |
+| `GET` | `/api/v1/attendance/dates` | admin, guru | query `classId` (**wajib**) | Daftar tanggal Senin–Jumat dari periode akademik aktif + mapel dari jadwal mingguan kelas |
+| `GET` | `/api/v1/attendance/me` | siswa | — | Rekap kehadiran harian siswa untuk periode aktif |
+| `PUT` | `/api/v1/attendance/me` | siswa | `{ date, status: hadir\|sakit\|izin, note? }` | Siswa mencatat presensi sendiri (hanya sekali per tanggal) |
+| `GET` | `/api/v1/attendance/records` | admin, guru | query `classId`, `date` | Catatan kehadiran kelas per tanggal |
+| `PUT` | `/api/v1/attendance/records` | admin, guru | `{ classId, date, records: [{ studentId, status, note? }] }` | Simpan/upsert catatan kehadiran (`hadir\|sakit\|izin\|alpa`) |
 
 > Untuk role `guru`, service menolak kelas yang `advisorId`-nya bukan user tersebut
 > (`403` — "Hanya wali kelas yang dapat membuka presensi kelas ini"). `admin` bypass.
+> Tanggal harus weekday dan berada di dalam periode akademik aktif.
+
+## Academic Periods — `/api/v1/academic-periods`
+
+| Method | Endpoint | Auth | Body / Query | Keterangan |
+|---|---|---|---|---|
+| `GET` | `/api/v1/academic-periods` | admin, guru | — | Daftar periode akademik |
+| `POST` | `/api/v1/academic-periods` | admin | `{ name, startDate, endDate, isActive? }` | Buat periode |
+| `PUT` | `/api/v1/academic-periods/:id` | admin | `{ name?, startDate?, endDate?, isActive? }` | Perbarui periode |
+| `POST` | `/api/v1/academic-periods/:id/activate` | admin | — | Aktifkan satu periode (lainnya nonaktif) |
 
 ---
 

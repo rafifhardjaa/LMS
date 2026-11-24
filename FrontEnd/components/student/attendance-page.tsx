@@ -101,6 +101,13 @@ export function AttendancePage() {
       : recap.days.filter((day) => monthOf(day.date) === selectedMonth)
     : [];
 
+  async function refreshRecap() {
+    const res = await masterDataApi.attendance.myRecap();
+    if (!res.error) {
+      setRecap(res.data?.data ?? null);
+    }
+  }
+
   return (
     <div className="flex w-full flex-col gap-6 text-[#1E293B]">
       <StudentPageHeader
@@ -219,7 +226,7 @@ export function AttendancePage() {
                           {day.note || "—"}
                         </td>
                         <td className="px-5 py-2.5">
-                          <AttendanceDayDialog day={day} />
+                          <AttendanceDayDialog day={day} onSaved={refreshRecap} />
                         </td>
                       </tr>
                     ))}
