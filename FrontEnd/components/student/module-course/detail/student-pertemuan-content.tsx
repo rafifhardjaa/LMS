@@ -20,7 +20,6 @@ import {
   formatSize,
   type PendingFile,
 } from "@/components/teacher/modul-management/detail/file-dropzone";
-
 type SubmissionSlot = "tugasSubmission" | "kuisSubmission";
 
 type StudentPertemuanContentProps = {

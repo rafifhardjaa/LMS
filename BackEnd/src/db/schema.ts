@@ -3,6 +3,7 @@ import {
   date,
   index,
   integer,
+  pgEnum,
   pgTable,
   type PgColumn,
   serial,
@@ -762,5 +763,65 @@ export const courseMeetingsRelations = relations(
       fields: [courseMeetings.teacherId],
       references: [users.id],
     }),
+  })
+);
+
+export const attendanceStatusEnum = pgEnum("attendance_status", [
+  "hadir",
+  "sakit",
+  "izin",
+  "alpa",
+]);
+
+export const academicPeriods = pgTable(
+  "academic_periods",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 100 }).notNull().unique(),
+    startDate: date("start_date", { mode: "string" }).notNull(),
+    endDate: date("end_date", { mode: "string" }).notNull(),
+    isActive: boolean("is_active").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    activeIdx: index("academic_periods_active_idx").on(table.isActive),
+  })
+);
+
+export const attendanceRecords = pgTable(
+  "attendance_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    academicPeriodId: uuid("academic_period_id")
+      .notNull()
+      .references(() => academicPeriods.id, { onDelete: "cascade" }),
+    date: date("date", { mode: "string" }).notNull(),
+    status: attendanceStatusEnum("status").notNull(),
+    note: text("note"),
+    recordedBy: uuid("recorded_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    studentDateUnique: uniqueIndex("attendance_records_student_date_unique").on(
+      table.studentId,
+      table.date
+    ),
+    classDateIdx: index("attendance_records_class_date_idx").on(
+      table.classId,
+      table.date
+    ),
+    periodIdx: index("attendance_records_period_idx").on(
+      table.academicPeriodId
+    ),
   })
 );

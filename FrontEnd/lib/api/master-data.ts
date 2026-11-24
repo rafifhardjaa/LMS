@@ -227,6 +227,25 @@ export interface AttendanceDate {
   subjects: AttendanceSubjectInfo[];
 }
 
+export type AttendanceStatus = "hadir" | "sakit" | "izin" | "alpa";
+
+export interface AttendanceRecapDay {
+  date: string;
+  day: string;
+  status: AttendanceStatus | null;
+  note: string | null;
+}
+
+export interface AttendanceRecap {
+  period: {
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+  };
+  days: AttendanceRecapDay[];
+}
+
 export interface CourseMeeting {
   id: string;
   meetingNumber: number;
@@ -606,6 +625,8 @@ export const masterDataApi = {
           `/api/v1/attendance/dates${queryString({ classId })}`
         ),
     },
+    myRecap: () =>
+      apiFetch<ApiSuccess<AttendanceRecap>>(`/api/v1/attendance/me`),
   },
   courseDetails: {
     meetings: {
