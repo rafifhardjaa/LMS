@@ -5,13 +5,11 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronDown,
-  ClipboardCheck,
   Clock,
   PencilLine,
   PlusCircle,
   Settings2,
   Trash2,
-  TriangleAlert,
 } from "lucide-react";
 import moment from "moment";
 import { FadeIn, ScaleIn } from "@/components/ui/animations";
@@ -44,7 +42,6 @@ type PertemuanContentProps = {
   meeting: CourseMeeting;
   subjectId: string;
   classId: string;
-  canOpenAttendance: boolean;
   meetings: CourseMeeting[];
   onMeetingsChanged: () => void;
   files: Record<UploadSlot, PendingFile[]>;
@@ -63,7 +60,6 @@ export function PertemuanContent({
   meeting,
   subjectId,
   classId,
-  canOpenAttendance,
   meetings,
   onMeetingsChanged,
   files,
@@ -217,7 +213,7 @@ export function PertemuanContent({
           </FadeIn>
         </div>
 
-        <div className="mt-auto flex flex-col items-start justify-between gap-3 border-t border-[#F1F5F9] px-5 py-3.5 sm:flex-row sm:items-center">
+        <div className="mt-auto border-t border-[#F1F5F9] px-5 py-3.5">
           <motion.button
             type="button"
             whileHover={{ scale: 1.03 }}
@@ -235,38 +231,6 @@ export function PertemuanContent({
               <ChevronDown className="size-4" />
             </motion.span>
           </motion.button>
-          <div className="flex flex-wrap items-center gap-2">
-            {!canOpenAttendance && (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#FEF3C7] px-2.5 py-1.5 text-[11px] font-bold text-[#D97706]">
-                <TriangleAlert className="size-4" />
-                Hanya bisa diakses wali kelas
-              </span>
-            )}
-            {canOpenAttendance ? (
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-block"
-              >
-                <Link
-                  href={`/teacher/presensi-siswa?classId=${encodeURIComponent(classId)}&date=${encodeURIComponent(meeting.meetingDate)}`}
-                  className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white transition hover:bg-[#8f0f1a]"
-                >
-                  <ClipboardCheck className="size-4" />
-                  Buka presensi
-                </Link>
-              </motion.div>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="inline-flex h-9 cursor-not-allowed items-center gap-2 rounded-xl bg-[#b71422] px-4 text-[12px] font-bold text-white opacity-60"
-              >
-                <ClipboardCheck className="size-4" />
-                Buka presensi
-              </button>
-            )}
-          </div>
         </div>
       </section>
 

@@ -1,10 +1,10 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "../db";
 import {
   academicPeriods,
   attendanceRecords,
   classes,
-  courseMeetings,
+  jadwalPelajaran,
   subjects,
   users,
 } from "../db/schema";
@@ -36,6 +36,21 @@ async function assertAdvisorAccess(
   }
 }
 
+async function getActiveAcademicPeriod() {
+  const [period] = await db
+    .select()
+    .from(academicPeriods)
+    .where(eq(academicPeriods.isActive, true))
+    .orderBy(desc(academicPeriods.startDate))
+    .limit(1);
+
+  if (!period) {
+    throw new NotFoundError("Periode akademik aktif tidak ditemukan");
+  }
+
+  return period;
+}
+
 export async function listAttendanceDates({
   classId,
   actor,
@@ -44,52 +59,44 @@ export async function listAttendanceDates({
   actor: AttendanceActor | null;
 }) {
   await assertAdvisorAccess(classId, actor);
-
-  const dateRows = await db
-    .select({
-      date: courseMeetings.meetingDate,
-      day: courseMeetings.day,
-    })
-    .from(courseMeetings)
-    .where(eq(courseMeetings.classId, classId))
-    .groupBy(courseMeetings.meetingDate, courseMeetings.day)
-    .orderBy(asc(courseMeetings.meetingDate));
+  const period = await getActiveAcademicPeriod();
 
   const subjectRows = await db
     .select({
-      date: courseMeetings.meetingDate,
-      subjectId: courseMeetings.subjectId,
+      hari: jadwalPelajaran.hari,
+      subjectId: jadwalPelajaran.subjectId,
       subjectName: subjects.name,
       subjectCode: subjects.code,
     })
-    .from(courseMeetings)
-    .innerJoin(subjects, eq(courseMeetings.subjectId, subjects.id))
-    .where(eq(courseMeetings.classId, classId));
+    .from(jadwalPelajaran)
+    .innerJoin(subjects, eq(jadwalPelajaran.subjectId, subjects.id))
+    .where(eq(jadwalPelajaran.classId, classId));
 
-  const subjectsByDate = new Map<
+  const subjectsByDay = new Map<
     string,
     Map<string, { id: string; name: string; code: string | null }>
   >();
   for (const row of subjectRows) {
-    if (!subjectsByDate.has(row.date)) {
-      subjectsByDate.set(row.date, new Map());
+    const day = row.hari.trim();
+    if (!subjectsByDay.has(day)) {
+      subjectsByDay.set(day, new Map());
     }
-    subjectsByDate.get(row.date)!.set(row.subjectId, {
+    subjectsByDay.get(day)!.set(row.subjectId, {
       id: row.subjectId,
       name: row.subjectName,
       code: row.subjectCode,
     });
   }
 
-  return dateRows.map((row) => {
-    const subjectMap = subjectsByDate.get(row.date) ?? new Map();
+  return weekdaysBetween(period.startDate, period.endDate).map((item) => {
+    const subjectMap = subjectsByDay.get(item.day) ?? new Map();
     const subjectList = [...subjectMap.values()].sort((first, second) =>
       first.name.localeCompare(second.name)
     );
 
     return {
-      date: row.date,
-      day: row.day,
+      date: item.date,
+      day: item.day,
       subjectCount: subjectList.length,
       subjects: subjectList,
     };
@@ -141,17 +148,7 @@ async function getStudentClassId(userId: string) {
 
 export async function listStudentAttendanceRecap({ userId }: { userId: string }) {
   await getStudentClassId(userId);
-
-  const [period] = await db
-    .select()
-    .from(academicPeriods)
-    .where(eq(academicPeriods.isActive, true))
-    .orderBy(desc(academicPeriods.startDate))
-    .limit(1);
-
-  if (!period) {
-    throw new NotFoundError("Periode akademik aktif tidak ditemukan");
-  }
+  const period = await getActiveAcademicPeriod();
 
   const rows = await db
     .select({
