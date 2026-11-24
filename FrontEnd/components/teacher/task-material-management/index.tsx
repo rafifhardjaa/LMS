@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ClipboardList, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import {
   masterDataApi,
   type Assignment as ApiAssignment,
@@ -26,7 +25,7 @@ import {
 } from "./mappers";
 import { TaskMaterialHeader } from "./page-header";
 import { ResourceToolbar } from "./resource-toolbar";
-import type { Assignment, GradingItem, ResourceTab } from "./types";
+import type { Assignment, ResourceTab } from "./types";
 
 type PanelView =
   | { mode: "tasks" }
@@ -203,29 +202,6 @@ export function TaskMaterialManagement() {
     ? gradingItems.filter((row) => row.assignmentId === activeAssignment.id)
     : gradingItems;
 
-  async function updateScore(item: GradingItem, score: number) {
-    if (!course) return;
-
-    const res = await masterDataApi.courseDetails.assignments.updateGrading(
-      course.subjectId,
-      item.assignmentId,
-      item.id,
-      { score, status: "graded" },
-    );
-
-    if (res.error || !res.data?.data) {
-      toast.error(errorMessage(res.error ?? null));
-      return;
-    }
-
-    setGradingRows((current) =>
-      current.map((row) =>
-        row.id === item.id ? { ...row, score, status: "graded" } : row,
-      ),
-    );
-    toast.success(`Nilai ${item.name} berhasil diperbarui.`);
-  }
-
   return (
     <div className="flex w-full flex-col gap-5 bg-[#EBF0F5] text-[#1E293B]">
       <TaskMaterialHeader />
@@ -263,7 +239,6 @@ export function TaskMaterialManagement() {
             rows={tableRows}
             filter={activeAssignment}
             onBack={() => setPanelView({ mode: "tasks" })}
-            onUpdateScore={updateScore}
           />
         </FadeIn>
       ) : (

@@ -7,9 +7,7 @@ import {
   ChevronRight,
   Clock3,
   Download,
-  PencilLine,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { Assignment, GradingItem, GradingStatus } from "./types";
 
 const PAGE_SIZE = 10;
@@ -27,17 +25,13 @@ type GradingManagementTableProps = {
   rows: GradingItem[];
   filter: Assignment | null;
   onBack: () => void;
-  onUpdateScore: (item: GradingItem, score: number) => Promise<void> | void;
 };
 
 export function GradingManagementTable({
   rows,
   filter,
   onBack,
-  onUpdateScore,
 }: GradingManagementTableProps) {
-  const [editingScoreId, setEditingScoreId] = useState<string | null>(null);
-  const [scoreDraft, setScoreDraft] = useState("");
   const [page, setPage] = useState(1);
 
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
@@ -45,28 +39,6 @@ export function GradingManagementTable({
   const startIndex = (safePage - 1) * PAGE_SIZE;
   const endIndex = Math.min(startIndex + PAGE_SIZE, rows.length);
   const visibleRows = rows.slice(startIndex, endIndex);
-
-  function startEditingScore(item: GradingItem) {
-    setEditingScoreId(item.id);
-    setScoreDraft(item.score === null ? "" : String(item.score));
-  }
-
-  async function commitScore(item: GradingItem) {
-    const parsed = Number(scoreDraft);
-
-    if (
-      scoreDraft.trim() === "" ||
-      Number.isNaN(parsed) ||
-      parsed < 0 ||
-      parsed > 100
-    ) {
-      toast.error("Nilai harus berupa angka 0–100.");
-      return;
-    }
-
-    await onUpdateScore(item, Math.round(parsed));
-    setEditingScoreId(null);
-  }
 
   return (
     <section className="flex flex-col overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -109,16 +81,14 @@ export function GradingManagementTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1170px] table-fixed border-collapse text-left">
+        <table className="w-full min-w-[980px] table-fixed border-collapse text-left">
           <colgroup>
             <col className="w-[80px]" />
-            <col className="w-[210px]" />
             <col className="w-[230px]" />
-            <col className="w-[190px]" />
-            <col className="w-[120px]" />
-            <col className="w-[150px]" />
-            <col className="w-[80px]" />
-            <col className="w-[110px]" />
+            <col className="w-[250px]" />
+            <col className="w-[200px]" />
+            <col className="w-[130px]" />
+            <col className="w-[160px]" />
           </colgroup>
           <thead>
             <tr className="border-b border-[#FECACA] bg-[#FFF1F0] text-[10px] font-bold uppercase tracking-[0.05em] text-[#b71422]">
@@ -128,8 +98,6 @@ export function GradingManagementTable({
               <th className="px-3 py-3">Berkas</th>
               <th className="px-3 py-3">Dikumpul</th>
               <th className="px-3 py-3">Status</th>
-              <th className="px-3 py-3 text-center">Nilai</th>
-              <th className="px-5 py-3 text-right">Aksi</th>
             </tr>
           </thead>
 
@@ -238,70 +206,13 @@ export function GradingManagementTable({
                     </span>
                   </td>
 
-                  <td className="px-3 py-3 text-center">
-                    {editingScoreId === item.id ? (
-                      <input
-                        autoFocus
-                        type="number"
-                        min={0}
-                        max={100}
-                        inputMode="numeric"
-                        value={scoreDraft}
-                        aria-label={`Nilai ${item.name}`}
-                        onChange={(event) => setScoreDraft(event.target.value)}
-                        onBlur={() => commitScore(item)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            event.currentTarget.blur();
-                          }
-
-                          if (event.key === "Escape") {
-                            event.preventDefault();
-                            setEditingScoreId(null);
-                          }
-                        }}
-                        className="h-8 w-16 rounded-md border border-[#b71422]/40 bg-white px-2 text-center font-mono text-[12px] font-bold tabular-nums text-[#1E293B] outline-none focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/20"
-                      />
-                    ) : item.score === null ? (
-                      <span className="text-[12px] font-semibold text-[#94A3B8]">
-                        —
-                      </span>
-                    ) : (
-                      <span className="font-mono text-[12px] font-bold tabular-nums text-[#1E293B]">
-                        {item.score}
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="px-5 py-3">
-                    <div className="flex items-center justify-end">
-                      <button
-                        type="button"
-                        title={
-                          item.score === null
-                            ? `Input nilai ${item.name}`
-                            : `Update nilai ${item.name}`
-                        }
-                        aria-label={
-                          item.score === null
-                            ? `Input nilai ${item.name}`
-                            : `Update nilai ${item.name}`
-                        }
-                        onClick={() => startEditingScore(item)}
-                        className="flex size-8 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#FFEBEB] hover:text-[#b71422]"
-                      >
-                        <PencilLine className="size-4" />
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               );
             })}
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center">
+                <td colSpan={6} className="px-5 py-12 text-center">
                   <p className="text-xs font-semibold text-[#334155]">
                     Belum ada pengumpulan untuk tugas ini
                   </p>
