@@ -298,38 +298,74 @@ export function AnalyticsGrades() {
   }
 
   function handleDownload(rows: StudentGrade[]) {
-    const filename = isRemedialOpen
-      ? "siswa-perlu-remidi.xlsx"
-      : `rekap-nilai-${selectedClassLabel || "kelas"}-${selectedAssignmentLabel || "tugas"}.xlsx`.replace(
-          /[^\w\d-]+/g,
-          "-",
-        );
+    const base = isRemedialOpen
+      ? "siswa-perlu-remidi"
+      : `rekap-nilai-${selectedClassLabel || "kelas"}-${selectedAssignmentLabel || "tugas"}`;
+    const safeBase = base
+      .replace(/[^\w\d-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+    const filename = `${safeBase || "rekap-nilai"}.xlsx`;
 
-    import("@/lib/export-xlsx").then(({ exportStudentsToXlsx }) => {
-      exportStudentsToXlsx(rows, filename);
-      toast.success("Berkas XLSX diunduh", {
-        description: `${rows.length} siswa berhasil diekspor.`,
+    import("@/lib/export-xlsx")
+      .then(({ exportStudentsToXlsx }) => {
+        exportStudentsToXlsx(rows, filename);
+        toast.success("Berkas XLSX diunduh", {
+          description: `${rows.length} siswa berhasil diekspor.`,
+        });
+      })
+      .catch((error: unknown) => {
+        toast.error("Gagal mengunduh berkas XLSX", {
+          description:
+            error instanceof Error ? error.message : "Terjadi kesalahan.",
+        });
       });
-    });
   }
 
-  function handleScheduleRemedial(student: StudentGrade) {
-    toast.success("Sesi bimbingan dibuka", {
-      description: `Jadwal remedial ${student.name} telah disiapkan untuk tindak lanjut.`,
-    });
-  }
+  async function handleSaveGrade(student: StudentGrade, score: number) {
+    const submissionId = student.submissionId;
+    const subjectId = subjectFilter;
+    const assignmentId = assignmentFilter;
 
-  function handleEditNote(student: StudentGrade) {
-    toast.info(`Catatan nilai ${student.name}`, {
-      description:
-        "Catatan perbaikan nilai akan tersimpan pada jurnal asesmen guru.",
-    });
-  }
+    if (!submissionId || !subjectId || !assignmentId) {
+      toast.error("Data submission tidak ditemukan.");
+      return false;
+    }
 
-  function handleViewDetail(student: StudentGrade) {
-    toast.info(`Detail nilai ${student.name}`, {
-      description: `Rincian nilai ${student.name} pada ${selectedAssignmentLabel}.`,
+    try {
+      const res = await masterDataApi.courseDetails.assignments.updateGrading(
+        subjectId,
+        assignmentId,
+        submissionId,
+        { score, status: "graded" },
+      );
+
+      if (res.error) {
+        toast.error("Gagal menyimpan nilai", {
+          description: errorMessage(res.error),
+        });
+        return false;
+      }
+    } catch (error) {
+      toast.error("Gagal menyimpan nilai", {
+        description:
+          error instanceof Error ? error.message : "Terjadi kesalahan.",
+      });
+      return false;
+    }
+
+    setGradingRows((rows) =>
+      rows.map((row) =>
+        row.id === submissionId ? { ...row, score, status: "graded" } : row,
+      ),
+    );
+
+    const status = getStudentStatus({ ...student, nilai: score });
+    toast.success("Nilai tersimpan", {
+      description: `${student.name}: ${score} — ${status.label}`,
     });
+
+    return true;
   }
 
   if (loading && !teachingAssignments.length) {
@@ -359,15 +395,14 @@ export function AnalyticsGrades() {
         <FadeIn delay={0.1}>
           <section className="overflow-hidden rounded-[20px] border border-[#E2E8F0] bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
             <GradeLedger
+              key={assignmentFilter || "no-assignment"}
               students={remedialStudents}
               classLabel={selectedClassLabel}
               subjectLabel={selectedSubjectLabel}
               assignmentLabel={selectedAssignmentLabel}
               opened
               remedialOnly
-              onScheduleRemedial={handleScheduleRemedial}
-              onEditNote={handleEditNote}
-              onViewDetail={handleViewDetail}
+              onSaveGrade={handleSaveGrade}
               onChangeFilter={handleCloseRemedial}
               onBack={handleCloseRemedial}
               onDownload={handleDownload}
@@ -401,14 +436,13 @@ export function AnalyticsGrades() {
               />
 
               <GradeLedger
+                key={assignmentFilter || "no-assignment"}
                 students={studentRows}
                 classLabel={selectedClassLabel}
                 subjectLabel={selectedSubjectLabel}
                 assignmentLabel={selectedAssignmentLabel}
                 opened={isLedgerOpen}
-                onScheduleRemedial={handleScheduleRemedial}
-                onEditNote={handleEditNote}
-                onViewDetail={handleViewDetail}
+                onSaveGrade={handleSaveGrade}
                 onChangeFilter={() => setIsLedgerOpen(false)}
                 onBack={handleBack}
                 onDownload={handleDownload}

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { masterDataApi } from "@/lib/api/master-data";
 import { Subject, TeacherSummary } from "@/lib/api/master-data";
-import { useAuthStore } from "@/lib/store/auth-store";
 import { SearchableDropdown, type JurusanOption } from "@/components/admin/searchable-dropdown";
 import {
   ChevronLeft,
@@ -14,12 +13,6 @@ import {
   UserPlus,
   UserRoundCheck,
 } from "lucide-react";
-
-const statusStyle: Record<string, string> = {
-  Aktif: "bg-[#ecfdf5] text-[#047857]",
-  "Menunggu Verifikasi": "bg-[#fff7ed] text-[#b45309]",
-  Cuti: "bg-[#fff7ed] text-[#b45309]",
-};
 
 function teacherGrades(classrooms: string | null): string[] {
   const grades = new Set<string>();
@@ -75,12 +68,11 @@ type TeachersTableProps = {
 };
 
 export function TeachersTable({
-  isAdmin,
-  onTeacherAdded,
   onAddTeacher,
   onPlacement,
 }: TeachersTableProps) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [fieldFilter, setFieldFilter] = useState("");
   const [gradeFilter, setGradeFilter] = useState("");
@@ -92,29 +84,68 @@ export function TeachersTable({
   const subjectsLoadedRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fetchNonce, setFetchNonce] = useState(0);
+  const debouncedQueryRef = useRef("");
 
-  const load = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await masterDataApi.teachers.list(query || undefined, statusFilter || undefined);
-      if (res.error) throw new Error((res.error as { message?: string }).message ?? "Gagal memuat guru");
-      setTeachers(res.data?.data ?? []);
-      if (!subjectsLoadedRef.current) {
-        const subjectRes = await masterDataApi.subjects.list();
-        if (!subjectRes.error) {
-          subjectsLoadedRef.current = true;
-          setAllSubjects(subjectRes.data?.data ?? []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (debouncedQueryRef.current === query) return;
+
+      debouncedQueryRef.current = query;
+      setDebouncedQuery(query);
+      setLoading(true);
+      setError(null);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
+  useEffect(() => {
+    let active = true;
+
+    const run = async () => {
+      try {
+        const res = await masterDataApi.teachers.list(
+          debouncedQuery || undefined,
+          statusFilter || undefined,
+        );
+
+        if (!active) return;
+
+        if (res.error) {
+          throw new Error(
+            (res.error as { message?: string }).message ?? "Gagal memuat guru",
+          );
         }
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Gagal memuat guru");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => { load(); }, [query, statusFilter]);
+        setTeachers(res.data?.data ?? []);
+        setError(null);
+
+        if (!subjectsLoadedRef.current) {
+          const subjectRes = await masterDataApi.subjects.list();
+          if (!active) return;
+
+          if (!subjectRes.error) {
+            subjectsLoadedRef.current = true;
+            setAllSubjects(subjectRes.data?.data ?? []);
+          }
+        }
+      } catch (e) {
+        if (!active) return;
+        setError(e instanceof Error ? e.message : "Gagal memuat guru");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+    };
+  }, [debouncedQuery, statusFilter, fetchNonce]);
 
   const majorNameToCode = useMemo(() => {
     const map: Record<string, string> = {};
@@ -150,7 +181,7 @@ export function TeachersTable({
     : "";
 
   const rows = useMemo(() => teachers.filter((t) => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     const subjectQuery = effectiveSubjectFilter.trim().toLowerCase();
     return (!q || [t.fullName, t.nomorInduk, t.kodeGuru, t.email].some((v) => (v ?? "").toLowerCase().includes(q)))
       && (!statusFilter || (t.isActive ? "Aktif" : "Nonaktif") === statusFilter)
@@ -158,7 +189,7 @@ export function TeachersTable({
       && (!gradeFilter || teacherGrades(t.classrooms).includes(gradeFilter))
       && matchesLoadFilter(t.scheduleCount, loadFilter)
       && (!subjectQuery || (t.subjects ?? "").toLowerCase().includes(subjectQuery));
-  }), [teachers, query, statusFilter, fieldFilter, gradeFilter, loadFilter, effectiveSubjectFilter, majorNameToCode]);
+  }), [teachers, debouncedQuery, statusFilter, fieldFilter, gradeFilter, loadFilter, effectiveSubjectFilter, majorNameToCode]);
 
   const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -166,12 +197,17 @@ export function TeachersTable({
 
   const reset = () => {
     setQuery("");
+    setDebouncedQuery("");
+    debouncedQueryRef.current = "";
     setStatusFilter("");
     setFieldFilter("");
     setGradeFilter("");
     setLoadFilter("");
     setSubjectFilter("");
     setPage(1);
+    setError(null);
+    setLoading(true);
+    setFetchNonce((nonce) => nonce + 1);
   };
 
   const statusOptions: JurusanOption[] = [
@@ -202,7 +238,10 @@ export function TeachersTable({
       <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-bold text-[#181c20]">Daftar Pendidik & Pengampu</h2>
-          <span className="rounded-full bg-[#e5deff] px-2.5 py-1 text-[11px] font-semibold text-[#4331a8]">Total {rows.length} Guru</span>
+          <span className="rounded-full bg-[#e5deff] px-2.5 py-1 text-[11px] font-semibold text-[#4331a8]">{loading ? "Memuat data…" : `Total ${rows.length} Guru`}</span>
+          {error ? (
+            <span className="text-[11px] font-semibold text-[#b91c1c]">{error}</span>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <motion.button
@@ -228,7 +267,7 @@ export function TeachersTable({
       <div className="flex flex-col gap-3 border-b border-[#eceef3] px-5 py-4 md:flex-row md:flex-wrap md:items-center">
         <label className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-[#787584]" aria-hidden="true" />
-          <input aria-label="Cari guru" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="Cari nama guru, kode guru, NIP, atau email..." className="h-11 w-full rounded-full bg-[#f1f4f9] pl-10 pr-4 text-sm text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30" />
+          <input aria-label="Cari guru" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); setError(null); }} placeholder="Cari nama guru, kode guru, NIP, atau email..." className="h-11 w-full rounded-full bg-[#f1f4f9] pl-10 pr-4 text-sm text-[#181c20] outline-none placeholder:text-[#787584] focus:ring-2 focus:ring-[#6c5dd3]/30" />
         </label>
         <div className="w-[190px] shrink-0">
           <SearchableDropdown value={fieldFilter} onChange={(v) => { setFieldFilter(v); setPage(1); }} options={fieldOptions} label="Semua Bidang" />
@@ -243,7 +282,7 @@ export function TeachersTable({
           <SearchableDropdown value={subjectFilter} onChange={(v) => { setSubjectFilter(v); setPage(1); }} options={subjectOptions} label="Semua Mapel" />
         </div>
         <div className="w-[190px] shrink-0">
-          <SearchableDropdown value={statusFilter} onChange={(v) => { setStatusFilter(v); setPage(1); }} options={statusOptions} label="Semua Status" />
+          <SearchableDropdown value={statusFilter} onChange={(v) => { setStatusFilter(v); setPage(1); setLoading(true); setError(null); }} options={statusOptions} label="Semua Status" />
         </div>
         <button type="button" onClick={reset} aria-label="Reset filter" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#f1f4f9] text-[#4e566c] hover:bg-[#e5deff] hover:text-[#6c5dd3]"><RefreshCw className="size-[18px]" /></button>
       </div>

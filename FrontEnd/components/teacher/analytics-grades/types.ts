@@ -9,6 +9,9 @@ export type StudentGrade = {
   className: string;
   subject: string;
   nilai: number | null;
+  submissionId: string | null;
+  fileName: string | null;
+  fileUrl: string | null;
 };
 
 export type GradeStatus = {
