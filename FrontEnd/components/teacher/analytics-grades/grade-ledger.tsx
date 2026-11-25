@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowUpDown,
-  CalendarClock,
+  Check,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
   Download,
   Eye,
+  Loader2,
   PencilLine,
   Search,
   Undo2,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getStudentStatus, pageSize } from "./data";
 import type { StudentGrade } from "./types";
@@ -25,9 +28,7 @@ type GradeLedgerProps = {
   subjectLabel: string;
   assignmentLabel: string;
   opened: boolean;
-  onScheduleRemedial: (student: StudentGrade) => void;
-  onEditNote: (student: StudentGrade) => void;
-  onViewDetail: (student: StudentGrade) => void;
+  onSaveGrade: (student: StudentGrade, score: number) => Promise<boolean>;
   onChangeFilter: () => void;
   onBack: () => void;
   onDownload: (rows: StudentGrade[]) => void;
@@ -42,9 +43,7 @@ export function GradeLedger({
   subjectLabel,
   assignmentLabel,
   opened,
-  onScheduleRemedial,
-  onEditNote,
-  onViewDetail,
+  onSaveGrade,
   onChangeFilter,
   onBack,
   onDownload,
@@ -52,6 +51,65 @@ export function GradeLedger({
 }: GradeLedgerProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftScore, setDraftScore] = useState("");
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const scoreInputRef = useRef<HTMLInputElement>(null);
+  const savingRef = useRef(false);
+
+  useEffect(() => {
+    if (!editingId) return;
+
+    const input = scoreInputRef.current;
+    if (!input) return;
+
+    input.focus();
+    input.select();
+  }, [editingId]);
+
+  function startEditing(student: StudentGrade) {
+    if (!student.submissionId || savingRef.current) return;
+
+    setEditingId(student.id);
+    setDraftScore(student.nilai === null ? "" : String(student.nilai));
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setDraftScore("");
+  }
+
+  async function saveEditing(student: StudentGrade) {
+    if (savingRef.current) return;
+
+    const raw = draftScore.trim().replace(",", ".");
+    const score = Number(raw);
+
+    if (!raw) {
+      toast.error("Nilai wajib diisi.");
+      return;
+    }
+
+    if (!Number.isFinite(score) || score < 0 || score > 100) {
+      toast.error("Nilai harus berupa angka 0–100.");
+      return;
+    }
+
+    savingRef.current = true;
+    setSavingId(student.id);
+    try {
+      const saved = await onSaveGrade(student, score);
+      if (saved) cancelEditing();
+    } catch (error) {
+      toast.error("Gagal menyimpan nilai", {
+        description:
+          error instanceof Error ? error.message : "Terjadi kesalahan.",
+      });
+    } finally {
+      savingRef.current = false;
+      setSavingId(null);
+    }
+  }
 
   const sortedStudents = [...students].sort((first, second) => {
     const firstScore = first.nilai ?? -1;
@@ -124,7 +182,10 @@ export function GradeLedger({
             <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-auto">
               <button
                 type="button"
-                onClick={onBack}
+                onClick={() => {
+                  cancelEditing();
+                  onBack();
+                }}
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DCE5EE] bg-white px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
               >
                 <ArrowLeft className="size-3.5" />
@@ -142,11 +203,12 @@ export function GradeLedger({
 
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  cancelEditing();
                   setSortDirection((current) =>
                     current === "desc" ? "asc" : "desc",
-                  )
-                }
+                  );
+                }}
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#DCE5EE] bg-[#F8FAFC] px-3 text-[11px] font-semibold text-[#475569] transition hover:border-[#b71422]/30 hover:text-[#b71422]"
               >
                 <ArrowUpDown className="size-3.5" />
@@ -159,9 +221,9 @@ export function GradeLedger({
             <table className="w-full min-w-[720px] table-fixed border-collapse text-left">
               <colgroup>
                 <col className="w-[7%]" />
-                <col className="w-[28%]" />
-                <col className="w-[20%]" />
-                <col className="w-[12%]" />
+                <col className="w-[27%]" />
+                <col className="w-[19%]" />
+                <col className="w-[14%]" />
                 <col className="w-[18%]" />
                 <col className="w-[15%]" />
               </colgroup>
@@ -215,21 +277,66 @@ export function GradeLedger({
                       <td className="px-3 py-3 font-mono text-[11px] font-medium text-[#475569]">
                         {student.nisn}
                       </td>
-                      <td className="px-3 py-3 text-center">
-                        <span
-                          className={cn(
-                            "font-mono text-[12px] font-bold tabular-nums",
-                            student.nilai === null
-                              ? "text-[#94A3B8]"
-                              : status.tone === "success"
-                                ? "text-[#15803D]"
-                                : "text-[#b71422]",
-                          )}
-                        >
-                          {student.nilai === null
-                            ? "—"
-                            : student.nilai.toFixed(1)}
-                        </span>
+                      <td className="px-2 py-3 text-center">
+                        {editingId === student.id ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <input
+                              ref={scoreInputRef}
+                              type="number"
+                              inputMode="decimal"
+                              min={0}
+                              max={100}
+                              step={0.1}
+                              value={draftScore}
+                              onChange={(event) =>
+                                setDraftScore(event.target.value)
+                              }
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                  event.preventDefault();
+                                  void saveEditing(student);
+                                }
+
+                                if (event.key === "Escape") {
+                                  event.preventDefault();
+                                  cancelEditing();
+                                }
+                              }}
+                              disabled={savingId === student.id}
+                              aria-label={`Nilai ${student.name}`}
+                              className="h-7 w-12 rounded-md border border-[#F3C6C3] bg-white px-1 text-center font-mono text-[11px] font-bold tabular-nums text-[#1E293B] outline-none transition focus:border-[#b71422] focus:ring-2 focus:ring-[#b71422]/15 disabled:opacity-50"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void saveEditing(student)}
+                              disabled={savingId === student.id}
+                              title="Simpan nilai"
+                              aria-label={`Simpan nilai ${student.name}`}
+                              className="flex size-6 items-center justify-center rounded-lg bg-[#b71422] text-white transition hover:bg-[#9e101d] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {savingId === student.id ? (
+                                <Loader2 className="size-3 animate-spin" />
+                              ) : (
+                                <Check className="size-3" />
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            className={cn(
+                              "font-mono text-[12px] font-bold tabular-nums",
+                              student.nilai === null
+                                ? "text-[#94A3B8]"
+                                : status.tone === "success"
+                                  ? "text-[#15803D]"
+                                  : "text-[#b71422]",
+                            )}
+                          >
+                            {student.nilai === null
+                              ? "—"
+                              : student.nilai.toFixed(1)}
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-3">
                         <span
@@ -243,36 +350,59 @@ export function GradeLedger({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
-                          {status.tone === "danger" ? (
+                          {editingId === student.id ? (
                             <button
                               type="button"
-                              onClick={() => onScheduleRemedial(student)}
-                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#F3C6C3] bg-[#FFF1F0] px-2 text-[9px] font-bold text-[#b71422] transition hover:bg-[#FFE4E1]"
+                              onClick={cancelEditing}
+                              disabled={savingId === student.id}
+                              title={`Batal mengubah nilai ${student.name}`}
+                              aria-label={`Batal mengubah nilai ${student.name}`}
+                              className="flex size-7 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#FFEBEB] hover:text-[#b71422] disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                              <CalendarClock className="size-3" />
-                              Bimbingan
+                              <X className="size-3.5" />
                             </button>
                           ) : (
-                            <>
-                              <button
-                                type="button"
-                                title={`Catatan ${student.name}`}
-                                aria-label={`Catatan ${student.name}`}
-                                onClick={() => onEditNote(student)}
-                                className="flex size-7 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#FFEBEB] hover:text-[#b71422]"
-                              >
-                                <PencilLine className="size-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                title={`Lihat detail ${student.name}`}
-                                aria-label={`Lihat detail ${student.name}`}
-                                onClick={() => onViewDetail(student)}
-                                className="flex size-7 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#E0F2FE] hover:text-[#006398]"
-                              >
-                                <Eye className="size-3.5" />
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              title={
+                                student.submissionId
+                                  ? `${student.nilai === null ? "Input" : "Perbarui"} nilai ${student.name}`
+                                  : "Siswa belum mengumpulkan tugas"
+                              }
+                              aria-label={
+                                student.submissionId
+                                  ? `${student.nilai === null ? "Input" : "Perbarui"} nilai ${student.name}`
+                                  : "Siswa belum mengumpulkan tugas"
+                              }
+                              onClick={() => startEditing(student)}
+                              disabled={!student.submissionId || savingId !== null}
+                              className="flex size-7 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#FFEBEB] hover:text-[#b71422] disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              <PencilLine className="size-3.5" />
+                            </button>
+                          )}
+
+                          {student.fileUrl ? (
+                            <a
+                              href={student.fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              title={`Lihat berkas ${student.fileName || student.name}`}
+                              aria-label={`Lihat berkas ${student.fileName || student.name}`}
+                              className="flex size-7 items-center justify-center rounded-lg text-[#94A3B8] transition hover:bg-[#E0F2FE] hover:text-[#006398]"
+                            >
+                              <Eye className="size-3.5" />
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              title="Siswa belum mengumpulkan berkas"
+                              aria-label="Berkas belum tersedia"
+                              className="flex size-7 items-center justify-center rounded-lg text-[#94A3B8] transition disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              <Eye className="size-3.5" />
+                            </button>
                           )}
                         </div>
                       </td>
@@ -321,7 +451,10 @@ export function GradeLedger({
               {!remedialOnly && (
                 <button
                   type="button"
-                  onClick={onChangeFilter}
+                  onClick={() => {
+                    cancelEditing();
+                    onChangeFilter();
+                  }}
                   className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
                   <Undo2 className="size-3.5" />
@@ -333,7 +466,10 @@ export function GradeLedger({
                 <button
                   type="button"
                   aria-label="Halaman sebelumnya"
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  onClick={() => {
+                    cancelEditing();
+                    setPage((current) => Math.max(1, current - 1));
+                  }}
                   disabled={safePage === 1}
                   className="flex size-7 items-center justify-center rounded-lg border border-[#E2E8F0] text-[#64748B] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-40"
                 >
@@ -345,7 +481,10 @@ export function GradeLedger({
                     <button
                       key={pageNumber}
                       type="button"
-                      onClick={() => setPage(pageNumber)}
+                      onClick={() => {
+                        cancelEditing();
+                        setPage(pageNumber);
+                      }}
                       aria-current={safePage === pageNumber ? "page" : undefined}
                       className={cn(
                         "flex size-7 items-center justify-center rounded-lg text-[10px] font-bold transition",
@@ -362,9 +501,10 @@ export function GradeLedger({
                 <button
                   type="button"
                   aria-label="Halaman berikutnya"
-                  onClick={() =>
-                    setPage((current) => Math.min(pageCount, current + 1))
-                  }
+                  onClick={() => {
+                    cancelEditing();
+                    setPage((current) => Math.min(pageCount, current + 1));
+                  }}
                   disabled={safePage === pageCount}
                   className="flex size-7 items-center justify-center rounded-lg border border-[#E2E8F0] text-[#64748B] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-40"
                 >
