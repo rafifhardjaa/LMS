@@ -7,20 +7,18 @@ import { masterDataApi, type AttendanceRecap } from "@/lib/api/master-data";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { TranscriptGradeChart } from "./transcript-grade-chart";
 
-type Category = "wajib" | "pilihan" | "lokal";
-
 type Subject = {
   code: string;
   name: string;
   teacher: string;
   jp: number;
-  daily: number;
-  exam: number;
+  tugas: number;
+  kuis: number;
+  uts: number;
+  uas: number;
   final: number;
   predicate: string;
   predicateNote: string;
-  status: "Tuntas Paripurna" | "Tuntas" | "Karya Unggulan";
-  category: Category;
   featured?: boolean;
 };
 
@@ -30,52 +28,52 @@ const subjects: Subject[] = [
     name: "Informatika & Sains Komputasi",
     teacher: "Bpk. Arya Wiguna, M.Cs",
     jp: 4,
-    daily: 94,
-    exam: 96,
+    tugas: 94,
+    kuis: 96,
+    uts: 95,
+    uas: 96,
     final: 95.2,
     predicate: "A",
     predicateNote: "Istimewa",
-    status: "Tuntas Paripurna",
-    category: "wajib",
   },
   {
     code: "MAT-302",
     name: "Matematika Tingkat Lanjut (Kalkulus & Matriks)",
     teacher: "Dr. Pawell Bennett, M.Pd",
     jp: 4,
-    daily: 89.5,
-    exam: 92,
+    tugas: 89,
+    kuis: 90,
+    uts: 92,
+    uas: 92,
     final: 90.8,
     predicate: "A",
     predicateNote: "Sangat Baik",
-    status: "Tuntas Paripurna",
-    category: "wajib",
   },
   {
     code: "FIS-301",
     name: "Fisika Terapan & Robotika Modern",
     teacher: "Drs. H. Ahmad Fauzi, M.Pd",
     jp: 4,
-    daily: 88,
-    exam: 87,
+    tugas: 88,
+    kuis: 89,
+    uts: 86,
+    uas: 87,
     final: 87.5,
     predicate: "A-",
     predicateNote: "Baik Sekali",
-    status: "Tuntas",
-    category: "wajib",
   },
   {
     code: "DKV-304",
     name: "Desain Komunikasi Visual & UI/UX",
     teacher: "Ibu Sarah Jenkins, S.Ds",
     jp: 3,
-    daily: 95,
-    exam: 98,
+    tugas: 95,
+    kuis: 96,
+    uts: 98,
+    uas: 97,
     final: 96.5,
     predicate: "A+",
     predicateNote: "Terbaik",
-    status: "Karya Unggulan",
-    category: "pilihan",
     featured: true,
   },
   {
@@ -83,112 +81,106 @@ const subjects: Subject[] = [
     name: "Bioteknologi Terapan",
     teacher: "Dra. Sri Rahayu",
     jp: 2,
-    daily: 86,
-    exam: 88,
+    tugas: 86,
+    kuis: 87,
+    uts: 88,
+    uas: 87,
     final: 87,
     predicate: "A-",
     predicateNote: "Baik Sekali",
-    status: "Tuntas",
-    category: "pilihan",
   },
   {
     code: "ING-301",
     name: "English for Academic & Tech",
     teacher: "Mrs. Evelyn Vance, M.A",
     jp: 2,
-    daily: 93,
-    exam: 95,
+    tugas: 93,
+    kuis: 94,
+    uts: 95,
+    uas: 94,
     final: 94,
     predicate: "A",
     predicateNote: "Istimewa",
-    status: "Tuntas Paripurna",
-    category: "wajib",
   },
   {
     code: "KJD-305",
     name: "Jaringan Komputer & Cloud Infrastructure",
     teacher: "Bpk. Hendra S., S.Kom",
     jp: 3,
-    daily: 90,
-    exam: 91,
+    tugas: 90,
+    kuis: 91,
+    uts: 91,
+    uas: 91,
     final: 90.5,
     predicate: "A",
     predicateNote: "Sangat Baik",
-    status: "Tuntas",
-    category: "pilihan",
   },
   {
     code: "RPL-306",
     name: "Pemrograman Web & Perangkat Bergerak",
     teacher: "Ibu Lina Kartika, S.Kom",
     jp: 3,
-    daily: 92,
-    exam: 94,
+    tugas: 92,
+    kuis: 93,
+    uts: 94,
+    uas: 93,
     final: 92.8,
     predicate: "A",
     predicateNote: "Sangat Baik",
-    status: "Tuntas Paripurna",
-    category: "pilihan",
   },
   {
     code: "AIS-307",
     name: "Kecerdasan Artifisial & Data Sains",
     teacher: "Bpk. Rizky Ramadhan, M.T",
     jp: 3,
-    daily: 91,
-    exam: 93,
+    tugas: 91,
+    kuis: 92,
+    uts: 93,
+    uas: 92,
     final: 92,
     predicate: "A",
     predicateNote: "Istimewa",
-    status: "Tuntas Paripurna",
-    category: "pilihan",
   },
   {
     code: "PKN-301",
     name: "Pendidikan Kewarganegaraan",
     teacher: "Ibu Ni Luh Sari, S.Pd",
     jp: 2,
-    daily: 88,
-    exam: 86,
+    tugas: 88,
+    kuis: 87,
+    uts: 86,
+    uas: 86,
     final: 87.2,
     predicate: "A-",
     predicateNote: "Baik Sekali",
-    status: "Tuntas",
-    category: "wajib",
   },
   {
     code: "MLK-301",
     name: "Bahasa Sasak & Budaya Lokal NTB",
     teacher: "Bpk. Made Wirawan, S.Pd",
     jp: 2,
-    daily: 89,
-    exam: 90,
+    tugas: 89,
+    kuis: 89,
+    uts: 90,
+    uas: 90,
     final: 89.4,
     predicate: "A",
     predicateNote: "Sangat Baik",
-    status: "Tuntas",
-    category: "lokal",
   },
   {
     code: "EKS-302",
     name: "Ekstrakurikuler Riset & Robotika",
     teacher: "Bpk. Hendra S., S.Kom",
     jp: 2,
-    daily: 96,
-    exam: 95,
+    tugas: 96,
+    kuis: 97,
+    uts: 95,
+    uas: 94,
     final: 95.5,
     predicate: "A",
     predicateNote: "Istimewa",
-    status: "Tuntas Paripurna",
-    category: "lokal",
   },
 ];
-
-const statusTextClassName: Record<Subject["status"], string> = {
-  "Tuntas Paripurna": "text-[#006f64]",
-  Tuntas: "text-[#0d5c52]",
-  "Karya Unggulan": "text-[#055e44]",
-};
 
 export function StudentTranscripts() {
   const user = useAuthStore((state) => state.user);
@@ -239,23 +231,21 @@ export function StudentTranscripts() {
     };
   }, []);
 
-  const categoryAverages = useMemo(() => {
-    const average = (category: Category) => {
-      const list = subjects.filter((subject) => subject.category === category);
-      if (!list.length) return 0;
-      return (
-        Math.round(
-          (list.reduce((total, subject) => total + subject.final, 0) /
-            list.length) *
-            10,
-        ) / 10
-      );
-    };
+  const componentAverages = useMemo(() => {
+    const round1 = (value: number) => Math.round(value * 10) / 10;
+
+    const averageOf = (selector: (subject: Subject) => number) =>
+      round1(subjects.reduce((total, subject) => total + selector(subject), 0) /
+        subjects.length);
+
+    const maxJp = Math.max(...subjects.map((subject) => subject.jp), 1);
 
     return [
-      { name: "Wajib", value: average("wajib") },
-      { name: "Pilihan", value: average("pilihan") },
-      { name: "Lokal", value: average("lokal") },
+      { name: "JP", value: round1((averageOf((subject) => subject.jp) / maxJp) * 100) },
+      { name: "Tugas", value: averageOf((subject) => subject.tugas) },
+      { name: "Kuis", value: averageOf((subject) => subject.kuis) },
+      { name: "UTS", value: averageOf((subject) => subject.uts) },
+      { name: "UAS", value: averageOf((subject) => subject.uas) },
     ];
   }, []);
 
@@ -382,7 +372,7 @@ export function StudentTranscripts() {
         </FadeIn>
 
         <FadeIn delay={0.14}>
-          <TranscriptGradeChart data={categoryAverages} />
+          <TranscriptGradeChart data={componentAverages} />
         </FadeIn>
 
         {/* Grade Table */}
@@ -392,27 +382,25 @@ export function StudentTranscripts() {
                   <div className="flex items-center gap-2">
                     <Award className="size-[22px] text-[#0d5c52]" />
                     <h2 className="text-[16px] font-semibold text-[#0d5c52]">
-                      Tabel Transkrip Capaian Akademik (Semester 5)
+                      Tabel Transkrip Capaian Akademik Siswa
                     </h2>
                   </div>
-                  <span className="text-[11px] text-[#536360] font-semibold">
-                    Update Sinkronisasi Terakhir: 19 Mar 2025
-                  </span>
                 </div>
               </div>
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-[12px] min-w-[760px]">
+                <table className="w-full text-left text-[12px] min-w-[900px]">
                   <thead className="bg-[#d9f3ed] text-[#3f4946] text-[11px] font-semibold uppercase tracking-wider">
                     <tr>
-                      <th className="py-2 px-4" scope="col">Kode &amp; Mata Pelajaran</th>
-                      <th className="py-2 px-2 text-center" scope="col">SKS / JP</th>
-                      <th className="py-2 px-2 text-right" scope="col">Harian &amp; Tugas</th>
-                      <th className="py-2 px-2 text-right" scope="col">ASAT (Ujian)</th>
+                      <th className="py-2 px-4" scope="col">Mata Pelajaran</th>
+                      <th className="py-2 px-2 text-center" scope="col">JP</th>
+                      <th className="py-2 px-2 text-right" scope="col">Tugas</th>
+                      <th className="py-2 px-2 text-right" scope="col">Kuis</th>
+                      <th className="py-2 px-2 text-right" scope="col">UTS</th>
+                      <th className="py-2 px-2 text-right" scope="col">UAS</th>
                       <th className="py-2 px-2 text-right" scope="col">Nilai Akhir</th>
-                      <th className="py-2 px-2 text-center" scope="col">Predikat</th>
-                      <th className="py-2 px-4 text-center" scope="col">Status Capaian</th>
+                      <th className="py-2 px-4 text-center" scope="col">Predikat</th>
                     </tr>
                   </thead>
                   <tbody className="text-[#071f1c]">
@@ -432,25 +420,20 @@ export function StudentTranscripts() {
                           </div>
                         </td>
                         <td className="py-3 px-2 text-center font-medium">{s.jp} JP</td>
-                        <td className="py-3 px-2 text-right font-medium">{s.daily.toFixed(1)}</td>
-                        <td className="py-3 px-2 text-right font-medium">{s.exam.toFixed(1)}</td>
+                        <td className="py-3 px-2 text-right font-medium">{s.tugas.toFixed(1)}</td>
+                        <td className="py-3 px-2 text-right font-medium">{s.kuis.toFixed(1)}</td>
+                        <td className="py-3 px-2 text-right font-medium">{s.uts.toFixed(1)}</td>
+                        <td className="py-3 px-2 text-right font-medium">{s.uas.toFixed(1)}</td>
                         <td className="py-3 px-2 text-right text-[16px] font-bold text-[#0d5c52]">
                           {s.final.toFixed(1)}
                         </td>
-                        <td className="py-3 px-2 text-center">
+                        <td className="py-3 px-4 text-center">
                           <span
                             className={`text-[11px] font-bold ${
                               s.featured ? "text-[#006f64]" : "text-[#0d5c52]"
                             }`}
                           >
                             {s.predicate} ({s.predicateNote})
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span
-                            className={`text-[11px] font-semibold ${statusTextClassName[s.status]}`}
-                          >
-                            {s.status}
                           </span>
                         </td>
                       </tr>
