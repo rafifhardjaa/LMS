@@ -34,18 +34,28 @@ export function mapStudentsWithGrades({
   className: string;
   subjectLabel: string;
 }): StudentGrade[] {
-  const scoreByStudent = new Map(
-    gradingRows.map((row) => [row.studentId, row.score]),
-  );
+  const gradingByStudent = new Map<string, AssignmentGradingRow>();
+  for (const row of gradingRows) {
+    if (!gradingByStudent.has(row.studentId)) {
+      gradingByStudent.set(row.studentId, row);
+    }
+  }
 
-  return students.map((student, index) => ({
-    id: student.id,
-    name: student.fullName,
-    initials: initialsOf(student.fullName),
-    avatarClassName: avatarPalettes[index % avatarPalettes.length]!,
-    nisn: student.nisn || student.nomorInduk || "-",
-    className,
-    subject: subjectLabel,
-    nilai: scoreByStudent.get(student.id) ?? null,
-  }));
+  return students.map((student, index) => {
+    const grading = gradingByStudent.get(student.id);
+
+    return {
+      id: student.id,
+      name: student.fullName,
+      initials: initialsOf(student.fullName),
+      avatarClassName: avatarPalettes[index % avatarPalettes.length]!,
+      nisn: student.nisn || student.nomorInduk || "-",
+      className,
+      subject: subjectLabel,
+      nilai: grading?.score ?? null,
+      submissionId: grading?.id ?? null,
+      fileName: grading?.fileName ?? null,
+      fileUrl: grading?.fileUrl ?? null,
+    };
+  });
 }
