@@ -7,186 +7,66 @@ import { masterDataApi, type AttendanceRecap } from "@/lib/api/master-data";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { TranscriptGradeChart } from "./transcript-grade-chart";
 
-type Subject = {
+type TranscriptRow = {
   code: string;
   name: string;
   teacher: string;
   jp: number;
-  tugas: number;
-  kuis: number;
-  uts: number;
-  uas: number;
-  final: number;
+  tugas: number | null;
+  kuis: number | null;
+  uts: number | null;
+  uas: number | null;
+  final: number | null;
   predicate: string;
   predicateNote: string;
-  featured?: boolean;
 };
 
-const subjects: Subject[] = [
-  {
-    code: "INF-301",
-    name: "Informatika & Sains Komputasi",
-    teacher: "Bpk. Arya Wiguna, M.Cs",
-    jp: 4,
-    tugas: 94,
-    kuis: 96,
-    uts: 95,
-    uas: 96,
-    final: 95.2,
-    predicate: "A",
-    predicateNote: "Istimewa",
+function formatScore(value: number | null) {
+  return value === null ? "-" : value.toFixed(1);
+}
+
+function predicateFor(final: number) {
+  if (final >= 95) return { predicate: "A+", predicateNote: "Terbaik" };
+  if (final >= 90) return { predicate: "A", predicateNote: "Istimewa" };
+  if (final >= 85) return { predicate: "A-", predicateNote: "Sangat Baik" };
+  if (final >= 80) return { predicate: "B+", predicateNote: "Baik" };
+  if (final >= 75) return { predicate: "B", predicateNote: "Cukup" };
+  return { predicate: "C", predicateNote: "Perlu Remedial" };
+}
+
+function calculateFinal(
+  tugas: number | null,
+  kuis: number | null,
+  uts: number | null,
+  uas: number | null,
+  weights: {
+    tugasWeight: number;
+    kuisWeight: number;
+    utsWeight: number;
+    uasWeight: number;
   },
-  {
-    code: "MAT-302",
-    name: "Matematika Tingkat Lanjut (Kalkulus & Matriks)",
-    teacher: "Dr. Pawell Bennett, M.Pd",
-    jp: 4,
-    tugas: 89,
-    kuis: 90,
-    uts: 92,
-    uas: 92,
-    final: 90.8,
-    predicate: "A",
-    predicateNote: "Sangat Baik",
-  },
-  {
-    code: "FIS-301",
-    name: "Fisika Terapan & Robotika Modern",
-    teacher: "Drs. H. Ahmad Fauzi, M.Pd",
-    jp: 4,
-    tugas: 88,
-    kuis: 89,
-    uts: 86,
-    uas: 87,
-    final: 87.5,
-    predicate: "A-",
-    predicateNote: "Baik Sekali",
-  },
-  {
-    code: "DKV-304",
-    name: "Desain Komunikasi Visual & UI/UX",
-    teacher: "Ibu Sarah Jenkins, S.Ds",
-    jp: 3,
-    tugas: 95,
-    kuis: 96,
-    uts: 98,
-    uas: 97,
-    final: 96.5,
-    predicate: "A+",
-    predicateNote: "Terbaik",
-    featured: true,
-  },
-  {
-    code: "BIO-203",
-    name: "Bioteknologi Terapan",
-    teacher: "Dra. Sri Rahayu",
-    jp: 2,
-    tugas: 86,
-    kuis: 87,
-    uts: 88,
-    uas: 87,
-    final: 87,
-    predicate: "A-",
-    predicateNote: "Baik Sekali",
-  },
-  {
-    code: "ING-301",
-    name: "English for Academic & Tech",
-    teacher: "Mrs. Evelyn Vance, M.A",
-    jp: 2,
-    tugas: 93,
-    kuis: 94,
-    uts: 95,
-    uas: 94,
-    final: 94,
-    predicate: "A",
-    predicateNote: "Istimewa",
-  },
-  {
-    code: "KJD-305",
-    name: "Jaringan Komputer & Cloud Infrastructure",
-    teacher: "Bpk. Hendra S., S.Kom",
-    jp: 3,
-    tugas: 90,
-    kuis: 91,
-    uts: 91,
-    uas: 91,
-    final: 90.5,
-    predicate: "A",
-    predicateNote: "Sangat Baik",
-  },
-  {
-    code: "RPL-306",
-    name: "Pemrograman Web & Perangkat Bergerak",
-    teacher: "Ibu Lina Kartika, S.Kom",
-    jp: 3,
-    tugas: 92,
-    kuis: 93,
-    uts: 94,
-    uas: 93,
-    final: 92.8,
-    predicate: "A",
-    predicateNote: "Sangat Baik",
-  },
-  {
-    code: "AIS-307",
-    name: "Kecerdasan Artifisial & Data Sains",
-    teacher: "Bpk. Rizky Ramadhan, M.T",
-    jp: 3,
-    tugas: 91,
-    kuis: 92,
-    uts: 93,
-    uas: 92,
-    final: 92,
-    predicate: "A",
-    predicateNote: "Istimewa",
-  },
-  {
-    code: "PKN-301",
-    name: "Pendidikan Kewarganegaraan",
-    teacher: "Ibu Ni Luh Sari, S.Pd",
-    jp: 2,
-    tugas: 88,
-    kuis: 87,
-    uts: 86,
-    uas: 86,
-    final: 87.2,
-    predicate: "A-",
-    predicateNote: "Baik Sekali",
-  },
-  {
-    code: "MLK-301",
-    name: "Bahasa Sasak & Budaya Lokal NTB",
-    teacher: "Bpk. Made Wirawan, S.Pd",
-    jp: 2,
-    tugas: 89,
-    kuis: 89,
-    uts: 90,
-    uas: 90,
-    final: 89.4,
-    predicate: "A",
-    predicateNote: "Sangat Baik",
-  },
-  {
-    code: "EKS-302",
-    name: "Ekstrakurikuler Riset & Robotika",
-    teacher: "Bpk. Hendra S., S.Kom",
-    jp: 2,
-    tugas: 96,
-    kuis: 97,
-    uts: 95,
-    uas: 94,
-    final: 95.5,
-    predicate: "A",
-    predicateNote: "Istimewa",
-  },
-];
+) {
+  if (tugas === null || kuis === null || uts === null || uas === null) {
+    return null;
+  }
+  return Math.round(
+    ((tugas * weights.tugasWeight +
+      kuis * weights.kuisWeight +
+      uts * weights.utsWeight +
+      uas * weights.uasWeight) /
+      100) *
+      10,
+  ) / 10;
+}
 
 export function StudentTranscripts() {
   const user = useAuthStore((state) => state.user);
   const [majorName, setMajorName] = useState("-");
   const [recap, setRecap] = useState<AttendanceRecap | null>(null);
   const [recapLoading, setRecapLoading] = useState(true);
+  const [rows, setRows] = useState<TranscriptRow[]>([]);
+  const [gradesLoading, setGradesLoading] = useState(true);
+  const [gradesError, setGradesError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.kelas) return;
@@ -231,23 +111,84 @@ export function StudentTranscripts() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        setGradesLoading(true);
+        setGradesError(null);
+        const res = await masterDataApi.grades.me.list();
+        if (!active) return;
+        if (res.error) throw new Error(res.error.message ?? "Gagal memuat nilai.");
+        const mapped: TranscriptRow[] = (res.data?.data ?? []).map((row) => {
+          const calculated = calculateFinal(
+            row.tugasScore,
+            row.kuisScore,
+            row.utsScore,
+            row.uasScore,
+            row.weights,
+          );
+          const final = row.finalScore ?? calculated;
+          const predicate = final === null ? "-" : predicateFor(final);
+          return {
+            code: row.subjectCode ?? "-",
+            name: row.subjectName,
+            teacher: row.teacherName ?? "-",
+            jp: row.jp,
+            tugas: row.tugasScore,
+            kuis: row.kuisScore,
+            uts: row.utsScore,
+            uas: row.uasScore,
+            final,
+            predicate: predicate === "-" ? "-" : predicate.predicate,
+            predicateNote:
+              predicate === "-" ? "-" : predicate.predicateNote,
+          };
+        });
+        setRows(mapped);
+      } catch (error) {
+        if (active) {
+          setRows([]);
+          setGradesError(
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat transkrip.",
+          );
+        }
+      } finally {
+        if (active) setGradesLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const componentAverages = useMemo(() => {
     const round1 = (value: number) => Math.round(value * 10) / 10;
+    const averageOf = (
+      selector: (row: TranscriptRow) => number | null,
+    ) => {
+      const values = rows
+        .map(selector)
+        .filter((value): value is number => value !== null);
+      if (!values.length) return 0;
+      return round1(
+        values.reduce((total, value) => total + value, 0) / values.length,
+      );
+    };
 
-    const averageOf = (selector: (subject: Subject) => number) =>
-      round1(subjects.reduce((total, subject) => total + selector(subject), 0) /
-        subjects.length);
-
-    const maxJp = Math.max(...subjects.map((subject) => subject.jp), 1);
+    const maxJp = Math.max(...rows.map((row) => row.jp), 1);
 
     return [
-      { name: "JP", value: round1((averageOf((subject) => subject.jp) / maxJp) * 100) },
-      { name: "Tugas", value: averageOf((subject) => subject.tugas) },
-      { name: "Kuis", value: averageOf((subject) => subject.kuis) },
-      { name: "UTS", value: averageOf((subject) => subject.uts) },
-      { name: "UAS", value: averageOf((subject) => subject.uas) },
+      { name: "JP", value: round1((averageOf((row) => row.jp) / maxJp) * 100) },
+      { name: "Tugas", value: averageOf((row) => row.tugas) },
+      { name: "Kuis", value: averageOf((row) => row.kuis) },
+      { name: "UTS", value: averageOf((row) => row.uts) },
+      { name: "UAS", value: averageOf((row) => row.uas) },
     ];
-  }, []);
+  }, [rows]);
 
   const recapCounts = useMemo(() => {
     const initial = { hadir: 0, sakit: 0, izin: 0, alpa: 0, total: 0 };
@@ -404,40 +345,56 @@ export function StudentTranscripts() {
                     </tr>
                   </thead>
                   <tbody className="text-[#071f1c]">
-                    {subjects.map((s, i) => (
-                      <tr
-                        key={s.code}
-                        className={`transition-colors hover:bg-[#dff9f2] ${
-                          i % 2 === 1 ? "bg-[#dff9f2]/40" : ""
-                        }`}
-                      >
-                        <td className="py-3 px-4">
-                          <div className="flex flex-col">
-                            <span className="text-[12px] text-[#0d5c52] font-semibold">
-                              {s.code} • {s.name}
-                            </span>
-                            <span className="text-[12px] text-[#536360]">{s.teacher}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-2 text-center font-medium">{s.jp} JP</td>
-                        <td className="py-3 px-2 text-right font-medium">{s.tugas.toFixed(1)}</td>
-                        <td className="py-3 px-2 text-right font-medium">{s.kuis.toFixed(1)}</td>
-                        <td className="py-3 px-2 text-right font-medium">{s.uts.toFixed(1)}</td>
-                        <td className="py-3 px-2 text-right font-medium">{s.uas.toFixed(1)}</td>
-                        <td className="py-3 px-2 text-right text-[16px] font-bold text-[#0d5c52]">
-                          {s.final.toFixed(1)}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span
-                            className={`text-[11px] font-bold ${
-                              s.featured ? "text-[#006f64]" : "text-[#0d5c52]"
-                            }`}
-                          >
-                            {s.predicate} ({s.predicateNote})
-                          </span>
+                    {gradesLoading ? (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-12 text-center text-[#536360]">
+                          Memuat transkrip…
                         </td>
                       </tr>
-                    ))}
+                    ) : gradesError ? (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-12 text-center text-[#b91c1c]">
+                          {gradesError}
+                        </td>
+                      </tr>
+                    ) : rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-12 text-center text-[#536360]">
+                          Belum ada nilai mapel untuk siswa ini.
+                        </td>
+                      </tr>
+                    ) : (
+                      rows.map((s, i) => (
+                        <tr
+                          key={s.name}
+                          className={`transition-colors hover:bg-[#dff9f2] ${
+                            i % 2 === 1 ? "bg-[#dff9f2]/40" : ""
+                          }`}
+                        >
+                          <td className="py-3 px-4">
+                            <div className="flex flex-col">
+                              <span className="text-[12px] text-[#0d5c52] font-semibold">
+                                {s.name}
+                              </span>
+                              <span className="text-[12px] text-[#536360]">{s.teacher}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-center font-medium">{s.jp} JP</td>
+                          <td className="py-3 px-2 text-right font-medium">{formatScore(s.tugas)}</td>
+                          <td className="py-3 px-2 text-right font-medium">{formatScore(s.kuis)}</td>
+                          <td className="py-3 px-2 text-right font-medium">{formatScore(s.uts)}</td>
+                          <td className="py-3 px-2 text-right font-medium">{formatScore(s.uas)}</td>
+                          <td className="py-3 px-2 text-right text-[16px] font-bold text-[#0d5c52]">
+                            {formatScore(s.final)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="text-[11px] font-bold text-[#0d5c52]">
+                              {s.predicate === "-" ? "-" : `${s.predicate} (${s.predicateNote})`}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -445,11 +402,11 @@ export function StudentTranscripts() {
               {/* Table Footer */}
               <div className="p-4 bg-[#dff9f2] flex items-center gap-2 text-[11px] text-[#536360] font-semibold">
                 <span>
-                  Total <strong>{subjects.length}</strong> Mata Pelajaran Fase F
+                  Total <strong>{rows.length}</strong> Mata Pelajaran Fase F
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#6f7976]" />
                 <span>
-                  Kriteria Ketuntasan Minimal (KKM): <strong>78.00</strong>
+                  Kriteria Ketuntasan Minimal (KKM): <strong>75.00</strong>
                 </span>
               </div>
             </div>

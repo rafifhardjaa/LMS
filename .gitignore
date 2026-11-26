@@ -67,8 +67,12 @@ BackEnd/backups/
 code.html
 
 # reference files (not part of codebase)
+/*.xlsx
+/*.xls
+/.obsidian/
+/Daftar_Wali_Kelas.md
 classes.csv
-"jurusan&mapel.docx"
+jurusan&mapel.docx
 Mapel_SMK_per_Jurusan.md
 pr-body-phase2.md
 server.log

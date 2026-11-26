@@ -6,7 +6,6 @@ import {
   BookOpen,
   BarChart3,
   ClipboardList,
-  Download,
   LayoutGrid,
   LogOut,
   MessageSquare,
@@ -45,12 +44,6 @@ const menu = [
     icon: UserCheck,
     href: "/teacher/presensi-siswa",
     title: "Presensi Siswa",
-  },
-  {
-    label: "Rekap Rapor",
-    icon: Download,
-    href: "/teacher/rekap-rapor",
-    title: "Rekap Rapor",
   },
   {
     label: "Chat",

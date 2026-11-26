@@ -28,6 +28,8 @@ import { progressRoute } from "./routes/progress";
 import { uploadsRoute } from "./routes/uploads";
 import { assignmentsRoute } from "./routes/assignments-route";
 import { studentCourseRoute } from "./routes/student-course-route";
+import { chatRoute } from "./routes/chat-route";
+import { chatWsRoute } from "./routes/chat-ws-route";
 
 const documentation = {
   info: {
@@ -195,6 +197,8 @@ const app = new Elysia()
   .use(progressRoute)
   .use(uploadsRoute)
   .use(studentCourseRoute)
+  .use(chatRoute)
+  .use(chatWsRoute)
   .listen(Number(process.env.PORT) || 3000);
 
 console.log(

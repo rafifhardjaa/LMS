@@ -6,6 +6,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   type PgColumn,
   serial,
   text,
@@ -921,5 +922,106 @@ export const studentSubjectGrades = pgTable(
     classSubjectPeriodIdx: index(
       "student_subject_grades_class_subject_period_idx"
     ).on(table.classId, table.subjectId, table.academicPeriodId),
+  })
+);
+
+export const chatConversations = pgTable(
+  "chat_conversations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    participantKey: varchar("participant_key", { length: 73 }).notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    participantKeyUnique: uniqueIndex(
+      "chat_conversations_participant_key_unique"
+    ).on(table.participantKey),
+    classIdx: index("chat_conversations_class_idx").on(table.classId),
+    lastMessageIdx: index("chat_conversations_last_message_idx").on(
+      table.lastMessageAt
+    ),
+  })
+);
+
+export const chatConversationParticipants = pgTable(
+  "chat_conversation_participants",
+  {
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => chatConversations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lastReadAt: timestamp("last_read_at", { withTimezone: true }),
+    joinedAt: timestamp("joined_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.conversationId, table.userId] }),
+    userIdx: index("chat_conversation_participants_user_idx").on(table.userId),
+  })
+);
+
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => chatConversations.id, { onDelete: "cascade" }),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    clientMessageId: uuid("client_message_id").notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    clientMessageUnique: uniqueIndex(
+      "chat_messages_conversation_client_unique"
+    ).on(table.conversationId, table.clientMessageId),
+    conversationTimeIdx: index("chat_messages_conversation_time_idx").on(
+      table.conversationId,
+      table.createdAt
+    ),
+    senderIdx: index("chat_messages_sender_idx").on(table.senderId),
+  })
+);
+
+export const chatWsTickets = pgTable(
+  "chat_ws_tickets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    tokenHashUnique: uniqueIndex("chat_ws_tickets_token_hash_unique").on(
+      table.tokenHash
+    ),
+    expiryIdx: index("chat_ws_tickets_expiry_idx").on(table.expiresAt),
+    userIdx: index("chat_ws_tickets_user_idx").on(table.userId),
   })
 );

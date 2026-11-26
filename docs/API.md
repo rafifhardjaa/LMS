@@ -468,6 +468,75 @@ Respons sukses `201`:
 
 ---
 
+## Chat — `/api/v1/chat`
+
+Chat mendukung percakapan **direct 1:1** antara siswa–siswa satu kelas, siswa–guru mapel, dan siswa–wali kelas. Semua operasi memvalidasi participant di server.
+
+### REST
+
+| Method | Endpoint | Auth | Body / Query | Keterangan |
+|---|---|---|---|---|
+| `GET` | `/api/v1/chat/contacts` | siswa | — | Kontak chat siswa: teman sekelas, wali kelas, dan guru mapel |
+| `POST` | `/api/v1/chat/ws-ticket` | siswa, guru | — | Membuat ticket WebSocket sekali pakai (berlaku ±30 detik) |
+| `GET` | `/api/v1/chat/conversations` | siswa, guru | query `classId?` | Daftar percakapan beserta last message dan unread count |
+| `POST` | `/api/v1/chat/conversations` | siswa, guru | `{ classId, participantId }` | Ambil atau buat percakapan direct |
+| `GET` | `/api/v1/chat/conversations/:id/messages` | siswa, guru | query `before?`, `limit?` | Riwayat pesan; cursor pagination |
+| `POST` | `/api/v1/chat/conversations/:id/messages` | siswa, guru | `{ clientMessageId, body }` | Kirim pesan via REST fallback; idempoten |
+| `POST` | `/api/v1/chat/conversations/:id/read` | siswa, guru | `{ lastMessageId? }` | Tandai percakapan sudah dibaca |
+
+Aturan penting:
+
+- `classId` tidak dipercaya dari client pada endpoint kontak siswa; kelas diambil dari user login.
+- Pesan maksimal 4000 karakter.
+- `clientMessageId` mencegah duplicate message saat retry.
+- Hanya participant conversation yang dapat membaca atau mengirim pesan.
+
+### WebSocket
+
+Endpoint:
+
+```text
+WS /api/v1/chat/ws?ticket=<one-time-ticket>
+```
+
+Autentikasi:
+
+1. Browser meminta ticket via `POST /api/v1/chat/ws-ticket` melalui BFF/cookie HttpOnly.
+2. Backend menyimpan hanya hash ticket.
+3. Ticket sekali pakai dan kedaluwarsa ±30 detik.
+4. Origin WebSocket divalidasi terhadap `APP_URL`/`CORS_ORIGINS`.
+
+Event client → server:
+
+| Event | Payload | Keterangan |
+|---|---|---|
+| `message:send` | `{ conversationId, clientMessageId, body }` | Kirim pesan |
+| `message:read` | `{ conversationId, lastMessageId? }` | Tandai dibaca |
+| `typing:start` | `{ conversationId }` | Mulai mengetik |
+| `typing:stop` | `{ conversationId }` | Berhenti mengetik |
+| `ping` | — | Heartbeat |
+
+Event server → client:
+
+| Event | Keterangan |
+|---|---|
+| `connection:ready` | Koneksi dan autentikasi berhasil |
+| `message:ack` | Pesan tersimpan; berisi data pesan final |
+| `message:new` | Pesan baru untuk participant lain |
+| `message:read` | Lawan bicara membaca pesan |
+| `typing:start` / `typing:stop` | Status mengetik lawan bicara |
+| `error` | Validasi/otorisasi gagal |
+
+Frontend development memerlukan:
+
+```env
+NEXT_PUBLIC_WS_URL="ws://localhost:3000"
+```
+
+Jika `NEXT_PUBLIC_WS_URL` kosong, client memakai `NEXT_PUBLIC_API_URL` sebagai fallback.
+
+---
+
 ## Ringkasan cakupan
 
 | Grup | Jumlah endpoint |
@@ -496,7 +565,10 @@ Respons sukses `201`:
 | Reviews | 3 |
 | Notifications | 3 |
 | Uploads | 6 |
-| **Total** | **105** |
+| Chat | 7 |
+| **Total REST** | **112** |
+
+Endpoint WebSocket `WS /api/v1/chat/ws` didokumentasikan terpisah dan tidak dihitung dalam total REST di atas.
 
 > Saat menambah atau mengubah route, perbarui dokumen ini **dan** metadata
 > `detail` pada route terkait agar Swagger tetap sinkron.

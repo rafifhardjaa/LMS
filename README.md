@@ -105,6 +105,7 @@ npm install
 # Setup environment
 cp .env.example .env
 # Pastikan NEXT_PUBLIC_API_URL mengarah ke backend
+# Untuk chat realtime, atur NEXT_PUBLIC_WS_URL (contoh: ws://localhost:3000)
 
 # Jalankan development server
 npm run dev
@@ -139,7 +140,7 @@ Kalau DBeaver masih hanya menampilkan satu database, aktifkan opsi **Show all da
 
 ## API Endpoints
 
-> **Referensi lengkap seluruh 105 endpoint ada di [`docs/API.md`](docs/API.md).**
+> **Referensi lengkap 112 endpoint REST dan 1 endpoint WebSocket ada di [`docs/API.md`](docs/API.md).**
 > Tabel di bawah hanya ringkasan grup inti; dokumentasi per-endpoint (auth, body,
 > query, dan catatan perilaku) dipelihara di file tersebut.
 
