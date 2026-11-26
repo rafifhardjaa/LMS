@@ -3,10 +3,7 @@
 import {
   FileSignature,
   FileText,
-  Flag,
   GraduationCap,
-  HelpCircle,
-  Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -15,19 +12,16 @@ import {
   StaggerChildren,
   StaggerItem,
 } from "@/components/ui/animations";
-import { useAuthStore } from "@/lib/store/auth-store";
 import { meetings } from "./data";
 
 const capaianPembelajaranDefault =
-  "Capaian pembelajaran mata pelajaran ini mengacu pada kurikulum yang berlaku dan akan disesuaikan dengan karakteristik peserta didik.";
+  "Capaian pembelajaran mata pelajaran ini belum diisi.";
 
 const bobotPenilaian = [
-  { persen: "15%", label: "Keaktifan", icon: Users, color: "#7A941F" },
-  { persen: "20%", label: "Tugas Akhir", icon: Flag, color: "#b71422" },
-  { persen: "15%", label: "Tugas", icon: FileText, color: "#006398" },
-  { persen: "5%", label: "Kuis", icon: HelpCircle, color: "#D97706" },
-  { persen: "20%", label: "UTS", icon: FileSignature, color: "#7C3AED" },
-  { persen: "25%", label: "UAS", icon: GraduationCap, color: "#b71422" },
+  { persen: "20%", label: "Tugas", icon: FileText, color: "#006398" },
+  { persen: "20%", label: "Kuis", icon: FileText, color: "#D97706" },
+  { persen: "30%", label: "UTS", icon: FileSignature, color: "#7C3AED" },
+  { persen: "30%", label: "UAS", icon: GraduationCap, color: "#b71422" },
 ];
 
 function initials(name: string): string {
@@ -76,10 +70,9 @@ export function CourseInfoContent({
   meetingCount,
   accent = "teacher",
 }: CourseInfoContentProps) {
-  const user = useAuthStore((state) => state.user);
   const styles = ACCENT_STYLES[accent];
   const isStudent = accent === "student";
-  const displayTeacher = teacherName?.trim() || user?.full_name || "-";
+  const displayTeacher = teacherName?.trim() || "-";
 
   const capaianText = capaianPembelajaran?.trim() || capaianPembelajaranDefault;
   const capaianItems = capaianText
@@ -94,7 +87,7 @@ export function CourseInfoContent({
   const stats = [
     { label: "Peserta", value: pesertaCount ?? 0 },
     { label: "Pertemuan", value: meetingCount ?? meetings.length },
-    { label: "Semester", value: "Genap 2024/2025" },
+    { label: "Semester", value: "Periode aktif" },
   ];
 
   return (

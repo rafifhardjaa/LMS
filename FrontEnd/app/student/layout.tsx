@@ -20,12 +20,12 @@ export default function MuridLayout({
   return (
     <div
       style={{ fontFamily: plusJakartaSans.style.fontFamily }}
-      className={`${inter.variable} min-h-screen bg-[#f2f9f7] text-[#071f1c] antialiased`}
+      className={`${inter.variable} student-scrollbar-hide min-h-screen bg-[#f2f9f7] text-[#071f1c] antialiased`}
     >
       <MuridSidebar />
-      <div className="min-h-screen flex flex-col relative z-10 pl-64">
+      <div className="min-h-screen flex flex-col relative z-10 pl-64 min-w-0">
         <MuridTopbar />
-        <main className="w-full flex-1 pt-28 px-8 pb-10">{children}</main>
+        <main className="w-full flex-1 min-w-0 pt-28 px-8 pb-10">{children}</main>
       </div>
     </div>
   );

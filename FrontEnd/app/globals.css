@@ -158,3 +158,33 @@ html:has(.admin-scrollbar-hide)::-webkit-scrollbar,
 body:has(.admin-scrollbar-hide)::-webkit-scrollbar {
   display: none;
 }
+
+.student-scrollbar-hide,
+.student-scrollbar-hide *,
+html:has(.student-scrollbar-hide) [data-slot="dialog-content"],
+html:has(.student-scrollbar-hide) [data-slot="dialog-content"] * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.student-scrollbar-hide::-webkit-scrollbar,
+.student-scrollbar-hide *::-webkit-scrollbar,
+html:has(.student-scrollbar-hide) [data-slot="dialog-content"]::-webkit-scrollbar,
+html:has(.student-scrollbar-hide) [data-slot="dialog-content"] *::-webkit-scrollbar {
+  display: none;
+}
+
+html:has(.student-scrollbar-hide),
+body:has(.student-scrollbar-hide) {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html:has(.student-scrollbar-hide)::-webkit-scrollbar,
+body:has(.student-scrollbar-hide)::-webkit-scrollbar {
+  display: none;
+}
+
+html:has(.student-scrollbar-hide) {
+  overflow-x: clip;
+}

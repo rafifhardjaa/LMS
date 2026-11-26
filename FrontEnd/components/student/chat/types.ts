@@ -29,6 +29,8 @@ export type Conversation = {
   lastMessageAt: string | null;
   unreadCount: number;
   messages: ChatMessage[];
+  hasMore?: boolean;
+  nextBefore?: string | null;
 };
 
 export type ContactFilter = "all" | "classmates" | "teachers" | "advisor";

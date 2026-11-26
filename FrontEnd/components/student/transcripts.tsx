@@ -64,6 +64,7 @@ export function StudentTranscripts() {
   const [majorName, setMajorName] = useState("-");
   const [recap, setRecap] = useState<AttendanceRecap | null>(null);
   const [recapLoading, setRecapLoading] = useState(true);
+  const [recapError, setRecapError] = useState<string | null>(null);
   const [rows, setRows] = useState<TranscriptRow[]>([]);
   const [gradesLoading, setGradesLoading] = useState(true);
   const [gradesError, setGradesError] = useState<string | null>(null);
@@ -95,12 +96,20 @@ export function StudentTranscripts() {
     let active = true;
     void (async () => {
       try {
+        setRecapError(null);
         const res = await masterDataApi.attendance.myRecap();
         if (!active) return;
         if (res.error) throw new Error(res.error.message ?? "Gagal memuat presensi.");
         setRecap(res.data?.data ?? null);
-      } catch {
-        if (active) setRecap(null);
+      } catch (error) {
+        if (active) {
+          setRecap(null);
+          setRecapError(
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat presensi.",
+          );
+        }
       } finally {
         if (active) setRecapLoading(false);
       }
@@ -199,7 +208,7 @@ export function StudentTranscripts() {
     }
     return {
       ...initial,
-      total: recap.days.length,
+      total: recap.days.filter((day) => Boolean(day.status)).length,
     };
   }, [recap]);
 
@@ -278,6 +287,10 @@ export function StudentTranscripts() {
                 <p className="mt-4 text-[12px] font-semibold text-[#536360]">
                   Memuat presensi…
                 </p>
+              ) : recapError ? (
+                <p className="mt-4 text-[12px] font-semibold text-[#b91c1c]">
+                  {recapError}
+                </p>
               ) : (
                 <>
                   <div className="mt-4 flex items-baseline gap-1">
@@ -285,7 +298,7 @@ export function StudentTranscripts() {
                       {recapCounts.total}
                     </span>
                     <span className="text-[12px] font-semibold text-[#6f7976]">
-                      Hari Belajar
+                      Hari Tercatat
                     </span>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] font-semibold">
@@ -312,9 +325,11 @@ export function StudentTranscripts() {
           </div>
         </FadeIn>
 
-        <FadeIn delay={0.14}>
-          <TranscriptGradeChart data={componentAverages} />
-        </FadeIn>
+        {!gradesLoading && !gradesError && rows.length > 0 ? (
+          <FadeIn delay={0.14}>
+            <TranscriptGradeChart data={componentAverages} />
+          </FadeIn>
+        ) : null}
 
         {/* Grade Table */}
             <div className="bg-white rounded-xl border border-[#cee8e1]/60 shadow-[0_2px_8px_-2px_rgba(13,92,82,0.05)] overflow-hidden flex flex-col">
@@ -366,7 +381,7 @@ export function StudentTranscripts() {
                     ) : (
                       rows.map((s, i) => (
                         <tr
-                          key={s.name}
+                          key={`${s.name}-${i}`}
                           className={`transition-colors hover:bg-[#dff9f2] ${
                             i % 2 === 1 ? "bg-[#dff9f2]/40" : ""
                           }`}
