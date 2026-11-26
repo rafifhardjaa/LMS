@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Paperclip, SendHorizontal } from "lucide-react";
-import { toast } from "sonner";
+import { SendHorizontal } from "lucide-react";
 
 type MessageComposerProps = {
   onSend: (body: string) => void;
@@ -51,18 +50,6 @@ export function MessageComposer({
       className="shrink-0 border-t border-[#A7D8CA] bg-[#F7FCFA] px-3 py-1 sm:px-4"
     >
       <div className="flex items-end gap-1.5">
-        <button
-          type="button"
-          title="Lampiran segera tersedia"
-          aria-label="Tambahkan lampiran"
-          onClick={() =>
-            toast.info("Lampiran akan tersedia setelah integrasi chat.")
-          }
-          className="mb-0.5 flex size-9 shrink-0 items-center justify-center rounded-full text-[#64748B] transition hover:bg-[#E7F6F1] hover:text-[#0d5c52]"
-        >
-          <Paperclip className="size-4" />
-        </button>
-
         <div className="flex min-w-0 flex-1 items-end rounded-2xl border border-[#A7D8CA] bg-white px-3 py-1 transition focus-within:border-[#0d5c52]/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0d5c52]/10">
           <textarea
             ref={textareaRef}
@@ -83,6 +70,7 @@ export function MessageComposer({
               }
             }}
             rows={1}
+            maxLength={4000}
             placeholder="Tulis pesan..."
             aria-label="Tulis pesan"
             disabled={disabled}

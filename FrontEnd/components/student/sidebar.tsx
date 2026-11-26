@@ -57,7 +57,7 @@ export function MuridSidebar() {
 
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white z-50 flex flex-col justify-between py-6 px-6 border-r border-[#cee8e1]/60 shadow-[0_1px_8px_rgba(7,31,28,0.03)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex flex-col gap-8 w-full">
+      <div className="flex flex-1 min-h-0 flex-col gap-8 w-full">
         <motion.div
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
@@ -77,7 +77,7 @@ export function MuridSidebar() {
           </div>
         </motion.div>
 
-        <StaggerChildren staggerDelay={0.06} className="flex flex-col gap-1 w-full">
+        <StaggerChildren staggerDelay={0.06} className="flex min-h-0 flex-1 flex-col gap-1 w-full overflow-y-auto">
           {menu.map(({ label, icon: Icon, href, title }) => {
             const active = pathname.startsWith(href);
 

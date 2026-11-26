@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Info } from "lucide-react";
 import moment from "moment";
 import "moment/locale/id";
+import { toast } from "sonner";
 import { FadeIn } from "@/components/ui/animations";
 import {
   masterDataApi,
@@ -102,9 +103,18 @@ export function AttendancePage() {
     : [];
 
   async function refreshRecap() {
-    const res = await masterDataApi.attendance.myRecap();
-    if (!res.error) {
+    try {
+      const res = await masterDataApi.attendance.myRecap();
+      if (res.error) {
+        throw new Error(res.error.message ?? "Gagal memperbarui presensi.");
+      }
       setRecap(res.data?.data ?? null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Gagal memperbarui presensi.",
+      );
     }
   }
 
