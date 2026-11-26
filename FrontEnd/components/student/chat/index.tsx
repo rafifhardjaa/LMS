@@ -31,6 +31,7 @@ export function StudentChat() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [typingUserId, setTypingUserId] = useState<string | null>(null);
+  const [olderLoading, setOlderLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const selectedIdRef = useRef<string | null>(null);
@@ -82,11 +83,7 @@ export function StudentChat() {
         setClassName(data?.class.name ?? "");
         setClassId(data?.class.id ?? "");
         setConversations(nextConversations);
-        setSelectedId(
-          window.matchMedia("(min-width: 1024px)").matches
-            ? nextConversations[0]?.id ?? null
-            : null,
-        );
+        setSelectedId(null);
       } catch (loadError) {
         if (active) {
           setConversations([]);
@@ -187,6 +184,11 @@ export function StudentChat() {
         return;
       }
 
+      if (event.type === "error") {
+        toast.error(event.message);
+        return;
+      }
+
       if (
         event.type === "typing:start" ||
         event.type === "typing:stop"
@@ -278,6 +280,8 @@ export function StudentChat() {
                 lastMessage: lastMessage?.body ?? "Belum ada pesan",
                 lastMessageAt: lastMessage?.sentAt ?? null,
                 unreadCount: 0,
+                hasMore: res.data?.data.hasMore ?? false,
+                nextBefore: res.data?.data.nextBefore ?? null,
               }
             : conversation,
         ),
@@ -290,6 +294,47 @@ export function StudentChat() {
           ? selectError.message
           : "Gagal memuat percakapan.",
       );
+    }
+  }
+
+  async function handleLoadOlder() {
+    if (
+      !selectedConversation?.conversationId ||
+      !selectedConversation.nextBefore ||
+      olderLoading
+    ) {
+      return;
+    }
+    setOlderLoading(true);
+    try {
+      const res = await chatApi.messages.list(
+        selectedConversation.conversationId,
+        { before: selectedConversation.nextBefore },
+      );
+      if (res.error) {
+        throw new Error(res.error.message ?? "Gagal memuat pesan lama.");
+      }
+      const older = (res.data?.data.messages ?? []).map(toLocalMessage);
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === selectedConversation.id
+            ? {
+                ...conversation,
+                messages: [...older, ...conversation.messages],
+                hasMore: res.data?.data.hasMore ?? false,
+                nextBefore: res.data?.data.nextBefore ?? null,
+              }
+            : conversation,
+        ),
+      );
+    } catch (loadError) {
+      toast.error(
+        loadError instanceof Error
+          ? loadError.message
+          : "Gagal memuat pesan lama.",
+      );
+    } finally {
+      setOlderLoading(false);
     }
   }
 
@@ -479,7 +524,11 @@ export function StudentChat() {
                 </span>
               </header>
 
-              <MessageThread conversation={selectedConversation} />
+              <MessageThread
+                conversation={selectedConversation}
+                onLoadOlder={handleLoadOlder}
+                loadingOlder={olderLoading}
+              />
               <MessageComposer
                 key={selectedConversation.id}
                 onSend={handleSend}

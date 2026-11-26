@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { CheckCheck, MessageCircle } from "lucide-react";
 import type { Conversation } from "./types";
 
 type MessageThreadProps = {
   conversation: Conversation;
+  onLoadOlder?: () => void;
+  loadingOlder?: boolean;
 };
 
 function formatMessageTime(value: string) {
@@ -16,7 +18,26 @@ function formatMessageTime(value: string) {
   });
 }
 
-export function MessageThread({ conversation }: MessageThreadProps) {
+function formatDateLabel(value: string) {
+  const date = new Date(value);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Hari ini";
+  if (date.toDateString() === yesterday.toDateString()) return "Kemarin";
+  return date.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function MessageThread({
+  conversation,
+  onLoadOlder,
+  loadingOlder = false,
+}: MessageThreadProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,6 +46,9 @@ export function MessageThread({ conversation }: MessageThreadProps) {
 
   return (
     <div
+      role="log"
+      aria-live="polite"
+      aria-relevant="additions"
       className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6"
       style={{
         backgroundColor: "#EFF9F5",
@@ -45,19 +69,34 @@ export function MessageThread({ conversation }: MessageThreadProps) {
           </p>
         </div>
       ) : (
-        <>
-          <div className="mb-5 flex justify-center">
-            <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold text-[#64748B] shadow-sm">
-              Hari ini
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            {conversation.messages.map((message) => {
-              const outgoing = message.direction === "outgoing";
-              return (
+        <div className="flex flex-col gap-2.5">
+          {conversation.hasMore && onLoadOlder ? (
+            <button
+              type="button"
+              onClick={onLoadOlder}
+              disabled={loadingOlder}
+              className="mx-auto mb-1 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold text-[#0d5c52] shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loadingOlder ? "Memuat pesan lama..." : "Muat pesan sebelumnya"}
+            </button>
+          ) : null}
+          {conversation.messages.map((message, index) => {
+            const outgoing = message.direction === "outgoing";
+            const previous = conversation.messages[index - 1];
+            const showDate =
+              !previous ||
+              new Date(previous.sentAt).toDateString() !==
+                new Date(message.sentAt).toDateString();
+            return (
+              <Fragment key={message.id}>
+                {showDate ? (
+                  <div className="my-2 flex justify-center">
+                    <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold text-[#64748B] shadow-sm">
+                      {formatDateLabel(message.sentAt)}
+                    </span>
+                  </div>
+                ) : null}
                 <motion.div
-                  key={message.id}
                   initial={{ opacity: 0, y: 6, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.18 }}
@@ -83,11 +122,11 @@ export function MessageThread({ conversation }: MessageThreadProps) {
                     </div>
                   </div>
                 </motion.div>
-              );
-            })}
-            <div ref={endRef} />
-          </div>
-        </>
+              </Fragment>
+            );
+          })}
+          <div ref={endRef} />
+        </div>
       )}
     </div>
   );

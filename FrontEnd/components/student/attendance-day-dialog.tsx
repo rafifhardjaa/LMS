@@ -96,9 +96,9 @@ export function AttendanceDayDialog({
 
       <DialogContent
         showCloseButton={false}
-        className="max-w-md overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white p-0 shadow-[0_24px_64px_-24px_rgba(15,23,42,0.35)]"
+        className="flex max-h-[calc(100dvh-2rem)] max-w-md flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white p-0 shadow-[0_24px_64px_-24px_rgba(15,23,42,0.35)]"
       >
-        <div className="flex flex-col gap-1 bg-gradient-to-r from-[#0d5c52] to-[#071f1c] px-5 py-4">
+        <div className="flex shrink-0 flex-col gap-1 bg-gradient-to-r from-[#0d5c52] to-[#071f1c] px-5 py-4">
           <DialogTitle className="text-[15px] font-extrabold tracking-tight text-white">
             Presensi Harian
           </DialogTitle>
@@ -107,7 +107,7 @@ export function AttendanceDayDialog({
           </DialogDescription>
         </div>
 
-        <div className="flex flex-col gap-4 p-5">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
           <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">
@@ -172,7 +172,7 @@ export function AttendanceDayDialog({
                 {SELF_STATUS_OPTIONS.map((option) => (
                   <label
                     key={option}
-                    className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-[11px] font-bold transition ${
+                    className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-[11px] font-bold transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#0d5c52]/30 ${
                       status === option
                         ? "border-[#0d5c52] bg-[#edf7f4] text-[#0d5c52]"
                         : "border-[#E2E8F0] bg-white text-[#475569] hover:border-[#0d5c52]/40"
@@ -194,6 +194,7 @@ export function AttendanceDayDialog({
                 type="text"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
+                aria-label="Catatan presensi"
                 placeholder="Catatan opsional (mis. alasan sakit/izin)"
                 className="h-9 w-full rounded-xl border border-[#DCE5EE] bg-white px-3 text-[12px] text-[#1E293B] outline-none transition focus:border-[#0d5c52] focus:ring-2 focus:ring-[#0d5c52]/15"
               />

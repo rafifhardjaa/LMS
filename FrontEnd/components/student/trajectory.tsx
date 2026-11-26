@@ -145,6 +145,14 @@ export function Trajectory() {
     };
   }, [classId]);
 
+  if (!user?.kelas) {
+    return (
+      <div className="rounded-xl border border-[#cee8e1] bg-white px-6 py-10 text-center text-[13px] font-semibold text-[#536360]">
+        Kelas siswa belum diatur. Hubungi admin sekolah.
+      </div>
+    );
+  }
+
   return (
     <FadeIn>
       <section className="rounded-[20px] border border-[#cee8e1]/60 bg-white p-5 shadow-[0_1px_8px_rgba(7,31,28,0.04)]">

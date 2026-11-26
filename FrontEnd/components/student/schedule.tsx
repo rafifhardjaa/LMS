@@ -135,6 +135,14 @@ export function Schedule() {
     user?.kelas?.trim() ||
     "-";
 
+  if (!user) {
+    return (
+      <div className="rounded-xl border border-[#cee8e1] bg-white px-6 py-10 text-center text-[13px] font-semibold text-[#536360]">
+        Profil siswa belum tersedia. Silakan login ulang.
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <FadeIn>
