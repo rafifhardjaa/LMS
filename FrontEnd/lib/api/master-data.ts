@@ -879,4 +879,35 @@ export const masterDataApi = {
         ),
     },
   },
+  grades: {
+    me: {
+      list: () =>
+        apiFetch<
+          ApiSuccess<
+            Array<{
+              subjectId: string;
+              subjectCode: string | null;
+              subjectName: string;
+              teacherName: string | null;
+              jp: number;
+              classId: string;
+              className: string;
+              academicPeriodId: string;
+              academicPeriodName: string;
+              weights: {
+                tugasWeight: number;
+                kuisWeight: number;
+                utsWeight: number;
+                uasWeight: number;
+              };
+              tugasScore: number | null;
+              kuisScore: number | null;
+              utsScore: number | null;
+              uasScore: number | null;
+              finalScore: number | null;
+            }>
+          >
+        >("/api/v1/grades/me"),
+    },
+  },
 } as const;

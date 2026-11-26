@@ -18,7 +18,13 @@ import type {
   ApiSuccess,
   ApiMessage,
   ApiError,
+  ChatConversationInfo,
+  ChatConversationSummary,
+  ChatMessageDto,
+  ChatMessagesPage,
+  ChatWsTicket,
   ProgressSummary,
+  StudentChatContacts,
   User,
 } from "./types";
 
@@ -171,6 +177,71 @@ export const discussionsApi = {
         body: JSON.stringify(body),
       }
     ),
+} as const;
+
+function chatQuery(params: Record<string, string | number | undefined>) {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === "") continue;
+    search.set(key, String(value));
+  }
+  const query = search.toString();
+  return query ? `?${query}` : "";
+}
+
+export const chatApi = {
+  contacts: {
+    list: () =>
+      apiFetch<ApiSuccess<StudentChatContacts>>("/api/v1/chat/contacts"),
+  },
+  wsTicket: {
+    create: () =>
+      apiFetch<ApiSuccess<ChatWsTicket>>("/api/v1/chat/ws-ticket", {
+        method: "POST",
+      }),
+  },
+  conversations: {
+    list: (classId?: string) =>
+      apiFetch<ApiSuccess<ChatConversationSummary[]>>(
+        `/api/v1/chat/conversations${chatQuery({ classId })}`,
+      ),
+    getOrCreate: (body: { classId: string; participantId: string }) =>
+      apiFetch<ApiSuccess<ChatConversationInfo>>(
+        "/api/v1/chat/conversations",
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
+  },
+  messages: {
+    list: (
+      conversationId: string,
+      params: { before?: string; limit?: number } = {},
+    ) =>
+      apiFetch<ApiSuccess<ChatMessagesPage>>(
+        `/api/v1/chat/conversations/${conversationId}/messages${chatQuery(params)}`,
+      ),
+    send: (
+      conversationId: string,
+      body: { clientMessageId: string; body: string },
+    ) =>
+      apiFetch<ApiSuccess<ChatMessageDto>>(
+        `/api/v1/chat/conversations/${conversationId}/messages`,
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      ),
+    read: (conversationId: string, lastMessageId?: string) =>
+      apiFetch<ApiSuccess<{ lastReadAt: string }>>(
+        `/api/v1/chat/conversations/${conversationId}/read`,
+        {
+          method: "POST",
+          body: JSON.stringify({ lastMessageId }),
+        },
+      ),
+  },
 } as const;
 
 export const authApi = {

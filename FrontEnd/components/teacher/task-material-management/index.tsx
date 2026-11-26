@@ -176,9 +176,17 @@ export function TaskMaterialManagement() {
     [assignments, course],
   );
 
-  const gradingItems = useMemo(
-    () => gradingRows.map((row, index) => mapGradingRow(row, index)),
+  const sortedGradingRows = useMemo(
+    () =>
+      [...gradingRows].sort((first, second) =>
+        second.submittedAt.localeCompare(first.submittedAt),
+      ),
     [gradingRows],
+  );
+
+  const gradingItems = useMemo(
+    () => sortedGradingRows.map((row, index) => mapGradingRow(row, index)),
+    [sortedGradingRows],
   );
 
   const gradingQueue = useMemo(
