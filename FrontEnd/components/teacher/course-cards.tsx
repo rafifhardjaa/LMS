@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ArrowRight, Bookmark, ChevronRight, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import moment from "moment";
@@ -10,6 +11,8 @@ import type { JadwalPelajaran } from "@/lib/api/master-data";
 
 type Course = {
   key: string;
+  classId: string;
+  subjectId: string;
   className: string;
   majorName: string;
   subjectName: string;
@@ -33,6 +36,8 @@ function mapCourses(jadwal: JadwalPelajaran[], todayName: string): Course[] {
   return jadwal
     .map((j) => ({
       key: j.id,
+      classId: j.classId,
+      subjectId: j.subjectId,
       className: classLabel(j),
       majorName: j.majorName || "-",
       subjectName: j.subjectName,
@@ -152,14 +157,17 @@ export function CourseCards() {
                         <span className="text-[11px] font-bold text-[#94A3B8] flex items-center gap-1">
                           <Clock className="size-3" /> {course.hari}, {course.waktuLabel}
                         </span>
-                        <motion.button
-                          type="button"
-                          className="text-[12px] font-semibold text-[#b71422] flex items-center gap-0.5"
+                        <motion.div
                           whileHover={{ x: 3 }}
                           transition={{ type: "spring", stiffness: 400, damping: 20 }}
                         >
-                          View Course <ChevronRight className="size-[14px]" />
-                        </motion.button>
+                          <Link
+                            href={`/teacher/modul-course/${course.classId}--${course.subjectId}`}
+                            className="text-[12px] font-semibold text-[#b71422] flex items-center gap-0.5"
+                          >
+                            View Course <ChevronRight className="size-[14px]" />
+                          </Link>
+                        </motion.div>
                       </div>
                     </motion.div>
                   </StaggerItem>

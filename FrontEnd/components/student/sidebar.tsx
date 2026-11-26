@@ -8,10 +8,9 @@ import {
   BookOpen,
   ClipboardCheck,
   GraduationCap,
-  Headset,
   LayoutDashboard,
+  MessageCircle,
   LogOut,
-  Settings,
   User,
 } from "lucide-react";
 import { StaggerChildren, StaggerItem } from "@/components/ui/animations";
@@ -44,16 +43,10 @@ const menu = [
     title: "Rekap Nilai & Transkrip",
   },
   {
-    label: "Konseling",
-    icon: Headset,
-    href: "/student/counseling",
-    title: "Konseling & Bimbingan",
-  },
-  {
-    label: "Pengaturan",
-    icon: Settings,
-    href: "/student/settings",
-    title: "Pengaturan Akun",
+    label: "Chat",
+    icon: MessageCircle,
+    href: "/student/chat",
+    title: "Chat Siswa",
   },
 ];
 
