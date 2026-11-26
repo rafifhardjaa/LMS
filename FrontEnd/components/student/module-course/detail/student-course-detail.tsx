@@ -13,6 +13,7 @@ import {
   type StudentSummary,
 } from "@/lib/api/master-data";
 import { uploadsApi, type UploadedFile } from "@/lib/api/uploads";
+import { useAuthStore } from "@/lib/store/auth-store";
 import { CourseSidebar } from "@/components/teacher/modul-management/detail/course-sidebar";
 import { CourseInfoContent } from "@/components/teacher/modul-management/detail/course-info-content";
 import { PesertaTable } from "@/components/teacher/modul-management/detail/peserta-table";
@@ -70,6 +71,7 @@ export function StudentCourseDetail({
   classId: string;
   subjectId: string;
 }) {
+  const user = useAuthStore((state) => state.user);
   const [course, setCourse] = useState<JadwalPelajaran | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,12 +93,33 @@ export function StudentCourseDetail({
   >({});
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [meetingDataLoading, setMeetingDataLoading] = useState(false);
+  const [meetingDataError, setMeetingDataError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
       try {
         setLoading(true);
+        if (!user?.kelas) {
+          setCourse(null);
+          setError("Kelas siswa belum diatur. Hubungi admin sekolah.");
+          return;
+        }
+        const classRes = await masterDataApi.classes.list();
+        if (!active) return;
+        if (classRes.error) {
+          throw new Error(classRes.error.message ?? "Gagal memuat kelas.");
+        }
+        const ownClass = (classRes.data?.data ?? []).find(
+          (item) => item.name === user.kelas,
+        );
+        if (!ownClass || ownClass.id !== classId) {
+          setCourse(null);
+          setError("Course ini bukan milik kelas Anda.");
+          return;
+        }
+
         const res = await masterDataApi.jadwalPelajaran.list({ activeOnly: true });
         if (!active) return;
         if (res.error) {
@@ -123,7 +146,7 @@ export function StudentCourseDetail({
     return () => {
       active = false;
     };
-  }, [classId, subjectId]);
+  }, [classId, subjectId, user?.kelas]);
 
   useEffect(() => {
     if (!classId || !subjectId) return;
@@ -229,61 +252,76 @@ export function StudentCourseDetail({
 
   const fetchMeetingData = useCallback(
     async (meetingId: string, isActive: () => boolean = () => true) => {
-      const results = await Promise.all([
-        uploadsApi.list("materi", meetingId),
-        uploadsApi.list("tugasFile", meetingId),
-        uploadsApi.list("kuisFile", meetingId),
-        uploadsApi.list("tugasSubmission", meetingId),
-        uploadsApi.list("kuisSubmission", meetingId),
-        masterDataApi.courseDetails.assignments.list(
-          subjectId,
-          classId,
-          meetingId,
-        ),
-      ]);
+      setMeetingDataLoading(true);
+      setMeetingDataError(null);
+      try {
+        const results = await Promise.all([
+          uploadsApi.list("materi", meetingId),
+          uploadsApi.list("tugasFile", meetingId),
+          uploadsApi.list("kuisFile", meetingId),
+          uploadsApi.list("tugasSubmission", meetingId),
+          uploadsApi.list("kuisSubmission", meetingId),
+          masterDataApi.courseDetails.assignments.list(
+            subjectId,
+            classId,
+            meetingId,
+          ),
+        ]);
 
-      if (!isActive()) return;
+        if (!isActive()) return;
 
-      const [
-        materiRes,
-        tugasFileRes,
-        kuisFileRes,
-        tugasRes,
-        kuisRes,
-        assignmentsRes,
-      ] = results;
+        const [
+          materiRes,
+          tugasFileRes,
+          kuisFileRes,
+          tugasRes,
+          kuisRes,
+          assignmentsRes,
+        ] = results;
 
-      if (
-        materiRes.error ||
-        tugasFileRes.error ||
-        kuisFileRes.error ||
-        tugasRes.error ||
-        kuisRes.error ||
-        assignmentsRes.error
-      ) {
+        if (
+          materiRes.error ||
+          tugasFileRes.error ||
+          kuisFileRes.error ||
+          tugasRes.error ||
+          kuisRes.error ||
+          assignmentsRes.error
+        ) {
+          setMeetingDataError("Gagal memuat data pertemuan.");
+          toast.error("Gagal memuat data pertemuan");
+          return;
+        }
+
+        setMeetingFiles((current) => ({
+          ...current,
+          [meetingId]: {
+            materi: (materiRes.data?.data ?? []).map(toPendingFile),
+            tugasFile: (tugasFileRes.data?.data ?? []).map(toPendingFile),
+            kuisFile: (kuisFileRes.data?.data ?? []).map(toPendingFile),
+            tugasSubmission: (tugasRes.data?.data ?? []).map(toPendingFile),
+            kuisSubmission: (kuisRes.data?.data ?? []).map(toPendingFile),
+          },
+        }));
+
+        const nextTasks: MeetingTasks = { tugas: [], kuis: [] };
+        for (const assignment of assignmentsRes.data?.data ?? []) {
+          nextTasks[assignment.type].push(assignment);
+        }
+        setTasksByMeeting((current) => ({
+          ...current,
+          [meetingId]: nextTasks,
+        }));
+      } catch (loadError) {
+        if (!isActive()) return;
+        setMeetingDataError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Gagal memuat data pertemuan.",
+        );
         toast.error("Gagal memuat data pertemuan");
-        return;
+      } finally {
+        if (isActive()) setMeetingDataLoading(false);
       }
-
-      setMeetingFiles((current) => ({
-        ...current,
-        [meetingId]: {
-          materi: (materiRes.data?.data ?? []).map(toPendingFile),
-          tugasFile: (tugasFileRes.data?.data ?? []).map(toPendingFile),
-          kuisFile: (kuisFileRes.data?.data ?? []).map(toPendingFile),
-          tugasSubmission: (tugasRes.data?.data ?? []).map(toPendingFile),
-          kuisSubmission: (kuisRes.data?.data ?? []).map(toPendingFile),
-        },
-      }));
-
-      const nextTasks: MeetingTasks = { tugas: [], kuis: [] };
-      for (const assignment of assignmentsRes.data?.data ?? []) {
-        nextTasks[assignment.type].push(assignment);
-      }
-      setTasksByMeeting((current) => ({
-        ...current,
-        [meetingId]: nextTasks,
-      }));
     },
     [classId, subjectId],
   );
@@ -384,20 +422,25 @@ export function StudentCourseDetail({
         updateMeetingFile(slot, item.clientId, {
           status: "saved",
           id: uploaded.id,
-          fileUrl: uploaded.fileUrl,
+          fileUrl: toProxyFileUrl(uploaded.fileUrl),
         });
         succeeded += 1;
       }
 
-      await fetchMeetingData(selectedMeetingId);
-
       if (succeeded === targets.length) {
+        await fetchMeetingData(selectedMeetingId);
         toast.success(`${succeeded} file berhasil diunggah`);
       } else {
         toast.error(
-          `Upload selesai: ${succeeded} berhasil, ${targets.length - succeeded} gagal`,
+          `Upload selesai: ${succeeded} berhasil, ${targets.length - succeeded} gagal. File gagal tetap tersedia untuk dicoba ulang.`,
         );
       }
+    } catch (uploadError) {
+      toast.error(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Upload gagal.",
+      );
     } finally {
       setUploading(false);
     }
@@ -417,6 +460,12 @@ export function StudentCourseDetail({
 
       toast.success("File berhasil dihapus");
       await fetchMeetingData(selectedMeetingId);
+    } catch (deleteError) {
+      toast.error(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Gagal menghapus file.",
+      );
     } finally {
       setDeleting(false);
     }
@@ -494,34 +543,59 @@ export function StudentCourseDetail({
                     accent="student"
                   />
                 ) : selectedMeeting ? (
-                  <StudentPertemuanContent
-                    meeting={selectedMeeting}
-                    materiFiles={currentFiles.materi}
-                    tugasTeacherFiles={currentFiles.tugasFile}
-                    kuisTeacherFiles={currentFiles.kuisFile}
-                    tugasFiles={currentFiles.tugasSubmission}
-                    kuisFiles={currentFiles.kuisSubmission}
-                    tugas={currentTasks.tugas}
-                    kuis={currentTasks.kuis}
-                    onTugasFilesChange={(assignmentId, next) =>
-                      replaceAssignmentFiles(
-                        "tugasSubmission",
-                        assignmentId,
-                        next,
-                      )
-                    }
-                    onKuisFilesChange={(assignmentId, next) =>
-                      replaceAssignmentFiles(
-                        "kuisSubmission",
-                        assignmentId,
-                        next,
-                      )
-                    }
-                    onUpload={handleUpload}
-                    uploading={uploading}
-                    onDelete={handleDelete}
-                    deleting={deleting}
-                  />
+                  meetingDataLoading ? (
+                    <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+                      <p className="text-[13px] font-semibold text-[#94A3B8]">
+                        Memuat materi pertemuan…
+                      </p>
+                    </div>
+                  ) : meetingDataError ? (
+                    <div className="flex min-h-64 flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-[#FECACA] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+                      <p className="text-[13px] font-semibold text-[#b91c1c]">
+                        {meetingDataError}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedMeetingId) {
+                            void fetchMeetingData(selectedMeetingId);
+                          }
+                        }}
+                        className="rounded-lg bg-[#0d5c52] px-3 py-2 text-[12px] font-semibold text-white"
+                      >
+                        Coba lagi
+                      </button>
+                    </div>
+                  ) : (
+                    <StudentPertemuanContent
+                      meeting={selectedMeeting}
+                      materiFiles={currentFiles.materi}
+                      tugasTeacherFiles={currentFiles.tugasFile}
+                      kuisTeacherFiles={currentFiles.kuisFile}
+                      tugasFiles={currentFiles.tugasSubmission}
+                      kuisFiles={currentFiles.kuisSubmission}
+                      tugas={currentTasks.tugas}
+                      kuis={currentTasks.kuis}
+                      onTugasFilesChange={(assignmentId, next) =>
+                        replaceAssignmentFiles(
+                          "tugasSubmission",
+                          assignmentId,
+                          next,
+                        )
+                      }
+                      onKuisFilesChange={(assignmentId, next) =>
+                        replaceAssignmentFiles(
+                          "kuisSubmission",
+                          assignmentId,
+                          next,
+                        )
+                      }
+                      onUpload={handleUpload}
+                      uploading={uploading}
+                      onDelete={handleDelete}
+                      deleting={deleting}
+                    />
+                  )
                 ) : meetingsLoading ? (
                   <div className="flex min-h-64 flex-1 items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white px-6 text-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
                     <p className="text-[13px] font-semibold text-[#94A3B8]">
