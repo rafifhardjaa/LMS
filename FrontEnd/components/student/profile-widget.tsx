@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { Settings, User } from "lucide-react";
 import { useAuthStore } from "@/lib/store/auth-store";
 
 function initialsOf(name: string) {
@@ -51,15 +49,6 @@ export function ProfileWidget() {
           </p>
         </div>
       </div>
-
-      <Link
-        href="/student/settings"
-        className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#0d5c52] hover:underline"
-      >
-        <Settings className="size-3.5" />
-        Pengaturan akun
-        <User className="size-3.5" />
-      </Link>
     </div>
   );
 }

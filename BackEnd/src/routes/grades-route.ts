@@ -3,6 +3,7 @@ import { authMiddleware, requireRole } from "../middleware/auth-middleware";
 import { canonicalRole } from "../services/role-service";
 import {
   getGradeWeights,
+  listGradesForStudent,
   listStudentGrades,
   upsertGradeWeights,
   upsertStudentGrades,
@@ -80,6 +81,26 @@ export const gradesRoute = new Elysia({ prefix: "/api/v1/grades" })
         utsWeight: t.Number({ minimum: 0, maximum: 100 }),
         uasWeight: t.Number({ minimum: 0, maximum: 100 }),
       }),
+    }
+  )
+  .get(
+    "/me",
+    async ({ user, status }: any) => {
+      try {
+        const data = await listGradesForStudent(user.id);
+        return status(200, { success: true, data });
+      } catch (error) {
+        const err = handleError(error);
+        return status(err.status, { success: false, message: err.message });
+      }
+    },
+    {
+      beforeHandle: requireRole(["siswa", "student"]),
+      detail: {
+        tags: ["Grades"],
+        summary: "Nilai milik siswa yang sedang login",
+        security: [{ BearerAuth: [] }],
+      },
     }
   )
   .get(

@@ -91,6 +91,7 @@ assignmentsRoute.post(
       startAt: t.Optional(t.String()),
       deadlineAt: t.String(),
       fileIds: t.Optional(t.Array(t.String())),
+      createdBy: t.Optional(t.String()),
     }),
   }
 );

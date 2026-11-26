@@ -10,9 +10,14 @@ import {
 import { db } from "../db";
 import {
   academicPeriods,
+  classes,
   courseMeetings,
+  jadwalPelajaran,
   studentSubjectGrades,
+  subjects,
   subjectGradeWeights,
+  teachingAssignments,
+  users,
 } from "../db/schema";
 import { storageDb } from "../db/storage";
 import {
@@ -293,6 +298,159 @@ export async function listStudentGrades({
       };
     }),
   };
+}
+
+export type StudentGradeRow = {
+  subjectId: string;
+  subjectCode: string | null;
+  subjectName: string;
+  teacherName: string | null;
+  jp: number;
+  classId: string;
+  className: string;
+  academicPeriodId: string;
+  academicPeriodName: string;
+  weights: typeof DEFAULT_WEIGHTS;
+  tugasScore: number | null;
+  kuisScore: number | null;
+  utsScore: number | null;
+  uasScore: number | null;
+  finalScore: number | null;
+};
+
+export async function listGradesForStudent(
+  studentId: string,
+): Promise<StudentGradeRow[]> {
+  const gradeRows = await db
+    .select()
+    .from(studentSubjectGrades)
+    .where(eq(studentSubjectGrades.studentId, studentId));
+
+  if (!gradeRows.length) return [];
+
+  const subjectIds = [...new Set(gradeRows.map((row) => row.subjectId))];
+  const classIds = [...new Set(gradeRows.map((row) => row.classId))];
+  const periodIds = [...new Set(gradeRows.map((row) => row.academicPeriodId))];
+
+  const [subjectRows, classRows, periodRows, weightRows, scheduleRows, teacherRows] =
+    await Promise.all([
+      db
+        .select({
+          id: subjects.id,
+          code: subjects.code,
+          name: subjects.name,
+        })
+        .from(subjects)
+        .where(inArray(subjects.id, subjectIds)),
+      db
+        .select({ id: classes.id, name: classes.name })
+        .from(classes)
+        .where(inArray(classes.id, classIds)),
+      db
+        .select({
+          id: academicPeriods.id,
+          name: academicPeriods.name,
+        })
+        .from(academicPeriods)
+        .where(inArray(academicPeriods.id, periodIds)),
+      db
+        .select()
+        .from(subjectGradeWeights)
+        .where(
+          and(
+            inArray(subjectGradeWeights.subjectId, subjectIds),
+            inArray(subjectGradeWeights.academicPeriodId, periodIds),
+          ),
+        ),
+      db
+        .select({
+          subjectId: jadwalPelajaran.subjectId,
+          classId: jadwalPelajaran.classId,
+        })
+        .from(jadwalPelajaran)
+        .where(
+          and(
+            inArray(jadwalPelajaran.subjectId, subjectIds),
+            inArray(jadwalPelajaran.classId, classIds),
+          ),
+        ),
+      db
+        .select({
+          subjectId: teachingAssignments.subjectId,
+          classId: teachingAssignments.classId,
+          teacherName: users.fullName,
+        })
+        .from(teachingAssignments)
+        .innerJoin(users, eq(teachingAssignments.teacherId, users.id))
+        .where(
+          and(
+            inArray(teachingAssignments.subjectId, subjectIds),
+            inArray(teachingAssignments.classId, classIds),
+          ),
+        ),
+    ]);
+
+  const subjectMap = new Map(subjectRows.map((row) => [row.id, row]));
+  const classMap = new Map(classRows.map((row) => [row.id, row]));
+  const periodMap = new Map(periodRows.map((row) => [row.id, row]));
+  const weightMap = new Map(
+    weightRows.map((row) => [
+      `${row.subjectId}:${row.academicPeriodId}`,
+      {
+        tugasWeight: Number(row.tugasWeight),
+        kuisWeight: Number(row.kuisWeight),
+        utsWeight: Number(row.utsWeight),
+        uasWeight: Number(row.uasWeight),
+      },
+    ]),
+  );
+  const scheduleCount = new Map<string, number>();
+  for (const row of scheduleRows) {
+    const key = `${row.subjectId}:${row.classId}`;
+    scheduleCount.set(key, (scheduleCount.get(key) ?? 0) + 1);
+  }
+  const teacherMap = new Map<string, string>();
+  for (const row of teacherRows) {
+    const key = `${row.subjectId}:${row.classId}`;
+    if (!teacherMap.has(key)) teacherMap.set(key, row.teacherName);
+  }
+
+  const mappedRows: Array<StudentGradeRow | null> = gradeRows.map((row) => {
+    const subject = subjectMap.get(row.subjectId);
+    const itemClass = classMap.get(row.classId);
+    const period = periodMap.get(row.academicPeriodId);
+    if (!subject || !itemClass || !period) return null;
+
+    const weightKey = `${row.subjectId}:${row.academicPeriodId}`;
+    return {
+        subjectId: row.subjectId,
+        subjectCode: subject.code,
+        subjectName: subject.name,
+        teacherName: teacherMap.get(`${row.subjectId}:${row.classId}`) ?? null,
+        jp:
+          scheduleCount.get(`${row.subjectId}:${row.classId}`) ??
+          0,
+        classId: row.classId,
+        className: itemClass.name,
+        academicPeriodId: row.academicPeriodId,
+        academicPeriodName: period.name,
+        weights: weightMap.get(weightKey) ?? { ...DEFAULT_WEIGHTS },
+        tugasScore:
+          row.tugasScore === null ? null : Number(row.tugasScore),
+        kuisScore:
+          row.kuisScore === null ? null : Number(row.kuisScore),
+        utsScore:
+          row.utsScore === null ? null : Number(row.utsScore),
+        uasScore:
+          row.uasScore === null ? null : Number(row.uasScore),
+        finalScore:
+          row.finalScore === null ? null : Number(row.finalScore),
+      };
+  });
+
+  return mappedRows
+    .filter((row): row is StudentGradeRow => row !== null)
+    .sort((first, second) => first.subjectName.localeCompare(second.subjectName));
 }
 
 export async function upsertStudentGrades({

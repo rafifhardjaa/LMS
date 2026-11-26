@@ -58,6 +58,67 @@ export interface ApiError {
   code?: string;
 }
 
+export type StudentChatContactRole = "classmate" | "teacher" | "advisor";
+
+export interface StudentChatSubject {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface StudentChatContact {
+  id: string;
+  kind: "student" | "teacher";
+  name: string;
+  identifier: string | null;
+  roles: StudentChatContactRole[];
+  className: string;
+  subjects?: StudentChatSubject[];
+}
+
+export interface StudentChatContacts {
+  class: {
+    id: string;
+    name: string;
+  };
+  contacts: StudentChatContact[];
+}
+
+export interface ChatMessageDto {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  clientMessageId: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface ChatConversationSummary {
+  id: string;
+  classId: string;
+  otherUserId: string;
+  lastMessage: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+}
+
+export interface ChatConversationInfo {
+  id: string;
+  classId: string;
+  participantId: string;
+}
+
+export interface ChatMessagesPage {
+  messages: ChatMessageDto[];
+  hasMore: boolean;
+  nextBefore: string | null;
+}
+
+export interface ChatWsTicket {
+  ticket: string;
+  expiresAt: string;
+}
+
 // ─── Modules & Discussions ──────────────────────────────────────────────────
 
 export interface BackendModule {
